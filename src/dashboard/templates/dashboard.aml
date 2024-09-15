@@ -1,0 +1,4 @@
+border
+  hstack
+    expand [axis: "horizontal"]
+      @textinput (text_change->input_update) [id: 1]

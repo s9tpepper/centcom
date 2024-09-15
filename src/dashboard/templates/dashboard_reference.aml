@@ -1,0 +1,26 @@
+vstack
+  hstack [alignment: "center"]
+    spacer
+    text "CENTCOM"
+    spacer
+
+  align [alignment: "center"]
+    vstack [alignment: "center"]
+      text "second line"
+      text "second line"
+      text "second line"
+
+      hstack
+        border
+          text [id: 1] "URL: 1"
+        border
+          text [id: 2] "URL: 2"
+        border
+          text [id: 3] "URL: 3"
+        border
+          text [id: 2] "URL: 4"
+
+      hstack
+        expand [factor: 1]
+          border
+            @textinput
