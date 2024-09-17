@@ -1,4 +1,4 @@
 zstack
   text input
   text cursor_prefix
-    span [foreground: "black", background: "white"] cursor_char
+    span [foreground: fg_color, background: bg_color] cursor_char

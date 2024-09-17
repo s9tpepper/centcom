@@ -1,4 +1,26 @@
-border
+vstack
   hstack
-    expand [axis: "horizontal"]
-      @textinput (text_change->input_update) [id: 1]
+    border
+        text [foreground: #ffffff, text_align: "right"] "GET"
+    border
+      expand [axis: "horizontal"]
+        @textinput (text_change->url_update) [id: 1]
+
+  hstack
+    text "headers go here"
+
+  expand [axis: "vert"]
+    hstack
+      expand
+        border
+          expand
+            text "response goes here"
+
+  container [height: 3]
+    hstack
+      expand
+        border
+          text "Change (U)RL"
+      expand
+        border
+          text "Change (M)ethod"

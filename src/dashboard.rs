@@ -1,12 +1,14 @@
 use anathema::{
+    component::{KeyCode, KeyEvent},
     prelude::{Context, Document, TuiBackend},
     runtime::Runtime,
-    state::{CommonVal, Value},
+    state::CommonVal,
     widgets::Elements,
 };
 
 use crate::components::textinput::{InputState, TextInput, TEXTINPUT_TEMPLATE};
 
+const APP_TEMPLATE: &str = "./src/app.aml";
 const DASHBOARD_TEMPLATE: &str = "./src/dashboard/templates/dashboard.aml";
 
 pub fn dashboard() {
@@ -14,8 +16,29 @@ pub fn dashboard() {
 }
 
 #[derive(anathema::state::State)]
-struct DashboardState {
-    input: Value<String>,
+struct AppState {}
+
+struct AppComponent;
+impl anathema::component::Component for AppComponent {
+    type State = AppState;
+    type Message = ();
+
+    fn on_focus(
+        &mut self,
+        _state: &mut Self::State,
+        mut _elements: Elements<'_, '_>,
+        mut context: Context<'_, Self::State>,
+    ) {
+        context.set_focus("id", "app");
+    }
+}
+
+#[derive(anathema::state::State)]
+struct DashboardState {}
+impl DashboardState {
+    pub fn new() -> Self {
+        DashboardState {}
+    }
 }
 
 #[derive(Debug)]
@@ -36,7 +59,8 @@ impl anathema::component::Component for DashboardComponent {
         _elements: Elements<'_, '_>,
         _context: Context<'_, Self::State>,
     ) {
-        if ident == "input_update" {
+        if ident == "url_update" {
+            // TODO: Do something with url updates (put it in some kind of state)
             let _value = &*value.to_common_str();
 
             // NOTE: value is updated input from textinput
@@ -46,31 +70,25 @@ impl anathema::component::Component for DashboardComponent {
 
     fn on_key(
         &mut self,
-        key: anathema::component::KeyEvent,
-        state: &mut Self::State,
+        event: KeyEvent,
+        _state: &mut Self::State,
         _elements: anathema::widgets::Elements<'_, '_>,
         mut context: anathema::prelude::Context<'_, Self::State>,
     ) {
-        context.set_focus("id", 1);
-
-        // Get mutable access to the name
-        let mut input = state.input.to_mut();
-
-        match key.code {
-            anathema::component::KeyCode::Char(char) => {
-                input.push(char);
+        match event.code {
+            KeyCode::Char(char) => {
+                if event.ctrl && char == 'u' {
+                    context.set_focus("id", 1);
+                }
             }
 
-            anathema::component::KeyCode::Backspace => {
-                input.pop();
-            }
-
-            anathema::component::KeyCode::Delete => {
-                input.remove(0);
-            }
-
+            KeyCode::Enter => todo!(),
             _ => {}
         }
+    }
+
+    fn accept_focus(&self) -> bool {
+        true
     }
 }
 
@@ -83,7 +101,7 @@ impl Dashboard {
 
     pub fn run(&self) -> Result<(), Box<dyn std::error::Error>> {
         // let template = read_to_string(DASHBOARD_TEMPLATE)?;
-        let doc = Document::new("@dashboard");
+        let doc = Document::new("@app");
 
         // let dashboard_id = doc.add_component("dashboard", SourceKind::from(DASHBOARD_TEMPLATE));
 
@@ -101,21 +119,24 @@ impl Dashboard {
         let backend = tui.unwrap();
         let mut runtime_builder = Runtime::builder(doc, backend);
 
-        let _ = runtime_builder.register_component(
+        let _ = runtime_builder.register_prototype(
             "textinput",
             TEXTINPUT_TEMPLATE,
-            TextInput,
-            InputState::new(),
+            || TextInput,
+            InputState::new,
         );
 
-        let _dashboard_id = runtime_builder.register_component(
+        let _dashboard_id = runtime_builder.register_prototype(
             "dashboard",
             DASHBOARD_TEMPLATE,
-            DashboardComponent,
-            DashboardState {
-                input: "".to_string().into(),
-            },
+            || DashboardComponent,
+            DashboardState::new,
         );
+
+        let _ = runtime_builder.register_component("app", APP_TEMPLATE, AppComponent, AppState {});
+
+        // dbg!(&dashboard_id.unwrap());
+        // dbg!(&input_id.unwrap());
 
         let mut runtime = runtime_builder.finish().unwrap();
 

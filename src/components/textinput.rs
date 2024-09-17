@@ -15,6 +15,9 @@ pub struct InputState {
     cursor_prefix: Value<String>,
     cursor_char: Value<String>,
     cursor_position: Value<usize>,
+    fg_color: Value<String>,
+    bg_color: Value<String>,
+    focused: Value<bool>,
 }
 
 impl InputState {
@@ -22,8 +25,11 @@ impl InputState {
         InputState {
             input: String::from("").into(),
             cursor_prefix: String::from("").into(),
-            cursor_char: String::from("").into(),
+            cursor_char: String::from("_").into(),
             cursor_position: 0.into(),
+            fg_color: String::from("white").into(),
+            bg_color: String::from("").into(),
+            focused: false.into(),
         }
     }
 }
@@ -34,11 +40,38 @@ impl anathema::component::Component for TextInput {
 
     fn on_focus(
         &mut self,
-        _state: &mut Self::State,
+        state: &mut Self::State,
         _: Elements<'_, '_>,
         _: Context<'_, Self::State>,
     ) {
-        // println!("text input got focus")
+        let input = state.input.to_ref();
+        let Some(cursor_position) = state.cursor_position.to_number() else {
+            return;
+        };
+        let pos = cursor_position.as_uint();
+
+        let cursor_char = if pos == input.len() {
+            ' '
+        } else {
+            input.chars().nth(pos).unwrap_or(' ')
+        };
+
+        state.cursor_char.set(cursor_char.to_string());
+        state.fg_color.set("black".to_string());
+        state.bg_color.set("white".to_string());
+        state.focused.set(true);
+    }
+
+    fn on_blur(
+        &mut self,
+        state: &mut Self::State,
+        _elements: Elements<'_, '_>,
+        _context: Context<'_, Self::State>,
+    ) {
+        state.cursor_char.set("_".to_string());
+        state.fg_color.set("white".to_string());
+        state.bg_color.set("".to_string());
+        state.focused.set(false);
     }
 
     fn on_key(
@@ -46,9 +79,12 @@ impl anathema::component::Component for TextInput {
         event: anathema::component::KeyEvent,
         state: &mut Self::State,
         _: anathema::widgets::Elements<'_, '_>,
-        context: anathema::prelude::Context<'_, Self::State>,
+        mut context: anathema::prelude::Context<'_, Self::State>,
     ) {
         // let mut input = state.input.to_mut();
+        if !*state.focused.to_ref() {
+            return;
+        }
 
         match event.code {
             // NOTE: Unused for TextInput
@@ -96,7 +132,7 @@ impl anathema::component::Component for TextInput {
             anathema::component::KeyCode::CtrlC => todo!(),
 
             // Move focus with this
-            anathema::component::KeyCode::Esc => todo!(),
+            anathema::component::KeyCode::Esc => context.set_focus("id", "app"),
 
             _ => {}
         }
