@@ -21,19 +21,32 @@ zstack
       hstack
         expand
           border
-            text "Change (U)RL"
+            text "(U)RL"
         expand
           border
-            text "Change (M)ethod"
-  align [alignment: "center"]
-    container [display: "hide"]
-      border [display: "show"]
-        padding [padding: 2, top: 0, bottom: 1]
-          vstack
-            text [display: "show"] "Method"
-            text "* (G)ET"
-            text "(P)OST"
-            text "P(U)T"
-            text "(D)ELETE"
-            text "(H)EAD"
-            text "(O)PTIONS"
+            text "(M)ethod"
+        expand
+          border
+            text "(H)eaders"
+        expand
+          border
+            text "Send (R)equest"
+        expand
+          border
+            text "(S)ave"
+        expand
+          border
+            text "(O)ptions"
+  if show_method_window
+    align [alignment: "center"]
+      container [display: "hide"]
+        border [display: "show"]
+          padding [padding: 2, top: 0, bottom: 1]
+            vstack
+              text [display: "show"] "Method"
+              text "* (G)ET"
+              text "(P)OST"
+              text "P(U)T"
+              text "(D)ELETE"
+              text "(H)EAD"
+              text "(O)PTIONS"

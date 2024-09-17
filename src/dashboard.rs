@@ -1,8 +1,8 @@
 use anathema::{
     component::{KeyCode, KeyEvent},
-    prelude::{Context, Document, ToSourceKind, TuiBackend},
+    prelude::{Context, Document, TuiBackend},
     runtime::Runtime,
-    state::CommonVal,
+    state::{CommonVal, Value},
     widgets::Elements,
 };
 
@@ -34,10 +34,15 @@ impl anathema::component::Component for AppComponent {
 }
 
 #[derive(anathema::state::State)]
-struct DashboardState {}
+struct DashboardState {
+    show_method_window: Value<bool>,
+}
+
 impl DashboardState {
     pub fn new() -> Self {
-        DashboardState {}
+        DashboardState {
+            show_method_window: false.into(),
+        }
     }
 }
 
@@ -71,18 +76,18 @@ impl anathema::component::Component for DashboardComponent {
     fn on_key(
         &mut self,
         event: KeyEvent,
-        _state: &mut Self::State,
+        state: &mut Self::State,
         _elements: anathema::widgets::Elements<'_, '_>,
         mut context: anathema::prelude::Context<'_, Self::State>,
     ) {
         match event.code {
             KeyCode::Char(char) => {
-                if event.ctrl && char == 'u' {
+                if char == 'u' {
                     context.set_focus("id", 1);
                 }
 
-                if event.ctrl && char == 'm' {
-                    // TODO: Show the method floating window here
+                if char == 'm' {
+                    state.show_method_window.set(true);
                 }
             }
 
