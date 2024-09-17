@@ -1,6 +1,6 @@
 use anathema::{
     component::{KeyCode, KeyEvent},
-    prelude::{Context, Document, TuiBackend},
+    prelude::{Context, Document, ToSourceKind, TuiBackend},
     runtime::Runtime,
     state::CommonVal,
     widgets::Elements,
@@ -80,6 +80,10 @@ impl anathema::component::Component for DashboardComponent {
                 if event.ctrl && char == 'u' {
                     context.set_focus("id", 1);
                 }
+
+                if event.ctrl && char == 'm' {
+                    // TODO: Show the method floating window here
+                }
             }
 
             KeyCode::Enter => todo!(),
@@ -92,18 +96,15 @@ impl anathema::component::Component for DashboardComponent {
     }
 }
 
-struct Dashboard;
+struct Dashboard {}
 
 impl Dashboard {
     pub fn new() -> Self {
         Dashboard {}
     }
 
-    pub fn run(&self) -> Result<(), Box<dyn std::error::Error>> {
-        // let template = read_to_string(DASHBOARD_TEMPLATE)?;
+    pub fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let doc = Document::new("@app");
-
-        // let dashboard_id = doc.add_component("dashboard", SourceKind::from(DASHBOARD_TEMPLATE));
 
         let tui = TuiBackend::builder()
             .enable_alt_screen()
@@ -134,9 +135,6 @@ impl Dashboard {
         );
 
         let _ = runtime_builder.register_component("app", APP_TEMPLATE, AppComponent, AppState {});
-
-        // dbg!(&dashboard_id.unwrap());
-        // dbg!(&input_id.unwrap());
 
         let mut runtime = runtime_builder.finish().unwrap();
 

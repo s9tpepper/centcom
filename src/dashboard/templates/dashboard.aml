@@ -1,26 +1,39 @@
-vstack
-  hstack
-    border
-        text [foreground: #ffffff, text_align: "right"] "GET"
-    border
-      expand [axis: "horizontal"]
-        @textinput (text_change->url_update) [id: 1]
-
-  hstack
-    text "headers go here"
-
-  expand [axis: "vert"]
+zstack
+  vstack
     hstack
-      expand
-        border
-          expand
-            text "response goes here"
+      border
+          text [foreground: #ffffff, text_align: "right"] "GET"
+      border
+        expand [axis: "horizontal"]
+          @textinput (text_change->url_update) [id: 1]
 
-  container [height: 3]
     hstack
-      expand
-        border
-          text "Change (U)RL"
-      expand
-        border
-          text "Change (M)ethod"
+      text "headers go here"
+
+    expand [axis: "vert"]
+      hstack
+        expand
+          border
+            expand
+              text "response goes here"
+
+    container [height: 3]
+      hstack
+        expand
+          border
+            text "Change (U)RL"
+        expand
+          border
+            text "Change (M)ethod"
+  align [alignment: "center"]
+    container [display: "hide"]
+      border [display: "show"]
+        padding [padding: 2, top: 0, bottom: 1]
+          vstack
+            text [display: "show"] "Method"
+            text "* (G)ET"
+            text "(P)OST"
+            text "P(U)T"
+            text "(D)ELETE"
+            text "(H)EAD"
+            text "(O)PTIONS"
