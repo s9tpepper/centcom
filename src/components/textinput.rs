@@ -25,7 +25,7 @@ impl InputState {
         InputState {
             input: String::from("").into(),
             cursor_prefix: String::from("").into(),
-            cursor_char: String::from("_").into(),
+            cursor_char: String::from("").into(),
             cursor_position: 0.into(),
             fg_color: String::from("white").into(),
             bg_color: String::from("").into(),
@@ -68,7 +68,7 @@ impl anathema::component::Component for TextInput {
         _elements: Elements<'_, '_>,
         _context: Context<'_, Self::State>,
     ) {
-        state.cursor_char.set("_".to_string());
+        state.cursor_char.set("".to_string());
         state.fg_color.set("white".to_string());
         state.bg_color.set("".to_string());
         state.focused.set(false);

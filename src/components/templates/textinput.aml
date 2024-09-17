@@ -1,4 +1,5 @@
-zstack
-  text input
-  text cursor_prefix
-    span [foreground: fg_color, background: bg_color] cursor_char
+container [height: 1]
+  zstack
+    text input
+    text cursor_prefix
+      span [foreground: fg_color, background: bg_color] cursor_char

@@ -1,42 +1,68 @@
 zstack
-  vstack
-    hstack
-      border
-          text [foreground: #ffffff, text_align: "right"] "GET"
-      border
-        expand [axis: "horizontal"]
-          @textinput (text_change->url_update) [id: 1]
-
-    hstack
-      text "headers go here"
-
-    expand [axis: "vert"]
-      hstack
-        expand
+  hstack
+    expand
+      vstack
+        hstack
           border
+              text [foreground: #ffffff, text_align: "right"] "GET"
+          border
+            expand [axis: "horizontal"]
+              @textinput (text_change->url_update) [id: 1]
+
+        text "Headers:"
+        border
+          expand [axis: "horizontal"]
+            vstack
+              hstack
+                text "h:"
+                @textinput
+                text "v:"
+                @textinput
+
+        expand [axis: "vert"]
+          hstack
             expand
-              text "response goes here"
+              border
+                expand
+                  text "response goes here"
 
-    container [height: 3]
-      hstack
-        expand
-          border
-            text "(U)RL"
-        expand
-          border
-            text "(M)ethod"
-        expand
-          border
-            text "(H)eaders"
-        expand
-          border
-            text "Send (R)equest"
-        expand
-          border
-            text "(S)ave"
-        expand
-          border
-            text "(O)ptions"
+    padding [left: 1]
+      vstack [width: 15]
+        border [foreground: "#ffffff", sides: ["top", "bottom"]]
+          expand [axis: "horizontal"]
+              expand [axis: "horizontal"]
+                text [foreground: "#ffffff"] "(U)RL"
+
+        border [foreground: "#ffffff", sides: "bottom"]
+          expand [axis: "horizontal"]
+              expand [axis: "horizontal"]
+                text "(M)ethod"
+
+        border [foreground: "#ffffff", sides: "bottom"]
+          expand [axis: "horizontal"]
+              expand [axis: "horizontal"]
+                text "Add (H)eader"
+
+        border [foreground: "#ffffff", sides: "bottom"]
+          expand [axis: "horizontal"]
+              expand [axis: "horizontal"]
+                text "Send (R)equest"
+
+        border [foreground: "#ffffff", sides: "bottom"]
+          expand [axis: "horizontal"]
+              expand [axis: "horizontal"]
+                text "(S)ave"
+
+        border [foreground: "#ffffff", sides: "bottom"]
+          expand [axis: "horizontal"]
+              expand [axis: "horizontal"]
+                text "(O)ptions"
+
+        border [foreground: "#ffffff", sides: "bottom"]
+          expand [axis: "horizontal"]
+              expand [axis: "horizontal"]
+                text "(O)ptions"
+
   if show_method_window
     align [alignment: "center"]
       container [display: "hide"]
