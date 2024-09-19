@@ -33,9 +33,9 @@ impl Component for MethodSelector {
 
     fn on_focus(
         &mut self,
-        state: &mut Self::State,
-        mut elements: anathema::widgets::Elements<'_, '_>,
-        mut context: anathema::prelude::Context<'_, Self::State>,
+        _state: &mut Self::State,
+        mut _elements: anathema::widgets::Elements<'_, '_>,
+        mut _context: anathema::prelude::Context<'_, Self::State>,
     ) {
         // TODO: Highlight current selection
     }
