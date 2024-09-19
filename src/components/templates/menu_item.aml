@@ -1,0 +1,4 @@
+border [foreground: "#ffffff", sides: "bottom"]
+  expand [axis: "horizontal"]
+    expand [axis: "horizontal"]
+      text item.label

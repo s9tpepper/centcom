@@ -1,0 +1,12 @@
+align [alignment: "center"]
+  container [background: "black"]
+    border
+      padding [padding: 2, top: 0, bottom: 1]
+        vstack
+          text "Method"
+          text "(G)ET"
+          text "(P)OST"
+          text "P(U)T"
+          text "(D)ELETE"
+          text "(H)EAD"
+          text "(O)PTIONS"

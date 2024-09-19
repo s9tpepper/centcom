@@ -2,10 +2,10 @@ use std::env;
 
 use clap::{Parser, Subcommand};
 
+mod app;
 mod components;
-mod dashboard;
 
-use crate::dashboard::dashboard;
+use crate::app::dashboard;
 
 #[derive(Debug, Subcommand)]
 enum Cmds {
