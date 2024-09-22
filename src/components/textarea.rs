@@ -189,35 +189,9 @@ impl TextArea {
     ) {
         let mut input = state.input.to_mut();
 
-        // let Some(cursor_position) = state.cursor_position.to_number() else {
-        //     return;
-        // };
-        // // NOTE: Input when cursor is at the far right
-        // let pos = cursor_position.as_uint();
-        // input.insert(pos, char);
-        //
-        // let new_position = pos + 1;
-        // state.cursor_position.set(new_position);
-        //
-        // if pos == input.len() {
-        //     state.cursor_prefix.set(input.to_string());
-        // } else {
-        //     state
-        //         .cursor_prefix
-        //         .set(input.chars().take(new_position).collect::<String>())
-        // };
-        //
-        // let cursor_char = if pos == input.len() {
-        //     ' '
-        // } else {
-        //     input.chars().nth(new_position).unwrap_or(' ')
-        // };
-        // state.cursor_char.set(cursor_char.to_string());
-
         elements
             .by_attribute("id", "contents")
             .each(|el, _attributes| {
-                // attributes.set("background", "red");
                 let text = el.to::<Text>();
 
                 // Update line count
@@ -229,7 +203,7 @@ impl TextArea {
                     .as_uint();
                 state.line_count.set(current_line_count);
 
-                // NOTE: Get coordinates before this character input
+                // Get coordinates before this character input
                 let mut cursor_coordinates = state.cursor_position.to_mut();
                 let prev_cursor_x = cursor_coordinates
                     .x
@@ -245,7 +219,7 @@ impl TextArea {
                 log(format!("prev_x: {prev_cursor_x}\n"));
                 log(format!("prev_y: {prev_cursor_y}\n"));
 
-
+                // Calculate new cursor X/Y position
                 let new_cursor_x = if current_line_count > prev_line_count {
                     Number::Usize(0).as_uint()
                 } else {
@@ -263,31 +237,12 @@ impl TextArea {
                 log(format!("new_x: {new_cursor_x}\n"));
                 log(format!("new_y: {new_cursor_y}\n"));
 
-                // Find the x/y of the current cursor position
-                //
-                // Get line lengths of lines above position Y
-                //
-                // Add lengths of lines above position Y
-                //
-                // Add (x + 1) to total of previous line lengths
-                //
-                // Insert new character at (lengthOfPreviousLines + x + 1)
-                //
-                // Update cursor to position (x + 1, y)
-                //
-
-                // Update input string
-
-                // sleep(Duration::from_millis(1000));
-
+                // Get line lengths for all lines in input
                 let lines = text.get_lines();
                 let mut line_lengths: Vec<usize> = [].to_vec();
                 lines.enumerate().for_each(|(index, current_line)| {
                     log(format!("Looking at line_number: {index}\n"));
 
-                    // update_index += current_line.entries.count().saturating_sub(1);
-
-                    // let length_of_line = current_line.width as usize + 1; // add newline
                     let mut length_of_line = 0;
                     current_line.entries.for_each(|entry| {
                         log(format!("Checking line entry for line {index}\n"));
@@ -301,80 +256,42 @@ impl TextArea {
                         };
                     });
 
-                    // if length_of_line > 0 {
-                    //     length_of_line += 1; // adds the newline character
-                    // }
-
 
                     log(format!("Length of line {index}: {length_of_line}\n"));
 
                     line_lengths.push(length_of_line);
                 });
 
-                // Account for newline characters
+                // Account for newline characters, but remove one because the last line doesn't
+                // have a newline character
                 line_lengths.push(line_lengths.len() - 1);
-
-                // if !line_lengths.is_empty() {
-                //     line_lengths.pop(); // get rid of last line's length
-                // }
-
-
-                log("  Debug lines: ===========================================\n".to_string());
-                let lines = text.get_lines();
-                let mut lines_count = 0;
-                lines.for_each(|line| {
-                    log(format!("    line number: {lines_count}, width: {}\n", line.width));
-
-                    for line_entry in line.entries {
-                        log(format!("      line_entry: {line_entry:?}\n"));
-                    }
-                    lines_count += 1;
-                });
-                log("  ===========================================\n".to_string());
-
 
                 log(format!("Length of all lines: {}\n", line_lengths.iter().sum::<usize>()));
 
-
                 // Sets update index to the end of the input string
-                let mut update_index = line_lengths.iter().sum::<usize>();
-                // if new_cursor_y == prev_cursor_y {
-                //     update_index += prev_cursor_x
-                // }
-
+                let update_index = line_lengths.iter().sum::<usize>();
                 log(format!("Initial update_index: {update_index}\n"));
 
 
-                if new_cursor_y > prev_cursor_y && new_cursor_y > 1 {
-                    log("We are on a new line, resetting update_index to sum of line lengths\n".to_string());
-
-                    // Change this to the sum of all line lengths
-                    let lengths_iter = line_lengths.iter();
-                    // let amount_of_newline_characters = lengths_iter.clone().count();
-                    let amount_of_newline_characters = 0;
-
-                    log(format!("amount_of_newline_characters: {amount_of_newline_characters}\n"));
-
-                    let previous_lines_sum = lengths_iter.sum::<usize>();
-                    log(format!("previous_lines_sum: {previous_lines_sum}\n"));
-
-                    update_index = previous_lines_sum + amount_of_newline_characters + new_cursor_x;
-
-                    log(format!("update_index when going to a next line: {update_index}\n"));
-                } else if new_cursor_y > 0 && new_cursor_y == prev_cursor_y {
-                    // TODO: Calculate index of input string at the cursor's x,y position
-                    // log("TODO: Calculate index of input at cursor x,y position\n".to_string());
-                    // let lengths_iter = line_lengths.iter();
-                    // // let amount_of_newline_characters = lengths_iter.clone().count();
-                    // let amount_of_newline_characters = 0;
-                    //
-                    // // adds one for newline character of the previous lines sum
-                    // update_index = (lengths_iter.sum::<usize>() - 1) + amount_of_newline_characters + new_cursor_x;
-                }
+                // NOTE: Adjust update_index when on a new line, commented out because linear editing
+                // works, this might be needed, with updated logic, once the cursor starts to move
+                // around and the editing is no longer linear
+                //
+                // if new_cursor_y > prev_cursor_y && new_cursor_y > 1 {
+                //     log("We are on a new line, resetting update_index to sum of line lengths\n".to_string());
+                //
+                //     let lengths_iter = line_lengths.iter();
+                //
+                //     let previous_lines_sum = lengths_iter.sum::<usize>();
+                //     log(format!("previous_lines_sum: {previous_lines_sum}\n"));
+                //
+                //     update_index = previous_lines_sum + new_cursor_x;
+                //
+                //     log(format!("update_index when going to a next line: {update_index}\n"));
+                // }
 
                 log(format!("Final update_index: {update_index}\n"));
                 log(format!("input.len(): {}\n", input.len()));
-
                 log(format!(
                     "Inserting at index: {update_index} character: {char}, current input length: {} \n", input.len()
                 ));
@@ -382,51 +299,8 @@ impl TextArea {
                     "----------------------------------------\n".to_string()
                 );
 
+                // Insert new character
                 input.insert(update_index, char);
-
-                //
-                // let log_output = format!(
-                //     "update_index: {update_index}, char: {char}, input: {}\n",
-                //     *input
-                // );
-                // log(log_output);
-
-                // if let Ok(current_logs) = read_to_string("logs.txt") {
-
-                // let _ = fs::write("logs.txt", log_output);
-
-                // }
-
-                // input.insert(update_index, char);
-
-                // let log_output = format!("insert is now: {}", input.to_string());
-                // state.log_output.set(log_output);
-                //
-                // context.publish("logs", |state| &state.log_output);
-                //
-                // // Get current line that we are typing on
-                // let current_line = lines.nth(new_y);
-                // if current_line.is_none() {
-                //     return;
-                // }
-                // let mut current_line = current_line.unwrap();
-                //
-                // // Update cursor char from the current line
-                // let cursor_char = current_line.entries.nth(new_x);
-                // if let Some(Segment::Str(cursor_char)) = cursor_char {
-                //     state.cursor_char.set(cursor_char.to_string());
-                // }
-                //
-                // // Update the cursor prefix for cursor positioning
-                // let mut cursor_prefix = String::from("");
-                // let prefix_lines = lines.take(new_y + 1);
-                // prefix_lines.for_each(|prefix_line| {
-                //     prefix_line.entries.for_each(|line_entry| match line_entry {
-                //         Segment::Str(character) => cursor_prefix.push_str(character),
-                //         _ => { /* Don't know what to do with Segment::SetStyle(_) */ }
-                //     })
-                // });
-                // state.cursor_prefix.set(cursor_prefix);
             });
 
         context.publish("text_change", |state| &state.input)
