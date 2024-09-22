@@ -8,10 +8,11 @@ use crate::components::{
     dashboard::{DashboardComponent, DashboardState, DASHBOARD_TEMPLATE},
     menu_item::{MenuItem, MenuItemState, MENU_ITEM_TEMPLATE},
     method_selector::{MethodSelector, MethodSelectorState, METHOD_SELECTOR_TEMPLATE},
+    textarea::{TextArea, TextAreaInputState, TEXTAREA_TEMPLATE},
     textinput::{InputState, TextInput, TEXTINPUT_TEMPLATE},
 };
 
-pub fn dashboard() {
+pub fn app() {
     let _ = App::new().run();
 }
 
@@ -55,6 +56,13 @@ impl App {
             TEXTINPUT_TEMPLATE,
             || TextInput,
             InputState::new,
+        );
+
+        let _ = builder.register_prototype(
+            "textarea",
+            TEXTAREA_TEMPLATE,
+            || TextArea,
+            TextAreaInputState::new,
         );
 
         let _ = builder.register_prototype(

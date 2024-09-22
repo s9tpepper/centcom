@@ -4,8 +4,9 @@ use clap::{Parser, Subcommand};
 
 mod app;
 mod components;
+mod widgets;
 
-use crate::app::dashboard;
+use crate::app::app;
 
 #[derive(Debug, Subcommand)]
 enum Cmds {
@@ -24,7 +25,7 @@ fn main() {
 
     match args.len() {
         1 => {
-            dashboard();
+            app();
         }
 
         _ => {

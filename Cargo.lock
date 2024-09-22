@@ -5,7 +5,7 @@ version = 3
 [[package]]
 name = "anathema"
 version = "0.3.0"
-source = "git+https://github.com/togglebyte/anathema.git?branch=main#b05d865b6d7550be2a0913bb120f05ddf4c781c9"
+source = "git+https://github.com/s9tpepper/anathema.git?branch=main#b1fb85c0ad906bf65d713202122ab4f68abeb29b"
 dependencies = [
  "anathema-backend",
  "anathema-debug",
@@ -22,7 +22,7 @@ dependencies = [
 [[package]]
 name = "anathema-backend"
 version = "0.3.0"
-source = "git+https://github.com/togglebyte/anathema.git?branch=main#b05d865b6d7550be2a0913bb120f05ddf4c781c9"
+source = "git+https://github.com/s9tpepper/anathema.git?branch=main#b1fb85c0ad906bf65d713202122ab4f68abeb29b"
 dependencies = [
  "anathema-geometry",
  "anathema-state",
@@ -37,12 +37,12 @@ dependencies = [
 [[package]]
 name = "anathema-debug"
 version = "0.3.0"
-source = "git+https://github.com/togglebyte/anathema.git?branch=main#b05d865b6d7550be2a0913bb120f05ddf4c781c9"
+source = "git+https://github.com/s9tpepper/anathema.git?branch=main#b1fb85c0ad906bf65d713202122ab4f68abeb29b"
 
 [[package]]
 name = "anathema-default-widgets"
 version = "0.3.0"
-source = "git+https://github.com/togglebyte/anathema.git?branch=main#b05d865b6d7550be2a0913bb120f05ddf4c781c9"
+source = "git+https://github.com/s9tpepper/anathema.git?branch=main#b1fb85c0ad906bf65d713202122ab4f68abeb29b"
 dependencies = [
  "anathema-backend",
  "anathema-geometry",
@@ -57,12 +57,12 @@ dependencies = [
 [[package]]
 name = "anathema-geometry"
 version = "0.3.0"
-source = "git+https://github.com/togglebyte/anathema.git?branch=main#b05d865b6d7550be2a0913bb120f05ddf4c781c9"
+source = "git+https://github.com/s9tpepper/anathema.git?branch=main#b1fb85c0ad906bf65d713202122ab4f68abeb29b"
 
 [[package]]
 name = "anathema-runtime"
 version = "0.3.0"
-source = "git+https://github.com/togglebyte/anathema.git?branch=main#b05d865b6d7550be2a0913bb120f05ddf4c781c9"
+source = "git+https://github.com/s9tpepper/anathema.git?branch=main#b1fb85c0ad906bf65d713202122ab4f68abeb29b"
 dependencies = [
  "anathema-backend",
  "anathema-debug",
@@ -79,7 +79,7 @@ dependencies = [
 [[package]]
 name = "anathema-state"
 version = "0.3.0"
-source = "git+https://github.com/togglebyte/anathema.git?branch=main#b05d865b6d7550be2a0913bb120f05ddf4c781c9"
+source = "git+https://github.com/s9tpepper/anathema.git?branch=main#b1fb85c0ad906bf65d713202122ab4f68abeb29b"
 dependencies = [
  "anathema-debug",
  "anathema-state-derive",
@@ -89,7 +89,7 @@ dependencies = [
 [[package]]
 name = "anathema-state-derive"
 version = "0.3.0"
-source = "git+https://github.com/togglebyte/anathema.git?branch=main#b05d865b6d7550be2a0913bb120f05ddf4c781c9"
+source = "git+https://github.com/s9tpepper/anathema.git?branch=main#b1fb85c0ad906bf65d713202122ab4f68abeb29b"
 dependencies = [
  "manyhow",
  "quote",
@@ -100,7 +100,7 @@ dependencies = [
 [[package]]
 name = "anathema-store"
 version = "0.3.0"
-source = "git+https://github.com/togglebyte/anathema.git?branch=main#b05d865b6d7550be2a0913bb120f05ddf4c781c9"
+source = "git+https://github.com/s9tpepper/anathema.git?branch=main#b1fb85c0ad906bf65d713202122ab4f68abeb29b"
 dependencies = [
  "anathema-debug",
 ]
@@ -108,7 +108,7 @@ dependencies = [
 [[package]]
 name = "anathema-templates"
 version = "0.3.0"
-source = "git+https://github.com/togglebyte/anathema.git?branch=main#b05d865b6d7550be2a0913bb120f05ddf4c781c9"
+source = "git+https://github.com/s9tpepper/anathema.git?branch=main#b1fb85c0ad906bf65d713202122ab4f68abeb29b"
 dependencies = [
  "anathema-debug",
  "anathema-state",
@@ -118,7 +118,7 @@ dependencies = [
 [[package]]
 name = "anathema-widgets"
 version = "0.3.0"
-source = "git+https://github.com/togglebyte/anathema.git?branch=main#b05d865b6d7550be2a0913bb120f05ddf4c781c9"
+source = "git+https://github.com/s9tpepper/anathema.git?branch=main#b1fb85c0ad906bf65d713202122ab4f68abeb29b"
 dependencies = [
  "anathema-debug",
  "anathema-geometry",
@@ -554,9 +554,9 @@ dependencies = [
 
 [[package]]
 name = "once_cell"
-version = "1.20.0"
+version = "1.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33ea5043e58958ee56f3e15a90aee535795cd7dfd319846288d93c5b57d85cbe"
+checksum = "3fdb12b2476b595f9358c5161aa467c2438859caa136dec86c26fdd2efe17b92"
 
 [[package]]
 name = "parking_lot"
@@ -750,9 +750,9 @@ checksum = "e91b56cd4cadaeb79bbf1a5645f6b4f8dc5bde8834ad5894a8db35fda9efa1fe"
 
 [[package]]
 name = "unicode-width"
-version = "0.1.13"
+version = "0.1.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0336d538f7abc86d282a4189614dfaa90810dfc2c6f6427eaf88e16311dd225d"
+checksum = "7dd6e30e90baa6f72411720665d41d89b9a3d039dc45b8faea1ddd07f617f6af"
 
 [[package]]
 name = "utf8parse"

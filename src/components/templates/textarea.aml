@@ -1,0 +1,5 @@
+overflow
+  zstack
+    text [id: "contents"] input
+    text cursor_prefix
+      span [foreground: fg_color, background: bg_color] cursor_char

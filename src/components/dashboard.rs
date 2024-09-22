@@ -17,6 +17,7 @@ pub struct DashboardState {
     method: Value<String>,
     show_method_window: Value<bool>,
     menu_items: Value<List<MenuItem>>,
+    logs: Value<String>,
 }
 
 impl DashboardState {
@@ -24,6 +25,7 @@ impl DashboardState {
         DashboardState {
             method: "GET".to_string().into(),
             show_method_window: false.into(),
+            logs: "".to_string().into(),
             menu_items: List::from_iter([
                 MenuItem {
                     label: "(U)RL".to_string().into(),
@@ -67,6 +69,12 @@ impl anathema::component::Component for DashboardComponent {
         _context: Context<'_, Self::State>,
     ) {
         match ident {
+            "log_output" => {
+                let value = &*value.to_common_str();
+                let mut logs = state.logs.to_mut();
+                logs.insert_str(0, value);
+            }
+
             "url_update" => {
                 // TODO: Do something with url updates (put it in some kind of state)
                 let _value = &*value.to_common_str();

@@ -22,9 +22,9 @@ zstack
         expand [axis: "vert"]
           hstack
             expand
-              border
+              border [foreground: "blue"]
                 expand
-                  text "response goes here"
+                  @textarea
 
     padding [left: 1]
       vstack [width: 15]

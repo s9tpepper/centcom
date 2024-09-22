@@ -4,5 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-anathema = { git = "https://github.com/togglebyte/anathema.git", branch = "main" }
+anathema = { git = "https://github.com/s9tpepper/anathema.git", branch = "main" }
 clap = { version = "4.5.17", features = ["derive", "env", "cargo"] }
