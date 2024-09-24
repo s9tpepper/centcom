@@ -140,7 +140,7 @@ impl anathema::component::Component for TextArea {
             anathema::component::KeyCode::Delete => self.delete(state, context),
             anathema::component::KeyCode::Left => self.move_cursor_left(state, elements),
             anathema::component::KeyCode::Right => self.move_cursor_right(state, elements),
-            anathema::component::KeyCode::Up => self.move_cursor_up(state),
+            anathema::component::KeyCode::Up => self.move_cursor_up(state, elements),
             anathema::component::KeyCode::Down => self.move_cursor_down(state),
 
             // TODO: This will need to call some callback or something?
@@ -435,7 +435,7 @@ impl TextArea {
 
     fn move_cursor_right(
         &self,
-        mut state: &mut TextAreaInputState,
+        state: &mut TextAreaInputState,
         mut elements: anathema::widgets::Elements<'_, '_>,
     ) {
         elements
@@ -494,12 +494,102 @@ impl TextArea {
             });
     }
 
-    fn move_cursor_up(&self, state: &mut TextAreaInputState) {
-        // let input = state.input.to_mut();
-        //
-        // state.cursor_position.set(input.len());
-        // state.cursor_char.set(' '.to_string());
-        // state.cursor_prefix.set(input.to_string());
+    fn move_cursor_up(
+        &self,
+        state: &mut TextAreaInputState,
+        mut elements: anathema::widgets::Elements<'_, '_>,
+    ) {
+        let mut coordinates = state.cursor_position.to_mut();
+        let x = *coordinates.x.to_ref();
+        let y = *coordinates.y.to_ref();
+
+        log(
+            format!(
+                "x: {}, y: {}\n",
+                *coordinates.x.to_ref(),
+                *coordinates.y.to_ref()
+            ),
+            Some("move_up.txt"),
+        );
+
+        if y == 0 {
+            return;
+        }
+
+        elements
+            .by_attribute("id", "contents")
+            .each(|el, _attributes| {
+                let text = el.to::<Text>();
+                let mut lines = text.get_lines();
+
+                let Some(target_line) = lines.nth(y - 1) else {
+                    log("Couldnt get target line\n".to_string(), Some("move_up.txt"));
+                    return;
+                };
+
+                let last_target_line_index = target_line.width + 1;
+                let target_x_position = if x <= last_target_line_index.into() {
+                    x + 1 // NOTE: Not sure why this needs +1, this clause is when the line above
+                          // is longer than the current line
+                } else {
+                    last_target_line_index.into()
+                };
+
+                let target_y_position = y - 1;
+
+                log(
+                    format!("tx: {target_x_position}, ty: {target_y_position}\n"),
+                    Some("move_up.txt"),
+                );
+
+                coordinates.x.set(target_x_position);
+                coordinates.y.set(target_y_position);
+
+                log(
+                    format!("target_y_position: {target_y_position}\n"),
+                    Some("move_up.txt"),
+                );
+                let prefix_lines = text.get_lines().take(target_y_position + 1);
+                log(
+                    format!("prefix_lines length: {}\n", prefix_lines.count()),
+                    Some("move_up.txt"),
+                );
+
+                let mut cursor_index = 0;
+                let prefix_lines = text.get_lines().take(target_y_position + 1);
+                prefix_lines.enumerate().for_each(|(index, line)| {
+                    if index == target_y_position {
+                        cursor_index += target_x_position;
+                        log(
+                            format!(
+                                "after adding x pos -> {target_x_position}: {}\n",
+                                cursor_index
+                            ),
+                            Some("move_up.txt"),
+                        );
+                    } else {
+                        cursor_index += (line.width + 1) as usize;
+                        log(
+                            format!("after adding line width: {}\n", cursor_index),
+                            Some("move_up.txt"),
+                        );
+                    }
+                });
+                log(
+                    format!("cursor_index: {cursor_index}\n"),
+                    Some("move_up.txt"),
+                );
+
+                // TODO: Refactor this so its not repeated everywhere
+                let current_input = state.input.to_ref();
+
+                let new_prefix = current_input.chars().take(cursor_index);
+                state.cursor_prefix.set(new_prefix.collect::<String>());
+
+                let mut chars = current_input.chars();
+                let cursor_char = update_cursor_char(&mut chars, cursor_index);
+                state.cursor_char.set(cursor_char);
+            })
     }
 
     fn move_cursor_down(&self, state: &mut TextAreaInputState) {
