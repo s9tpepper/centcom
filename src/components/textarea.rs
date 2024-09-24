@@ -1,16 +1,11 @@
-use std::{
-    fs::{self, read_to_string},
-    io::Write,
-    thread::{current, sleep},
-    time::Duration,
-};
+use std::io::Write;
 
 use anathema::{
-    component::Component,
-    default_widgets::Text,
+    default_widgets::{Overflow, Text},
+    geometry::Pos,
     prelude::Context,
     state::{Number, State, Value},
-    widgets::{layout::text::Segment, AnyWidget, Elements},
+    widgets::{layout::text::Segment, Elements},
 };
 
 pub const TEXTAREA_TEMPLATE: &str = "./src/components/templates/textarea.aml";
@@ -301,6 +296,18 @@ impl TextArea {
 
                 // Insert new character
                 input.insert(update_index, char);
+            });
+
+        elements
+            .by_attribute("id", "container")
+            .each(|el, _attributes| {
+                let coordinates = state.cursor_position.to_ref();
+                let x = coordinates.x.to_number().unwrap_or(Number::I32(0)).as_int() as i32;
+                let y = coordinates.y.to_number().unwrap_or(Number::I32(0)).as_int() as i32;
+
+                let position = Pos { x, y };
+                let overflow = el.to::<Overflow>();
+                overflow.scroll_to(position);
             });
 
         context.publish("text_change", |state| &state.input)

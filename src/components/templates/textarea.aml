@@ -1,4 +1,4 @@
-overflow
+overflow [id: "container"]
   zstack
     text [id: "contents"] input
     text cursor_prefix
