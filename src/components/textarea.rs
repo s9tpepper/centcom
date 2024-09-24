@@ -296,6 +296,17 @@ impl TextArea {
 
                 // Insert new character
                 input.insert(update_index, char);
+
+                // Update text prefix
+                let prefix_text = input.chars().take(update_index + 1).collect::<String>();
+                state.cursor_prefix.set(prefix_text);
+
+                // Update cursor char
+                if let Some(cursor_char) = input.chars().nth(update_index + 1) {
+                    state.cursor_char.set(cursor_char.to_string());
+                } else {
+                    state.cursor_char.set(" ".to_string());
+                }
             });
 
         elements
