@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::{io::Write, str::Chars};
 
 use anathema::{
     default_widgets::{Overflow, Text},
@@ -138,7 +138,7 @@ impl anathema::component::Component for TextArea {
             }
             anathema::component::KeyCode::Backspace => self.backspace(state, context),
             anathema::component::KeyCode::Delete => self.delete(state, context),
-            anathema::component::KeyCode::Left => self.move_cursor_left(state),
+            anathema::component::KeyCode::Left => self.move_cursor_left(state, elements),
             anathema::component::KeyCode::Right => self.move_cursor_right(state),
             anathema::component::KeyCode::Up => self.move_cursor_up(state),
             anathema::component::KeyCode::Down => self.move_cursor_down(state),
@@ -171,6 +171,14 @@ fn log(output: String) {
     let file = std::fs::OpenOptions::new().append(true).open("logs.txt");
     if let Ok(mut file) = file {
         let _ = file.write(output.as_bytes());
+    }
+}
+
+fn update_cursor_char(input: &mut Chars, update_index: usize) -> String {
+    if let Some(cursor_char) = input.nth(update_index) {
+        cursor_char.to_string()
+    } else {
+        " ".to_string()
     }
 }
 
@@ -301,12 +309,9 @@ impl TextArea {
                 let prefix_text = input.chars().take(update_index + 1).collect::<String>();
                 state.cursor_prefix.set(prefix_text);
 
-                // Update cursor char
-                if let Some(cursor_char) = input.chars().nth(update_index + 1) {
-                    state.cursor_char.set(cursor_char.to_string());
-                } else {
-                    state.cursor_char.set(" ".to_string());
-                }
+                let mut chars = input.chars();
+                let cursor_char = update_cursor_char(&mut chars, update_index + 1);
+                state.cursor_char.set(cursor_char);
             });
 
         elements
@@ -385,26 +390,45 @@ impl TextArea {
         // context.publish("text_change", |state| &state.input)
     }
 
-    fn move_cursor_left(&self, state: &mut TextAreaInputState) {
-        // let input = state.input.to_mut();
-        // let Some(cursor_position) = state.cursor_position.to_number() else {
-        //     return;
-        // };
-        //
-        // let pos = cursor_position.as_uint();
-        // if pos == 0 {
-        //     return;
-        // }
-        //
-        // let new_pos = pos - 1;
-        // if let Some(new_char) = input.get(0..new_pos) {
-        //     state.cursor_position.set(new_pos);
-        //     state.cursor_prefix.set(new_char.to_string());
-        //
-        //     if let Some(cursor_char) = input.to_string().chars().nth(new_pos) {
-        //         state.cursor_char.set(cursor_char.to_string());
-        //     }
-        // }
+    fn move_cursor_left(
+        &self,
+        state: &mut TextAreaInputState,
+        mut elements: anathema::widgets::Elements<'_, '_>,
+    ) {
+        let cursor_index = state.cursor_prefix.to_ref().len();
+        let new_cursor_index = cursor_index.saturating_sub(1);
+        let current_input = state.input.to_ref();
+        let new_prefix = current_input.chars().take(new_cursor_index);
+        state.cursor_prefix.set(new_prefix.collect::<String>());
+
+        let input = state.input.to_ref();
+        let mut chars = input.chars();
+        let cursor_char = update_cursor_char(&mut chars, new_cursor_index);
+        state.cursor_char.set(cursor_char);
+
+        // Update cursor x/y position
+        let mut coordinates = state.cursor_position.to_mut();
+        let mut x = *coordinates.x.to_ref();
+        let mut y = *coordinates.y.to_ref();
+
+        if x > 0 {
+            coordinates.x.set(x - 1);
+        } else {
+            elements
+                .by_attribute("id", "contents")
+                .each(|el, _attributes| {
+                    let text = el.to::<Text>();
+                    let mut lines = text.get_lines();
+
+                    y = y.saturating_sub(1);
+                    if let Some(previous_line) = lines.nth(y) {
+                        x = previous_line.width as usize + 1;
+                    }
+                });
+
+            coordinates.x.set(x);
+            coordinates.y.set(y);
+        }
     }
 
     fn move_cursor_right(&self, state: &mut TextAreaInputState) {
