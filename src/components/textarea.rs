@@ -139,7 +139,7 @@ impl anathema::component::Component for TextArea {
             anathema::component::KeyCode::Backspace => self.backspace(state, context),
             anathema::component::KeyCode::Delete => self.delete(state, context),
             anathema::component::KeyCode::Left => self.move_cursor_left(state, elements),
-            anathema::component::KeyCode::Right => self.move_cursor_right(state),
+            anathema::component::KeyCode::Right => self.move_cursor_right(state, elements),
             anathema::component::KeyCode::Up => self.move_cursor_up(state),
             anathema::component::KeyCode::Down => self.move_cursor_down(state),
 
@@ -167,8 +167,9 @@ impl anathema::component::Component for TextArea {
     }
 }
 
-fn log(output: String) {
-    let file = std::fs::OpenOptions::new().append(true).open("logs.txt");
+fn log(output: String, file: Option<&str>) {
+    let file_name = file.unwrap_or("logs.txt");
+    let file = std::fs::OpenOptions::new().append(true).open(file_name);
     if let Ok(mut file) = file {
         let _ = file.write(output.as_bytes());
     }
@@ -219,8 +220,8 @@ impl TextArea {
                     .unwrap_or(Number::Usize(0))
                     .as_uint();
 
-                log(format!("prev_x: {prev_cursor_x}\n"));
-                log(format!("prev_y: {prev_cursor_y}\n"));
+                log(format!("prev_x: {prev_cursor_x}\n"), None);
+                log(format!("prev_y: {prev_cursor_y}\n"), None);
 
                 // Calculate new cursor X/Y position
                 let new_cursor_x = if current_line_count > prev_line_count {
@@ -237,30 +238,30 @@ impl TextArea {
                 };
                 cursor_coordinates.y.set(new_cursor_y);
 
-                log(format!("new_x: {new_cursor_x}\n"));
-                log(format!("new_y: {new_cursor_y}\n"));
+                log(format!("new_x: {new_cursor_x}\n"), None);
+                log(format!("new_y: {new_cursor_y}\n"), None);
 
                 // Get line lengths for all lines in input
                 let lines = text.get_lines();
                 let mut line_lengths: Vec<usize> = [].to_vec();
                 lines.enumerate().for_each(|(index, current_line)| {
-                    log(format!("Looking at line_number: {index}\n"));
+                    log(format!("Looking at line_number: {index}\n"), None);
 
                     let mut length_of_line = 0;
                     current_line.entries.for_each(|entry| {
-                        log(format!("Checking line entry for line {index}\n"));
+                        log(format!("Checking line entry for line {index}\n"), None);
 
                         if let Segment::Str(text) = entry {
                             let chunk_length = text.len();
 
-                            log(format!("Chunk: {text}, chunk_length: {chunk_length}\n"));
+                            log(format!("Chunk: {text}, chunk_length: {chunk_length}\n"), None);
 
                             length_of_line += chunk_length;
                         };
                     });
 
 
-                    log(format!("Length of line {index}: {length_of_line}\n"));
+                    log(format!("Length of line {index}: {length_of_line}\n"), None);
 
                     line_lengths.push(length_of_line);
                 });
@@ -269,11 +270,11 @@ impl TextArea {
                 // have a newline character
                 line_lengths.push(line_lengths.len() - 1);
 
-                log(format!("Length of all lines: {}\n", line_lengths.iter().sum::<usize>()));
+                log(format!("Length of all lines: {}\n", line_lengths.iter().sum::<usize>()), None);
 
                 // Sets update index to the end of the input string
                 let update_index = line_lengths.iter().sum::<usize>();
-                log(format!("Initial update_index: {update_index}\n"));
+                log(format!("Initial update_index: {update_index}\n"), None);
 
 
                 // NOTE: Adjust update_index when on a new line, commented out because linear editing
@@ -293,13 +294,13 @@ impl TextArea {
                 //     log(format!("update_index when going to a next line: {update_index}\n"));
                 // }
 
-                log(format!("Final update_index: {update_index}\n"));
-                log(format!("input.len(): {}\n", input.len()));
+                log(format!("Final update_index: {update_index}\n"), None);
+                log(format!("input.len(): {}\n", input.len()), None);
                 log(format!(
                     "Inserting at index: {update_index} character: {char}, current input length: {} \n", input.len()
-                ));
+                ), None);
                 log(
-                    "----------------------------------------\n".to_string()
+                    "----------------------------------------\n".to_string(), None
                 );
 
                 // Insert new character
@@ -395,6 +396,7 @@ impl TextArea {
         state: &mut TextAreaInputState,
         mut elements: anathema::widgets::Elements<'_, '_>,
     ) {
+        // TODO: Refactor this so its not repeated when moving right
         let cursor_index = state.cursor_prefix.to_ref().len();
         let new_cursor_index = cursor_index.saturating_sub(1);
         let current_input = state.input.to_ref();
@@ -431,28 +433,65 @@ impl TextArea {
         }
     }
 
-    fn move_cursor_right(&self, state: &mut TextAreaInputState) {
-        // let input = state.input.to_mut();
-        // let Some(cursor_position) = state.cursor_position.to_number() else {
-        //     return;
-        // };
-        //
-        // let pos = cursor_position.as_uint();
-        // if pos == input.len() {
-        //     return;
-        // }
-        //
-        // let new_pos = pos + 1;
-        // if let Some(new_char) = input.get(0..new_pos) {
-        //     state.cursor_position.set(new_pos);
-        //     state.cursor_prefix.set(new_char.to_string());
-        //
-        //     if new_pos == input.len() {
-        //         state.cursor_char.set(" ".to_string());
-        //     } else if let Some(cursor_char) = input.to_string().chars().nth(new_pos) {
-        //         state.cursor_char.set(cursor_char.to_string());
-        //     }
-        // }
+    fn move_cursor_right(
+        &self,
+        mut state: &mut TextAreaInputState,
+        mut elements: anathema::widgets::Elements<'_, '_>,
+    ) {
+        elements
+            .by_attribute("id", "contents")
+            .each(|el, _attributes| {
+                // TODO: Fix this clone
+                let prefix = state.cursor_prefix.to_ref().clone();
+                let input = state.input.to_ref();
+                if prefix.len() == input.len() {
+                    // At the end, can't move to the right
+                    return;
+                }
+
+                let text = el.to::<Text>();
+                let mut lines = text.get_lines();
+
+                let mut coordinates = state.cursor_position.to_mut();
+                let x = *coordinates.x.to_ref();
+                let y = *coordinates.y.to_ref();
+
+                let Some(current_line) = lines.nth(y) else {
+                    return;
+                };
+
+                let current_input = state.input.to_ref();
+                let last_current_line_x = current_line.width + 1;
+
+                match x == last_current_line_x.into() {
+                    true => {
+                        coordinates.x.set(0);
+                        coordinates.y.set(y + 1);
+                    }
+                    false => {
+                        coordinates.x.set(x + 1);
+                    }
+                }
+
+                let cursor_index = prefix.len();
+                let new_cursor_index = cursor_index + 1;
+                let new_prefix = current_input.chars().take(new_cursor_index);
+                state.cursor_prefix.set(new_prefix.collect::<String>());
+
+                // let input = state.input.to_ref();
+                let mut chars = current_input.chars();
+                let cursor_char = update_cursor_char(&mut chars, new_cursor_index);
+                state.cursor_char.set(cursor_char);
+
+                log(
+                    format!(
+                        "x: {}, y: {}\n",
+                        *coordinates.x.to_ref(),
+                        *coordinates.y.to_ref()
+                    ),
+                    Some("move_right.txt"),
+                );
+            });
     }
 
     fn move_cursor_up(&self, state: &mut TextAreaInputState) {
