@@ -1,4 +1,4 @@
-use std::{io::Write, str::Chars};
+use std::{io::Write, str::Chars, usize};
 
 use anathema::{
     default_widgets::{Overflow, Text},
@@ -275,9 +275,10 @@ impl TextArea {
                 line_lengths.push(line_lengths.len() - 1);
 
                 log(format!("Length of all lines: {}\n", line_lengths.iter().sum::<usize>()), None);
+                log(format!("Length of line_lengths array: {}\n", line_lengths.len()), None);
 
                 // Sets update index to the end of the input string
-                let update_index = line_lengths.iter().sum::<usize>();
+                let mut update_index = line_lengths.iter().sum::<usize>();
                 log(format!("Initial update_index: {update_index}\n"), None);
 
 
@@ -298,6 +299,20 @@ impl TextArea {
                 //     log(format!("update_index when going to a next line: {update_index}\n"));
                 // }
 
+                // Find update_index if we are not at the end of the text
+                // let on_last_line = prev_cursor_y == line_lengths.len() - 1;
+                // let last_line_length = *line_lengths.iter().last().unwrap_or(&usize::MIN);
+                // let at_last_line_index = on_last_line && last_line_length == prev_cursor_x + 1;
+
+                if !is_at_end_of_input(&line_lengths, prev_cursor_x, prev_cursor_y) {
+                    // let previous_lines_sum = line_lengths.iter().take(prev_cursor_y).sum::<usize>();
+                    // update_index = previous_lines_sum + prev_cursor_x + 1;
+
+                    log(format!("get_update_index(): {line_lengths:?}, {prev_cursor_x}, {prev_cursor_y}\n"), None);
+                    log(format!("get_update_index() line_lengths.len(): {}\n", line_lengths.len()), None);
+                    update_index = get_update_index(&line_lengths, prev_cursor_x, prev_cursor_y);
+                }
+
                 log(format!("Final update_index: {update_index}\n"), None);
                 log(format!("input.len(): {}\n", input.len()), None);
                 log(format!(
@@ -308,6 +323,11 @@ impl TextArea {
                 );
 
                 // Insert new character
+                // TODO: Remove this hack when I find the bug
+                if update_index > input.len() {
+                    update_index = input.len();
+                }
+
                 input.insert(update_index, char);
 
                 // Update text prefix
@@ -705,6 +725,59 @@ fn cursor_down(text: &mut Text, state: &mut TextAreaInputState) {
     let mut chars = current_input.chars();
     let cursor_char = update_cursor_char(&mut chars, cursor_index);
     state.cursor_char.set(cursor_char);
+}
+
+fn is_at_end_of_input(line_lengths: &[usize], x: usize, y: usize) -> bool {
+    // Subtract 2 from line_lengths because the last entry is a count of newlines
+    let on_last_line = y == line_lengths.len().saturating_sub(2);
+    if !on_last_line {
+        return false;
+    }
+
+    // Uses nth_back(1) to skip the final entry which is a count of newlines
+    let last_line_length = *line_lengths.iter().nth_back(1).unwrap_or(&usize::MIN);
+
+    last_line_length.saturating_sub(1) == x
+}
+
+fn get_update_index(line_lengths: &[usize], x: usize, y: usize) -> usize {
+    let previous_lines = line_lengths.iter().take(y);
+    let newlines = previous_lines.len();
+    let previous_lines_sum = previous_lines.sum::<usize>();
+
+    previous_lines_sum + newlines + x
+}
+
+#[test]
+fn test_get_update_index() {
+    let lengths: Vec<usize> = vec![10, 20, 3, 5, 8];
+    let update_index = get_update_index(&lengths, 1, 2);
+
+    assert_eq!(update_index, 34);
+}
+
+#[test]
+fn test_is_at_end_of_input_false() {
+    let lengths: Vec<usize> = vec![10, 20, 3, 5, 8];
+    let at_the_end = is_at_end_of_input(&lengths, 7, 1);
+
+    assert!(!at_the_end);
+}
+
+#[test]
+fn test_is_at_end_of_input_true() {
+    let lengths: Vec<usize> = vec![10, 20, 3, 5, 8, 5];
+    let at_the_end = is_at_end_of_input(&lengths, 7, 4);
+
+    assert!(at_the_end);
+}
+
+#[test]
+fn test_is_at_end_of_input_false_for_first_char() {
+    let lengths: Vec<usize> = vec![0, 0];
+    let at_the_end = is_at_end_of_input(&lengths, 0, 0);
+
+    assert!(at_the_end);
 }
 
 #[test]
