@@ -1,3 +1,4 @@
+use std::iter::Iterator;
 use std::{io::Write, str::Chars, usize};
 
 use anathema::{
@@ -5,7 +6,10 @@ use anathema::{
     geometry::Pos,
     prelude::Context,
     state::{Number, State, Value},
-    widgets::{layout::text::Segment, Elements},
+    widgets::{
+        layout::text::{Line, Segment},
+        Elements,
+    },
 };
 
 pub const TEXTAREA_TEMPLATE: &str = "./src/components/templates/textarea.aml";
@@ -136,7 +140,7 @@ impl anathema::component::Component for TextArea {
             anathema::component::KeyCode::Char(char) => {
                 self.add_character(char, state, context, elements)
             }
-            anathema::component::KeyCode::Backspace => self.backspace(state, context),
+            anathema::component::KeyCode::Backspace => self.backspace(state, context, elements),
             anathema::component::KeyCode::Delete => self.delete(state, context),
             anathema::component::KeyCode::Left => self.move_cursor_left(state, elements),
             anathema::component::KeyCode::Right => self.move_cursor_right(state, elements),
@@ -181,6 +185,38 @@ fn update_cursor_char(input: &mut Chars, update_index: usize) -> String {
     } else {
         " ".to_string()
     }
+}
+
+fn get_line_lengths<'textarea>(
+    lines: impl Iterator<Item = Line<impl Iterator<Item = Segment<'textarea>>>>,
+) -> Vec<usize> {
+    let mut line_lengths: Vec<usize> = [].to_vec();
+    lines.for_each(|current_line| {
+        let mut length_of_line = 0;
+        current_line.entries.for_each(|entry| {
+            if let Segment::Str(text) = entry {
+                let chunk_length = text.len();
+
+                length_of_line += chunk_length;
+            };
+        });
+
+        line_lengths.push(length_of_line);
+    });
+
+    // Account for newline characters, but remove one because the last line doesn't
+    // have a newline character
+    line_lengths.push(line_lengths.len() - 1);
+
+    line_lengths
+}
+
+#[derive(Debug, PartialEq, Eq)]
+struct CursorData {
+    x: usize,
+    y: usize,
+    cursor_index: usize,
+    cursor_prefix: String,
 }
 
 impl TextArea {
@@ -384,7 +420,8 @@ impl TextArea {
     fn backspace(
         &mut self,
         state: &mut TextAreaInputState,
-        mut context: Context<'_, TextAreaInputState>,
+        _context: Context<'_, TextAreaInputState>,
+        mut elements: anathema::widgets::Elements<'_, '_>,
     ) {
         // let mut input = state.input.to_mut();
         // let Some(cursor_position) = state.cursor_position.to_number() else {
@@ -413,6 +450,97 @@ impl TextArea {
         //     .set(input.chars().take(new_pos).collect::<String>());
         //
         // context.publish("text_change", |state| &state.input)
+
+        elements
+            .by_attribute("id", "contents")
+            .each(|el, _attributes| {
+                log(
+                    "----------------------------------------\n".to_string(),
+                    Some("backspace.txt"),
+                );
+                let text = el.to::<Text>();
+                let lines = text.get_lines();
+
+                let prev_cursor_x = *state.cursor_position.to_ref().x.to_ref();
+                let prev_cursor_y = *state.cursor_position.to_ref().y.to_ref();
+                let line_lengths = get_line_lengths(lines);
+
+                let mut input = state.input.to_mut();
+                let mut backspace_index = input.len() - 1;
+                log(
+                    format!("backspace_index: {backspace_index}\n"),
+                    Some("backspace.txt"),
+                );
+
+                if !is_at_end_of_input(&line_lengths, prev_cursor_x, prev_cursor_y) {
+                    backspace_index = get_update_index(&line_lengths, prev_cursor_x, prev_cursor_y)
+                        .saturating_sub(1);
+                }
+                log(
+                    format!(">backspace_index: {backspace_index}\n"),
+                    Some("backspace.txt"),
+                );
+                log(
+                    format!("input.len(): {}\n", input.len()),
+                    Some("backspace.txt"),
+                );
+
+                if backspace_index < input.len() {
+                    log(
+                        format!("Deleting backspace_index: {backspace_index}\n"),
+                        Some("backspace.txt"),
+                    );
+                    input.remove(backspace_index);
+
+                    // let mut prefix = state.cursor_prefix.to_mut();
+                    // prefix.remove(backspace_index);
+
+                    let chars = input.chars();
+                    let Some(previous_line) = text.get_lines().nth(prev_cursor_y.saturating_sub(1))
+                    else {
+                        return;
+                    };
+
+                    let prev_cursor_index =
+                        self.get_cursor_index(prev_cursor_x, prev_cursor_y, text.get_lines());
+                    let new_cursor_data = get_cursor_data_left(
+                        chars,
+                        prev_cursor_x,
+                        prev_cursor_y,
+                        previous_line.width.into(),
+                        prev_cursor_index,
+                    );
+                    let char = input
+                        .chars()
+                        .nth(new_cursor_data.cursor_index)
+                        .unwrap_or(' ');
+
+                    state.cursor_position.to_mut().x.set(new_cursor_data.x);
+                    state.cursor_position.to_mut().y.set(new_cursor_data.y);
+                    state.cursor_prefix.set(new_cursor_data.cursor_prefix);
+                    state.cursor_char.set(char.to_string());
+                }
+
+                log(
+                    ">>>----------------------------------------\n".to_string(),
+                    Some("backspace.txt"),
+                );
+            });
+    }
+
+    fn get_cursor_index<'a>(
+        &self,
+        x: usize,
+        y: usize,
+        lines: impl Iterator<Item = Line<impl Iterator<Item = Segment<'a>>>>,
+    ) -> usize {
+        let mut previous_lines_width: usize = 0;
+
+        lines
+            .take(y)
+            .for_each(|line| previous_lines_width += line.width as usize);
+
+        previous_lines_width + y + x
     }
 
     fn move_cursor_left(
@@ -543,6 +671,106 @@ impl TextArea {
                 cursor_down(text, state);
             })
     }
+}
+
+fn get_cursor_data_left(
+    chars: Chars,
+    prev_x: usize,
+    prev_y: usize,
+    prev_line_width: usize,
+    prev_cursor_index: usize,
+) -> CursorData {
+    let cursor_index = prev_cursor_index.saturating_sub(1);
+    let cursor_prefix = chars.take(cursor_index).collect::<String>();
+
+    let mut x = prev_line_width + 1;
+    let mut y = prev_y.saturating_sub(1);
+
+    if prev_x > 0 {
+        x = prev_x - 1;
+        y = prev_y;
+    }
+
+    CursorData {
+        x,
+        y,
+        cursor_index,
+        cursor_prefix,
+    }
+}
+
+#[test]
+fn test_get_cursor_data_left_1() {
+    // Cursor on 'g' test
+
+    let chars = "ab\ncde\nfg".chars();
+
+    let cursor_data = get_cursor_data_left(chars, 1, 2, 3, 8);
+
+    assert_eq!(
+        cursor_data,
+        CursorData {
+            x: 0,
+            y: 2,
+            cursor_index: 7,
+            cursor_prefix: "ab\ncde\n".to_string()
+        }
+    )
+}
+
+#[test]
+fn test_get_cursor_data_left_2() {
+    // Cursor after 'g' test
+
+    let chars = "ab\ncde\nfg".chars();
+
+    let cursor_data = get_cursor_data_left(chars, 2, 2, 3, 9);
+
+    assert_eq!(
+        cursor_data,
+        CursorData {
+            x: 1,
+            y: 2,
+            cursor_index: 8,
+            cursor_prefix: "ab\ncde\nf".to_string()
+        }
+    )
+}
+
+#[test]
+fn test_get_cursor_data_left_3() {
+    // Cursor after g on single line text
+    let chars = "abcdefg".chars();
+
+    let cursor_data = get_cursor_data_left(chars, 7, 0, 0, 7);
+
+    assert_eq!(
+        cursor_data,
+        CursorData {
+            x: 6,
+            y: 0,
+            cursor_index: 6,
+            cursor_prefix: "abcdef".to_string()
+        }
+    )
+}
+
+#[test]
+fn test_get_cursor_data_left_4() {
+    // Cursor on e on single line text
+    let chars = "abcdefg".chars();
+
+    let cursor_data = get_cursor_data_left(chars, 4, 0, 0, 4);
+
+    assert_eq!(
+        cursor_data,
+        CursorData {
+            x: 3,
+            y: 0,
+            cursor_index: 3,
+            cursor_prefix: "abc".to_string()
+        }
+    )
 }
 
 fn get_cursor_up_x_y(x: usize, y: usize, target_line_width: u16) -> Coordinates {
