@@ -1,7 +1,6 @@
 use std::iter::Iterator;
-use std::{io::Write, str::Chars, usize};
+use std::{io::Write, str::Chars};
 
-use anathema::component::KeyEvent;
 use anathema::{
     default_widgets::{Overflow, Text},
     geometry::Pos,
@@ -73,7 +72,7 @@ impl anathema::component::Component for TextArea {
         _: Elements<'_, '_>,
         _: Context<'_, Self::State>,
     ) {
-        let input = state.input.to_ref();
+        // let input = state.input.to_ref();
         // let Some(cursor_position) = state.cursor_position.to_number() else {
         //     return;
         // };
@@ -404,7 +403,7 @@ impl TextArea {
         context.publish("text_change", |state| &state.input)
     }
 
-    fn delete(&self, state: &mut TextAreaInputState, mut context: Context<'_, TextAreaInputState>) {
+    fn delete(&self, _state: &mut TextAreaInputState, _context: Context<'_, TextAreaInputState>) {
         // let mut input = state.input.to_mut();
         // let Some(cursor_position) = state.cursor_position.to_number() else {
         //     return;
@@ -437,34 +436,6 @@ impl TextArea {
         _context: Context<'_, TextAreaInputState>,
         mut elements: anathema::widgets::Elements<'_, '_>,
     ) {
-        // let mut input = state.input.to_mut();
-        // let Some(cursor_position) = state.cursor_position.to_number() else {
-        //     return;
-        // };
-        //
-        // let pos = cursor_position.as_uint();
-        //
-        // if pos == 0 {
-        //     return;
-        // }
-        //
-        // let new_pos = pos - 1;
-        // input.remove(new_pos);
-        //
-        // state.cursor_position.set(new_pos);
-        //
-        // if let Some(cursor_char) = input.chars().nth(new_pos) {
-        //     state.cursor_char.set(cursor_char.to_string());
-        // } else {
-        //     state.cursor_char.set(' '.to_string());
-        // }
-        //
-        // state
-        //     .cursor_prefix
-        //     .set(input.chars().take(new_pos).collect::<String>());
-        //
-        // context.publish("text_change", |state| &state.input)
-
         elements
             .by_attribute("id", "contents")
             .each(|el, _attributes| {
