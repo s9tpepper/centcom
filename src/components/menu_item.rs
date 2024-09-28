@@ -26,14 +26,4 @@ impl MenuItemState {
 impl Component for MenuItem {
     type State = MenuItemState;
     type Message = ();
-
-    // fn on_key(
-    //     &mut self,
-    //     key: anathema::component::KeyEvent,
-    //     state: &mut Self::State,
-    //     mut elements: anathema::widgets::Elements<'_, '_>,
-    //     mut context: anathema::prelude::Context<'_, Self::State>,
-    // ) {
-    //     let item = context.get_external("item");
-    // }
 }

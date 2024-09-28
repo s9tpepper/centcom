@@ -66,6 +66,18 @@ impl anathema::component::Component for TextArea {
     type State = TextAreaInputState;
     type Message = ();
 
+    fn tick(
+        &mut self,
+        state: &mut Self::State,
+        mut _elements: Elements<'_, '_>,
+        context: Context<'_, Self::State>,
+        _dt: std::time::Duration,
+    ) {
+        if let Some(output) = context.get_external("output") {
+            state.input.set(output.to_common().unwrap().to_string());
+        };
+    }
+
     fn on_focus(
         &mut self,
         state: &mut Self::State,
@@ -600,7 +612,7 @@ impl TextArea {
                 let current_input = state.input.to_ref();
                 let last_current_line_x = current_line.width + 1;
 
-                match x == last_current_line_x.into() {
+                match x == Into::<usize>::into(last_current_line_x) {
                     true => {
                         coordinates.x.set(0);
                         coordinates.y.set(y + 1);

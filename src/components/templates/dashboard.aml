@@ -15,16 +15,17 @@ zstack
             vstack
               hstack
                 text "h:"
-                @textinput
+                @textinput (text_change->header_update)
+
                 text "v:"
-                @textinput
+                @textinput (text_change->value_update)
 
         expand [axis: "vert"]
           hstack
             expand
               border [foreground: "blue"]
                 expand
-                  @textarea
+                  @textarea [id: "textarea"]
 
     padding [left: 1]
       vstack [width: 15]

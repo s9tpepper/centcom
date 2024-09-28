@@ -1,9 +1,11 @@
 use anathema::{
-    component::{KeyCode, KeyEvent},
-    prelude::Context,
+    component::{ComponentId, KeyCode, KeyEvent},
+    prelude::{Context, WidgetComponentId},
     state::{CommonVal, List, Value},
     widgets::Elements,
 };
+
+use super::textarea::TextArea;
 
 pub const DASHBOARD_TEMPLATE: &str = "./src/components/templates/dashboard.aml";
 
@@ -14,7 +16,9 @@ struct MenuItem {
 
 #[derive(anathema::state::State)]
 pub struct DashboardState {
+    url: Value<String>,
     method: Value<String>,
+    response: Value<String>,
     show_method_window: Value<bool>,
     menu_items: Value<List<MenuItem>>,
     logs: Value<String>,
@@ -23,7 +27,9 @@ pub struct DashboardState {
 impl DashboardState {
     pub fn new() -> Self {
         DashboardState {
+            url: "".to_string().into(),
             method: "GET".to_string().into(),
+            response: "".to_string().into(),
             show_method_window: false.into(),
             logs: "".to_string().into(),
             menu_items: List::from_iter([
@@ -77,10 +83,8 @@ impl anathema::component::Component for DashboardComponent {
 
             "url_update" => {
                 // TODO: Do something with url updates (put it in some kind of state)
-                let _value = &*value.to_common_str();
-
-                // NOTE: value is updated input from textinput
-                // println!("Input update: {value}");
+                let value = &*value.to_common_str();
+                state.url.set(value.to_string());
             }
 
             "cancel_method_selector" => {
@@ -101,20 +105,22 @@ impl anathema::component::Component for DashboardComponent {
         &mut self,
         event: KeyEvent,
         state: &mut Self::State,
-        _elements: anathema::widgets::Elements<'_, '_>,
+        elements: anathema::widgets::Elements<'_, '_>,
         mut context: anathema::prelude::Context<'_, Self::State>,
     ) {
         match event.code {
-            KeyCode::Char(char) => {
-                if char == 'u' {
-                    context.set_focus("id", 1);
+            KeyCode::Char(char) => match char {
+                'u' => context.set_focus("id", 1),
+
+                'm' => {
+                    state.show_method_window.set(true);
+                    context.set_focus("id", "method_selector")
                 }
 
-                if char == 'm' {
-                    state.show_method_window.set(true);
-                    context.set_focus("id", "method_selector");
-                }
-            }
+                'r' => do_request(state, context, elements),
+
+                _ => {}
+            },
 
             KeyCode::Enter => todo!(),
             _ => {}
@@ -123,5 +129,33 @@ impl anathema::component::Component for DashboardComponent {
 
     fn accept_focus(&self) -> bool {
         true
+    }
+}
+
+fn do_request(
+    state: &mut DashboardState,
+    mut _context: anathema::prelude::Context<'_, DashboardState>,
+    _elements: anathema::widgets::Elements<'_, '_>,
+) {
+    let url = state.url.to_ref().clone();
+    let method = state.method.to_ref().clone();
+
+    let http_request = http::Request::builder()
+        .method(method.as_str())
+        .uri(url.as_str())
+        .body(vec![0u8])
+        .unwrap();
+    let (http_parts, _body) = http_request.into_parts();
+    let request: ureq::Request = http_parts.into();
+    // let response = request.send_bytes(&body);
+
+    let response = request.send_string("");
+    if let Ok(response) = response {
+        let _status = response.status();
+        let body = response
+            .into_string()
+            .unwrap_or("Could not read response body".to_string());
+
+        state.response.set(body);
     }
 }
