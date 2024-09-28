@@ -5,4 +5,5 @@ edition = "2021"
 
 [dependencies]
 anathema = { git = "https://github.com/s9tpepper/anathema.git", branch = "main" }
+arboard = "3.4.1"
 clap = { version = "4.5.17", features = ["derive", "env", "cargo"] }

@@ -1,6 +1,7 @@
 use std::iter::Iterator;
 use std::{io::Write, str::Chars, usize};
 
+use anathema::component::KeyEvent;
 use anathema::{
     default_widgets::{Overflow, Text},
     geometry::Pos,
@@ -11,6 +12,7 @@ use anathema::{
         Elements,
     },
 };
+use arboard::Clipboard;
 
 pub const TEXTAREA_TEMPLATE: &str = "./src/components/templates/textarea.aml";
 
@@ -134,11 +136,11 @@ impl anathema::component::Component for TextArea {
             // TODO: Ask togglebit Discord if I'm supposed to get this key event
             anathema::component::KeyCode::Tab => {
                 let char = '\u{0009}'; // Tab
-                self.add_character(char, state, context, elements);
+                self.add_character(char, state, context, elements, event);
             }
 
             anathema::component::KeyCode::Char(char) => {
-                self.add_character(char, state, context, elements)
+                self.add_character(char, state, context, elements, event)
             }
             anathema::component::KeyCode::Backspace => self.backspace(state, context, elements),
             anathema::component::KeyCode::Delete => self.delete(state, context),
@@ -150,7 +152,7 @@ impl anathema::component::Component for TextArea {
             // TODO: This will need to call some callback or something?
             anathema::component::KeyCode::Enter => {
                 let char = '\u{000A}';
-                self.add_character(char, state, context, elements)
+                self.add_character(char, state, context, elements, event)
             }
 
             // TODO: Maybe I'll implement this later
@@ -230,6 +232,7 @@ impl TextArea {
         state: &mut TextAreaInputState,
         mut context: Context<'_, TextAreaInputState>,
         mut elements: anathema::widgets::Elements<'_, '_>,
+        event: anathema::component::KeyEvent,
     ) {
         let mut input = state.input.to_mut();
 
@@ -237,6 +240,17 @@ impl TextArea {
             .by_attribute("id", "contents")
             .each(|el, _attributes| {
                 let text = el.to::<Text>();
+
+                if event.ctrl && char == 'c' {
+                    // TODO: Add support for pasting at cursor position, replaces for now
+                    if let Ok(mut clipboard) = Clipboard::new() {
+                        if let Ok(text) = clipboard.get_text() {
+                            *input = text;
+
+                            return;
+                        };
+                    }
+                }
 
                 // Update line count
                 let current_line_count = text.get_line_count();
