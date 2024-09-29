@@ -1,12 +1,21 @@
 align [alignment: "center"]
   container [background: "black"]
-    border
-      padding [padding: 2, top: 0, bottom: 1]
-        vstack
-          text "Method"
-          text "(G)ET"
-          text "(P)OST"
-          text "P(U)T"
-          text "(D)ELETE"
-          text "(H)EAD"
-          text "(O)PTIONS"
+    zstack
+      vstack
+        text "              "
+        text "              "
+        text "              "
+        text "              "
+        text "              "
+        text "              "
+        text "              "
+      zstack
+        border [foreground: #ffffff ]
+          vstack
+            text [foreground: #ffffff] "(G)ET       "
+            text [foreground: #ffffff] "(P)OST      "
+            text [foreground: #ffffff] "P(U)T       "
+            text [foreground: #ffffff] "(D)ELETE    "
+            text [foreground: #ffffff] "(H)EAD      "
+            text [foreground: #ffffff] "(O)PTIONS   "
+        text "┌─Method:"

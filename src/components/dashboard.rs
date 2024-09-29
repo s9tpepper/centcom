@@ -1,11 +1,9 @@
 use anathema::{
-    component::{ComponentId, KeyCode, KeyEvent},
-    prelude::{Context, WidgetComponentId},
+    component::{KeyCode, KeyEvent},
+    prelude::Context,
     state::{CommonVal, List, Value},
     widgets::Elements,
 };
-
-use super::textarea::TextArea;
 
 pub const DASHBOARD_TEMPLATE: &str = "./src/components/templates/dashboard.aml";
 
@@ -20,6 +18,7 @@ pub struct DashboardState {
     method: Value<String>,
     response: Value<String>,
     show_method_window: Value<bool>,
+    show_output: Value<bool>,
     menu_items: Value<List<MenuItem>>,
     logs: Value<String>,
 }
@@ -31,6 +30,7 @@ impl DashboardState {
             method: "GET".to_string().into(),
             response: "".to_string().into(),
             show_method_window: false.into(),
+            show_output: false.into(),
             logs: "".to_string().into(),
             menu_items: List::from_iter([
                 MenuItem {
@@ -72,7 +72,7 @@ impl anathema::component::Component for DashboardComponent {
         value: CommonVal<'_>,
         state: &mut Self::State,
         _elements: Elements<'_, '_>,
-        _context: Context<'_, Self::State>,
+        mut context: Context<'_, Self::State>,
     ) {
         match ident {
             "log_output" => {
@@ -95,6 +95,10 @@ impl anathema::component::Component for DashboardComponent {
                 let value = &*value.to_common_str();
 
                 state.method.set(value.to_string());
+
+                // Trigger a resize on the text input by setting focus and then resetting it to app
+                context.set_focus("id", 1);
+                context.set_focus("id", "app");
             }
 
             _ => {}
@@ -111,13 +115,12 @@ impl anathema::component::Component for DashboardComponent {
         match event.code {
             KeyCode::Char(char) => match char {
                 'u' => context.set_focus("id", 1),
-
                 'm' => {
                     state.show_method_window.set(true);
-                    context.set_focus("id", "method_selector")
+                    context.set_focus("id", "method_selector");
                 }
-
                 'r' => do_request(state, context, elements),
+                'b' => state.show_output.set(false),
 
                 _ => {}
             },
@@ -134,7 +137,7 @@ impl anathema::component::Component for DashboardComponent {
 
 fn do_request(
     state: &mut DashboardState,
-    mut _context: anathema::prelude::Context<'_, DashboardState>,
+    mut context: anathema::prelude::Context<'_, DashboardState>,
     _elements: anathema::widgets::Elements<'_, '_>,
 ) {
     let url = state.url.to_ref().clone();
@@ -157,5 +160,8 @@ fn do_request(
             .unwrap_or("Could not read response body".to_string());
 
         state.response.set(body);
+        state.show_output.set(true);
     }
+
+    context.set_focus("id", "app");
 }

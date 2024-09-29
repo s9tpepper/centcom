@@ -26,6 +26,7 @@ pub struct TextAreaInputState {
     cursor_char: Value<String>,
     cursor_position: Value<Coordinates>,
     line_count: Value<usize>,
+    text_color: Value<String>,
     fg_color: Value<String>,
     bg_color: Value<String>,
     focused: Value<bool>,
@@ -54,6 +55,7 @@ impl TextAreaInputState {
             cursor_char: String::from("").into(),
             cursor_position: Coordinates::new(0, 0).into(),
             line_count: 1.into(),
+            text_color: String::from("white").into(),
             fg_color: String::from("white").into(),
             bg_color: String::from("").into(),
             focused: false.into(),
@@ -66,6 +68,17 @@ impl anathema::component::Component for TextArea {
     type State = TextAreaInputState;
     type Message = ();
 
+    fn resize(
+        &mut self,
+        state: &mut Self::State,
+        _elements: Elements<'_, '_>,
+        context: Context<'_, Self::State>,
+    ) {
+        if let Some(color) = context.get_external("color") {
+            state.text_color.set(color.to_common().unwrap().to_string());
+        };
+    }
+
     fn tick(
         &mut self,
         state: &mut Self::State,
@@ -75,6 +88,10 @@ impl anathema::component::Component for TextArea {
     ) {
         if let Some(output) = context.get_external("output") {
             state.input.set(output.to_common().unwrap().to_string());
+        };
+
+        if let Some(color) = context.get_external("color") {
+            state.text_color.set(color.to_common().unwrap().to_string());
         };
     }
 

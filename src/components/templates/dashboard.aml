@@ -9,23 +9,40 @@ zstack
             expand [axis: "horizontal"]
               @textinput (text_change->url_update) [id: 1]
 
-        text "Headers:"
-        border
-          expand [axis: "horizontal"]
-            vstack
-              hstack
-                text "h:"
-                @textinput (text_change->header_update)
-
-                text "v:"
-                @textinput (text_change->value_update)
+      //  text "Headers:"
+      //  border
+      //    expand [axis: "horizontal"]
+      //      vstack
+      //        hstack
+      //          text "header:"
+      //          @textinput (text_change->header_update)
+      //          text "value:"
+      //          @textinput (text_change->value_update)
 
         expand [axis: "vert"]
-          hstack
-            expand
-              border [foreground: "blue"]
-                expand
-                  @textarea [id: "textarea"]
+          zstack
+            if !show_output
+              expand
+                zstack
+                  border [foreground: #ffffff]
+                    expand
+                      @textarea [id: "textarea"]
+                  text "┌─Request Body:"
+                  expand
+                    vstack
+                      spacer
+                      text "└─[Show Request Hea(d)ers]"
+            if show_output
+              expand
+                zstack
+                  border [foreground: #ffffff]
+                    expand
+                      @textarea [id: "response"] {output: response, color: "#989898"}
+                  text "┌─Response Body:"
+                  expand
+                    vstack
+                      spacer
+                      text "└─[(B)ack to Request]"
 
     padding [left: 1]
       vstack [width: 15]
