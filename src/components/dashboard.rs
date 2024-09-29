@@ -50,18 +50,6 @@ impl DashboardState {
             logs: "".to_string().into(),
             menu_items: List::from_iter([
                 MenuItem {
-                    label: "(U)RL".to_string().into(),
-                },
-                MenuItem {
-                    label: "(M)ethod".to_string().into(),
-                },
-                MenuItem {
-                    label: "Add (H)eader".to_string().into(),
-                },
-                MenuItem {
-                    label: "Send (R)equest".to_string().into(),
-                },
-                MenuItem {
                     label: "(S)ave".to_string().into(),
                 },
                 MenuItem {

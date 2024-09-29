@@ -1,0 +1,14 @@
+container [height: 3, max_height: 3]
+  zstack
+    border [foreground: border_color, border_style: "╭─╮│╯─╰│", min_width: minwidth]
+      if expanding
+        expand [axis: "horizontal"]
+          $children
+      else
+        $children
+
+    if top_label
+      text "╭─" top_label  ":"
+    vstack
+      spacer
+      text "╰─" bottom_label

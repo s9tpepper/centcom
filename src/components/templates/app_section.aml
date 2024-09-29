@@ -1,0 +1,16 @@
+zstack
+  border [foreground: border_color, border_style: "╭─╮│╯─╰│"]
+    expand
+      $children
+  if top_label
+    text "╭─" top_label ":"
+
+  if has_bottom_label
+    vstack
+      position [bottom: 0, placement: "absolute"]
+        text "╰"
+          for val in bottom_label
+            span [foreground: border_color, background: "reset"] "─"
+            span [foreground: border_color, background: "reset"] "["
+            span [foreground: border_color, background: "black"] val
+            span [foreground: border_color, background: "reset"] "]"

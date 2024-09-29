@@ -1,9 +1,16 @@
-text "Headers:"
-border
-  expand [axis: "horizontal"]
-    vstack
-      hstack
-        text "header:"
-        @textinput (text_change->header_update)
-        text "value:"
-        @textinput (text_change->value_update)
+expand
+  vstack
+    padding [padding: 0]
+      vstack
+        border [sides: "bottom", foreground: #000000, border_style: "╭─╮│╯─╰│"]
+          expand [axis: "horizontal"]
+            text [foreground: #ffffff] "• Content-Type: application/json"
+        border [sides: "bottom"]
+          expand [axis: "horizontal"]
+            text "• Content-Type: application/json"
+        border [sides: "bottom"]
+          expand [axis: "horizontal"]
+            text "• Content-Type: application/json"
+
+        // @textinput (text_change->header_update)
+        // @textinput (text_change->value_update)

@@ -3,41 +3,47 @@ zstack
     expand
       vstack
         hstack
-          border
+          @row {border_color: "#ffffff", top_label: "(M)ethod", expanding: false, minwidth: 13}
+            $children
               text [foreground: #ffffff, text_align: "right"] method
-          border
-            expand [axis: "horizontal"]
+
+          @row {border_color: "#ffffff", top_label: "(U)RL", expanding: true}
+            $children
               @textinput (text_change->url_update) [id: 1]
 
 
-        expand [axis: "vert"]
+        expand [axis: "vertical"]
           zstack
             if main_display == "request_body"
               expand
-                zstack
-                  border [foreground: #ffffff]
-                    expand
-                      @textarea [id: "textarea"]
-                  text "┌─Request Body:"
-                  expand
-                    vstack
-                      spacer
-                      text "└─[Show Request Hea(d)ers]"
+                @app_section {
+                  border_color: "#ffffff",
+                  top_label: "Request Body",
+                  has_bottom_label: true,
+                  bottom_label: ["Send (R)equest", "Show Request Hea(d)ers"]
+                }
+                  $children
+                    @textarea [id: "textarea"]
 
             if main_display == "response_body"
               expand
-                zstack
-                  border [foreground: #ffffff]
-                    expand
-                      @textarea [id: "response"] {output: response, color: "#989898"}
-                  text "┌─Response Body:"
-                  expand
-                    vstack
-                      spacer
-                      text "└─[(B)ack to Request]"
+                @app_section {
+                  border_color: "#ffffff",
+                  top_label: "Response Body",
+                  bottom_label: ["(B)ack to Request", "Sho(w) Response Headers"]
+                }
+                  $children
+                    @textarea [id: "response"] {output: response, color: "#989898"}
 
             if main_display == "request_headers_editor"
-              @request_headers_editor
+              expand
+                @app_section {
+                  border_color: "#ffffff",
+                  top_label: "Request Headers",
+                  bottom_label: ["Send (R)equest", "(A)dd Header", "(B)ack to Request"]
+                }
+                  $children
+                    @request_headers_editor
 
     padding [left: 1]
       vstack [width: 15]

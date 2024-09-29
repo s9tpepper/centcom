@@ -5,12 +5,14 @@ use anathema::{
 
 use crate::components::{
     app_layout::{AppLayoutComponent, AppLayoutState, APP_LAYOUT_TEMPLATE},
+    app_section::{AppSection, AppSectionState, APP_SECTION_TEMPLATE},
     dashboard::{DashboardComponent, DashboardState, DASHBOARD_TEMPLATE},
     menu_item::{MenuItem, MenuItemState, MENU_ITEM_TEMPLATE},
     method_selector::{MethodSelector, MethodSelectorState, METHOD_SELECTOR_TEMPLATE},
     request_headers_editor::{
         RequestHeadersEditor, RequestHeadersEditorState, REQUEST_HEADERS_EDITOR_TEMPLATE,
     },
+    row::{Row, RowState, ROW_TEMPLATE},
     textarea::{TextArea, TextAreaInputState, TEXTAREA_TEMPLATE},
     textinput::{InputState, TextInput, TEXTINPUT_TEMPLATE},
 };
@@ -102,5 +104,14 @@ impl App {
             || RequestHeadersEditor,
             RequestHeadersEditorState::new,
         );
+
+        let _ = builder.register_prototype(
+            "app_section",
+            APP_SECTION_TEMPLATE,
+            || AppSection,
+            AppSectionState::new,
+        );
+
+        let _ = builder.register_prototype("row", ROW_TEMPLATE, || Row, RowState::new);
     }
 }
