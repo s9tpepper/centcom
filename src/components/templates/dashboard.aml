@@ -9,19 +9,10 @@ zstack
             expand [axis: "horizontal"]
               @textinput (text_change->url_update) [id: 1]
 
-      //  text "Headers:"
-      //  border
-      //    expand [axis: "horizontal"]
-      //      vstack
-      //        hstack
-      //          text "header:"
-      //          @textinput (text_change->header_update)
-      //          text "value:"
-      //          @textinput (text_change->value_update)
 
         expand [axis: "vert"]
           zstack
-            if !show_output
+            if main_display == "request_body"
               expand
                 zstack
                   border [foreground: #ffffff]
@@ -32,7 +23,8 @@ zstack
                     vstack
                       spacer
                       text "└─[Show Request Hea(d)ers]"
-            if show_output
+
+            if main_display == "response_body"
               expand
                 zstack
                   border [foreground: #ffffff]
@@ -43,6 +35,9 @@ zstack
                     vstack
                       spacer
                       text "└─[(B)ack to Request]"
+
+            if main_display == "request_headers_editor"
+              @request_headers_editor
 
     padding [left: 1]
       vstack [width: 15]

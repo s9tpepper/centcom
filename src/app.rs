@@ -8,6 +8,9 @@ use crate::components::{
     dashboard::{DashboardComponent, DashboardState, DASHBOARD_TEMPLATE},
     menu_item::{MenuItem, MenuItemState, MENU_ITEM_TEMPLATE},
     method_selector::{MethodSelector, MethodSelectorState, METHOD_SELECTOR_TEMPLATE},
+    request_headers_editor::{
+        RequestHeadersEditor, RequestHeadersEditorState, REQUEST_HEADERS_EDITOR_TEMPLATE,
+    },
     textarea::{TextArea, TextAreaInputState, TEXTAREA_TEMPLATE},
     textinput::{InputState, TextInput, TEXTINPUT_TEMPLATE},
 };
@@ -91,6 +94,13 @@ impl App {
             MENU_ITEM_TEMPLATE,
             || MenuItem,
             MenuItemState::new,
+        );
+
+        let _ = builder.register_prototype(
+            "request_headers_editor",
+            REQUEST_HEADERS_EDITOR_TEMPLATE,
+            || RequestHeadersEditor,
+            RequestHeadersEditorState::new,
         );
     }
 }

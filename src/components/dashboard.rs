@@ -7,6 +7,22 @@ use anathema::{
 
 pub const DASHBOARD_TEMPLATE: &str = "./src/components/templates/dashboard.aml";
 
+enum MainDisplay {
+    RequestBody,
+    RequestHeadersEditor,
+    ResponseBody,
+}
+
+impl anathema::state::State for MainDisplay {
+    fn to_common(&self) -> Option<CommonVal<'_>> {
+        match self {
+            MainDisplay::RequestBody => Some(CommonVal::Str("request_body")),
+            MainDisplay::RequestHeadersEditor => Some(CommonVal::Str("request_headers_editor")),
+            MainDisplay::ResponseBody => Some(CommonVal::Str("response_body")),
+        }
+    }
+}
+
 #[derive(anathema::state::State)]
 struct MenuItem {
     label: Value<String>,
@@ -18,7 +34,7 @@ pub struct DashboardState {
     method: Value<String>,
     response: Value<String>,
     show_method_window: Value<bool>,
-    show_output: Value<bool>,
+    main_display: Value<MainDisplay>,
     menu_items: Value<List<MenuItem>>,
     logs: Value<String>,
 }
@@ -30,7 +46,7 @@ impl DashboardState {
             method: "GET".to_string().into(),
             response: "".to_string().into(),
             show_method_window: false.into(),
-            show_output: false.into(),
+            main_display: Value::<MainDisplay>::new(MainDisplay::RequestBody),
             logs: "".to_string().into(),
             menu_items: List::from_iter([
                 MenuItem {
@@ -120,8 +136,8 @@ impl anathema::component::Component for DashboardComponent {
                     context.set_focus("id", "method_selector");
                 }
                 'r' => do_request(state, context, elements),
-                'b' => state.show_output.set(false),
-
+                'b' => state.main_display.set(MainDisplay::RequestBody),
+                'd' => state.main_display.set(MainDisplay::RequestHeadersEditor),
                 _ => {}
             },
 
@@ -160,7 +176,7 @@ fn do_request(
             .unwrap_or("Could not read response body".to_string());
 
         state.response.set(body);
-        state.show_output.set(true);
+        state.main_display.set(MainDisplay::ResponseBody);
     }
 
     context.set_focus("id", "app");
