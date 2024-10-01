@@ -1,54 +1,60 @@
 zstack
-  hstack
-    expand
-      vstack
+  vstack
+    hstack
+      @row {border_color: "#ffffff", top_label: "(M)ethod", expanding: false, minwidth: 13}
+        $children
+          text [foreground: #ffffff, text_align: "right"] method
+
+      @row {border_color: "#ffffff", top_label: "(U)RL", expanding: true}
+        $children
+          @textinput (text_change->url_update) [id: 1]
+
+
+    expand [axis: "vertical"]
+      zstack
+        if main_display == "request_body"
+          expand
+            @app_section {
+              border_color: "#ffffff",
+              top_label: "Request Body",
+              show_top_label: true,
+              show_bottom_label: true,
+              bottom_label: ["Send (R)equest", "Show Request Hea(d)ers"]
+            }
+              $children
+                @textarea [id: "textarea"]
+
+        if main_display == "response_body"
+          expand
+            @app_section {
+              border_color: "#ffffff",
+              top_label: "Response Body",
+              bottom_label: ["(B)ack to Request", "Sho(w) Response Headers"]
+              show_top_label: true,
+              show_bottom_label: true,
+            }
+              $children
+                @textarea [id: "response"] {output: response, color: "#989898"}
+
+        if main_display == "request_headers_editor"
+          expand
+            @app_section {
+              border_color: "#ffffff",
+              top_label: "Request Headers",
+              bottom_label: ["Send (R)equest", "(A)dd Header", "(B)ack to Request"]
+              show_top_label: true,
+              show_bottom_label: true,
+            }
+              $children
+                @request_headers_editor
+
+
+    container [height: 1, background: "blue", foreground: #131313]
+      expand
         hstack
-          @row {border_color: "#ffffff", top_label: "(M)ethod", expanding: false, minwidth: 13}
-            $children
-              text [foreground: #ffffff, text_align: "right"] method
-
-          @row {border_color: "#ffffff", top_label: "(U)RL", expanding: true}
-            $children
-              @textinput (text_change->url_update) [id: 1]
-
-
-        expand [axis: "vertical"]
-          zstack
-            if main_display == "request_body"
-              expand
-                @app_section {
-                  border_color: "#ffffff",
-                  top_label: "Request Body",
-                  has_bottom_label: true,
-                  bottom_label: ["Send (R)equest", "Show Request Hea(d)ers"]
-                }
-                  $children
-                    @textarea [id: "textarea"]
-
-            if main_display == "response_body"
-              expand
-                @app_section {
-                  border_color: "#ffffff",
-                  top_label: "Response Body",
-                  bottom_label: ["(B)ack to Request", "Sho(w) Response Headers"]
-                }
-                  $children
-                    @textarea [id: "response"] {output: response, color: "#989898"}
-
-            if main_display == "request_headers_editor"
-              expand
-                @app_section {
-                  border_color: "#ffffff",
-                  top_label: "Request Headers",
-                  bottom_label: ["Send (R)equest", "(A)dd Header", "(B)ack to Request"]
-                }
-                  $children
-                    @request_headers_editor
-
-    padding [left: 1]
-      vstack [width: 15]
-        for item in menu_items
-          @menu_item
+          text " "
+          for item in menu_items
+            @menu_item
 
   if show_method_window
     @method_selector (cancel_method_selector->cancel_method_selector, new_method_selection->new_method_selection) [id: "method_selector"]
