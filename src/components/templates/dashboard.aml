@@ -5,24 +5,15 @@ zstack
         $children
           text [foreground: #ffffff, text_align: "right"] method
 
-      @row {border_color: "#ffffff", top_label: "(U)RL", expanding: true}
-        $children
-          @textinput (text_change->url_update) [id: 1]
+      expand [axis: "horizontal"]
+        @url_input { border_color: "#666666", target: "url_border" }
 
 
     expand [axis: "vertical"]
       zstack
         if main_display == "request_body"
           expand
-            @app_section {
-              border_color: "#ffffff",
-              top_label: "Request Body",
-              show_top_label: true,
-              show_bottom_label: true,
-              bottom_label: ["Send (R)equest", "Show Request Hea(d)ers"]
-            }
-              $children
-                @textarea [id: "textarea"]
+            @request_body_section { border_color: "#666666", target: "request_body_border" }
 
         if main_display == "response_body"
           expand

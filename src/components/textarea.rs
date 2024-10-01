@@ -123,12 +123,14 @@ impl anathema::component::Component for TextArea {
         &mut self,
         state: &mut Self::State,
         _elements: Elements<'_, '_>,
-        _context: Context<'_, Self::State>,
+        mut context: Context<'_, Self::State>,
     ) {
         state.cursor_char.set("".to_string());
         state.fg_color.set("white".to_string());
         state.bg_color.set("".to_string());
         state.focused.set(false);
+
+        context.publish("textarea_focus", |state| &state.focused);
     }
 
     fn on_key(
@@ -194,7 +196,11 @@ impl anathema::component::Component for TextArea {
             anathema::component::KeyCode::CtrlC => todo!(),
 
             // Move focus with this
-            anathema::component::KeyCode::Esc => context.set_focus("id", "app"),
+            anathema::component::KeyCode::Esc => {
+                context.set_focus("id", "app");
+
+                context.publish("textarea_focus", |state| &state.focused);
+            }
 
             _ => {}
         }

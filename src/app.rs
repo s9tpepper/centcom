@@ -7,8 +7,12 @@ use crate::components::{
     app_layout::{AppLayoutComponent, AppLayoutState, APP_LAYOUT_TEMPLATE},
     app_section::{AppSection, AppSectionState, APP_SECTION_TEMPLATE},
     dashboard::{DashboardComponent, DashboardState, DASHBOARD_TEMPLATE},
+    focusable_section::{FocusableSection, FocusableSectionState},
     menu_item::{MenuItem, MenuItemState, MENU_ITEM_TEMPLATE},
     method_selector::{MethodSelector, MethodSelectorState, METHOD_SELECTOR_TEMPLATE},
+    request_body_section::{
+        RequestBodySection, RequestBodySectionState, REQUEST_BODY_SECTION_TEMPLATE,
+    },
     request_headers_editor::{
         RequestHeadersEditor, RequestHeadersEditorState, REQUEST_HEADERS_EDITOR_TEMPLATE,
     },
@@ -110,6 +114,20 @@ impl App {
             APP_SECTION_TEMPLATE,
             || AppSection,
             AppSectionState::new,
+        );
+
+        let _ = builder.register_prototype(
+            "request_body_section",
+            REQUEST_BODY_SECTION_TEMPLATE,
+            || FocusableSection,
+            FocusableSectionState::new,
+        );
+
+        let _ = builder.register_prototype(
+            "url_input",
+            "./src/components/templates/url_input.aml",
+            || FocusableSection,
+            FocusableSectionState::new,
         );
 
         let _ = builder.register_prototype("row", ROW_TEMPLATE, || Row, RowState::new);

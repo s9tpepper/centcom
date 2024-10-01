@@ -26,4 +26,8 @@ impl MenuItemState {
 impl Component for MenuItem {
     type State = MenuItemState;
     type Message = ();
+
+    fn accept_focus(&self) -> bool {
+        false
+    }
 }

@@ -101,7 +101,7 @@ impl anathema::component::Component for DashboardComponent {
                 state.method.set(value.to_string());
 
                 // Trigger a resize on the text input by setting focus and then resetting it to app
-                context.set_focus("id", 1);
+                context.set_focus("id", "url_input");
                 context.set_focus("id", "app");
             }
 
@@ -118,7 +118,7 @@ impl anathema::component::Component for DashboardComponent {
     ) {
         match event.code {
             KeyCode::Char(char) => match char {
-                'u' => context.set_focus("id", 1),
+                'u' => context.set_focus("id", "url_input"),
                 'm' => {
                     state.show_method_window.set(true);
                     context.set_focus("id", "method_selector");
