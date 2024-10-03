@@ -1,5 +1,5 @@
 @app_section {
-  border_color: "#666666",
+  border_color: active_border_color,
   top_label: "Re(q)uest Body",
   show_top_label: true,
   show_bottom_label: true,
@@ -8,4 +8,4 @@
   section_text_id: "textarea"
 }
   $children
-    @textarea (textarea_focus -> request_body_border) [id: "textarea"]
+    @textarea (textarea_focus -> input_focus) [id: "textarea"]

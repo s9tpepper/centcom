@@ -119,6 +119,8 @@ impl anathema::component::Component for DashboardComponent {
         match event.code {
             KeyCode::Char(char) => match char {
                 'u' => context.set_focus("id", "url_input"),
+                'q' => context.set_focus("id", "textarea"),
+
                 'm' => {
                     state.show_method_window.set(true);
                     context.set_focus("id", "method_selector");

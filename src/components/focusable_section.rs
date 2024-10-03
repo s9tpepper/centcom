@@ -1,17 +1,23 @@
 use anathema::{
     component::Component,
-    state::{CommonVal, State},
+    state::{State, Value},
 };
 
 #[derive(Default)]
 pub struct FocusableSection;
 
 #[derive(Default, State)]
-pub struct FocusableSectionState {}
+pub struct FocusableSectionState {
+    target: Value<Option<String>>,
+    active_border_color: Value<String>,
+}
 
 impl FocusableSectionState {
     pub fn new() -> Self {
-        FocusableSectionState {}
+        FocusableSectionState {
+            target: None.into(),
+            active_border_color: String::from("#666666").into(),
+        }
     }
 }
 
@@ -23,41 +29,44 @@ impl Component for FocusableSection {
         false
     }
 
+    fn tick(
+        &mut self,
+        state: &mut Self::State,
+        _elements: anathema::widgets::Elements<'_, '_>,
+        context: anathema::prelude::Context<'_, Self::State>,
+        _dt: std::time::Duration,
+    ) {
+        if state.target.to_ref().is_some() {
+            return;
+        }
+
+        let Some(target) = context.get_external("target") else {
+            return;
+        };
+
+        if let Some(target) = target.to_common() {
+            state.target.set(Some(target.to_string()));
+        }
+    }
+
     fn receive(
         &mut self,
         ident: &str,
         value: anathema::state::CommonVal<'_>,
-        _state: &mut Self::State,
-        mut elements: anathema::widgets::Elements<'_, '_>,
-        context: anathema::prelude::Context<'_, Self::State>,
+        state: &mut Self::State,
+        _: anathema::widgets::Elements<'_, '_>,
+        _: anathema::prelude::Context<'_, Self::State>,
     ) {
-        let Some(target) = context.get_external("target") else {
+        if state.target.to_ref().is_none() {
             return;
-        };
-        let Some(target) = target.to_common() else {
-            return;
-        };
+        }
 
-        if target.to_string() == ident {
+        if ident == "input_focus" {
             let focus = value.to_bool();
-            if focus {
-                return;
+            match focus {
+                true => state.active_border_color.set("#ffffff".to_string()),
+                false => state.active_border_color.set("#666666".to_string()),
             }
-
-            let Some(border_color) = context.get_external("border_color") else {
-                return;
-            };
-            let Some(border_color) = border_color.to_common() else {
-                return;
-            };
-
-            // NOTE: Is this right?
-            let color = border_color.to_string().leak();
-            elements
-                .by_attribute("id", target)
-                .each(|_element, attributes| {
-                    attributes.set("foreground", CommonVal::Str(color));
-                });
         }
     }
 }

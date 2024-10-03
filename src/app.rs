@@ -10,9 +10,7 @@ use crate::components::{
     focusable_section::{FocusableSection, FocusableSectionState},
     menu_item::{MenuItem, MenuItemState, MENU_ITEM_TEMPLATE},
     method_selector::{MethodSelector, MethodSelectorState, METHOD_SELECTOR_TEMPLATE},
-    request_body_section::{
-        RequestBodySection, RequestBodySectionState, REQUEST_BODY_SECTION_TEMPLATE,
-    },
+    request_body_section::REQUEST_BODY_SECTION_TEMPLATE,
     request_headers_editor::{
         RequestHeadersEditor, RequestHeadersEditorState, REQUEST_HEADERS_EDITOR_TEMPLATE,
     },

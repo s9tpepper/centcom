@@ -68,6 +68,10 @@ impl anathema::component::Component for TextArea {
     type State = TextAreaInputState;
     type Message = ();
 
+    fn accept_focus(&self) -> bool {
+        true
+    }
+
     fn resize(
         &mut self,
         state: &mut Self::State,
@@ -99,7 +103,7 @@ impl anathema::component::Component for TextArea {
         &mut self,
         state: &mut Self::State,
         _: Elements<'_, '_>,
-        _: Context<'_, Self::State>,
+        mut context: Context<'_, Self::State>,
     ) {
         // let input = state.input.to_ref();
         // let Some(cursor_position) = state.cursor_position.to_number() else {
@@ -117,12 +121,14 @@ impl anathema::component::Component for TextArea {
         state.fg_color.set("black".to_string());
         state.bg_color.set("white".to_string());
         state.focused.set(true);
+
+        context.publish("textarea_focus", |state| &state.focused);
     }
 
     fn on_blur(
         &mut self,
         state: &mut Self::State,
-        _elements: Elements<'_, '_>,
+        _: Elements<'_, '_>,
         mut context: Context<'_, Self::State>,
     ) {
         state.cursor_char.set("".to_string());

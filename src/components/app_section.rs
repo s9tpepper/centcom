@@ -55,39 +55,39 @@ impl Component for AppSection {
         }
     }
 
-    fn on_focus(
+    fn receive(
         &mut self,
+        ident: &str,
+        value: CommonVal<'_>,
         state: &mut Self::State,
         mut elements: anathema::widgets::Elements<'_, '_>,
-        mut context: anathema::prelude::Context<'_, Self::State>,
+        _context: anathema::prelude::Context<'_, Self::State>,
     ) {
-        let section_id = state.section_id.to_ref().clone();
-        if let Some(section_id) = section_id {
+        println!("app_section received message ident: {ident}");
+        if ident == "input_focus" {
+            let focus = value.to_bool();
+            println!("app_section received message focus: {focus}");
+
+            let section_id = state.section_id.to_ref().clone();
+            let Some(section_id) = section_id else { return };
             let section_id = section_id.to_string().leak();
-            elements
-                .by_attribute("id", CommonVal::Str(section_id))
-                .each(|_element, attributes| {
-                    attributes.set("foreground", "#ffffff");
-                })
-        }
 
-        let section_text_id = state.section_text_id.to_ref().clone();
-        if let Some(section_text_id) = section_text_id {
-            // NOTE: Is this right way to do this? Not so sure about this .leak()
-            let id = section_text_id.to_string().leak();
-            context.set_focus("id", CommonVal::Str(id));
+            match focus {
+                true => elements
+                    .by_attribute("id", CommonVal::Str(section_id))
+                    .each(|_element, attributes| {
+                        attributes.set("foreground", "#ffffff");
+                    }),
+                false => elements
+                    .by_attribute("id", CommonVal::Str(section_id))
+                    .each(|_element, attributes| {
+                        attributes.set("foreground", "#ff0000");
+                    }),
+            }
         }
-    }
-
-    fn on_blur(
-        &mut self,
-        _state: &mut Self::State,
-        mut elements: anathema::widgets::Elements<'_, '_>,
-        mut context: anathema::prelude::Context<'_, Self::State>,
-    ) {
     }
 
     fn accept_focus(&self) -> bool {
-        true
+        false
     }
 }

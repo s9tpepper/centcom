@@ -1,10 +1,10 @@
 container [height: 3]
   @app_section {
-    border_color: "#666666",
+    border_color: active_border_color,
     top_label: "(U)RL",
     show_top_label: true,
     section_id: "url_border",
     section_text_id: "url_input"
   }
     $children
-      @textinput (text_change->url_update, textarea_focus -> url_border) [id: "url_input"]
+      @textinput (text_change->url_update, textarea_focus -> input_focus) [id: "url_input"]
