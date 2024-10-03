@@ -63,11 +63,8 @@ impl Component for AppSection {
         mut elements: anathema::widgets::Elements<'_, '_>,
         _context: anathema::prelude::Context<'_, Self::State>,
     ) {
-        println!("app_section received message ident: {ident}");
         if ident == "input_focus" {
             let focus = value.to_bool();
-            println!("app_section received message focus: {focus}");
-
             let section_id = state.section_id.to_ref().clone();
             let Some(section_id) = section_id else { return };
             let section_id = section_id.to_string().leak();
