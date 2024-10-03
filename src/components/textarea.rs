@@ -340,29 +340,14 @@ impl TextArea {
                 let mut line_lengths: Vec<usize> = [].to_vec();
                 lines.enumerate().for_each(|(index, current_line)| {
                     log(format!("Looking at line_number: {index}\n"), None);
+                    log(format!("Length of line {index}: {}\n", current_line.width), None);
 
-                    let mut length_of_line = 0;
-                    current_line.entries.for_each(|entry| {
-                        log(format!("Checking line entry for line {index}\n"), None);
-
-                        if let Segment::Str(text) = entry {
-                            let chunk_length = text.len();
-
-                            log(format!("Chunk: {text}, chunk_length: {chunk_length}\n"), None);
-
-                            length_of_line += chunk_length;
-                        };
-                    });
-
-
-                    log(format!("Length of line {index}: {length_of_line}\n"), None);
-
-                    line_lengths.push(length_of_line);
+                    line_lengths.push(current_line.width.into());
                 });
 
                 // Account for newline characters, but remove one because the last line doesn't
                 // have a newline character
-                line_lengths.push(line_lengths.len() - 1);
+                line_lengths.push(line_lengths.len().saturating_sub(1));
 
                 log(format!("Length of all lines: {}\n", line_lengths.iter().sum::<usize>()), None);
                 log(format!("Length of line_lengths array: {}\n", line_lengths.len()), None);
@@ -372,32 +357,7 @@ impl TextArea {
                 log(format!("Initial update_index: {update_index}\n"), None);
 
 
-                // NOTE: Adjust update_index when on a new line, commented out because linear editing
-                // works, this might be needed, with updated logic, once the cursor starts to move
-                // around and the editing is no longer linear
-                //
-                // if new_cursor_y > prev_cursor_y && new_cursor_y > 1 {
-                //     log("We are on a new line, resetting update_index to sum of line lengths\n".to_string());
-                //
-                //     let lengths_iter = line_lengths.iter();
-                //
-                //     let previous_lines_sum = lengths_iter.sum::<usize>();
-                //     log(format!("previous_lines_sum: {previous_lines_sum}\n"));
-                //
-                //     update_index = previous_lines_sum + new_cursor_x;
-                //
-                //     log(format!("update_index when going to a next line: {update_index}\n"));
-                // }
-
-                // Find update_index if we are not at the end of the text
-                // let on_last_line = prev_cursor_y == line_lengths.len() - 1;
-                // let last_line_length = *line_lengths.iter().last().unwrap_or(&usize::MIN);
-                // let at_last_line_index = on_last_line && last_line_length == prev_cursor_x + 1;
-
                 if !is_at_end_of_input(&line_lengths, prev_cursor_x, prev_cursor_y) {
-                    // let previous_lines_sum = line_lengths.iter().take(prev_cursor_y).sum::<usize>();
-                    // update_index = previous_lines_sum + prev_cursor_x + 1;
-
                     log(format!("get_update_index(): {line_lengths:?}, {prev_cursor_x}, {prev_cursor_y}\n"), None);
                     log(format!("get_update_index() line_lengths.len(): {}\n", line_lengths.len()), None);
                     update_index = get_update_index(&line_lengths, prev_cursor_x, prev_cursor_y);
