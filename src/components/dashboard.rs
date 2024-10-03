@@ -60,15 +60,10 @@ impl DashboardState {
     }
 }
 
-#[derive(Debug)]
-pub struct DashboardUpdate {
-    // data: String,
-}
-
 pub struct DashboardComponent;
 impl anathema::component::Component for DashboardComponent {
     type State = DashboardState;
-    type Message = DashboardUpdate;
+    type Message = String;
 
     fn receive(
         &mut self,
@@ -86,7 +81,6 @@ impl anathema::component::Component for DashboardComponent {
             }
 
             "url_update" => {
-                // TODO: Do something with url updates (put it in some kind of state)
                 let value = &*value.to_common_str();
                 state.url.set(value.to_string());
             }
@@ -147,13 +141,21 @@ fn do_request(
     _elements: anathema::widgets::Elements<'_, '_>,
 ) {
     let url = state.url.to_ref().clone();
+
     let method = state.method.to_ref().clone();
 
-    let http_request = http::Request::builder()
+    let http_request_result = http::Request::builder()
         .method(method.as_str())
         .uri(url.as_str())
-        .body(vec![0u8])
-        .unwrap();
+        .body(vec![0u8]);
+
+    if let Err(http_request_error) = http_request_result {
+        dbg!(http_request_error);
+        println!("url: {}", url);
+        return;
+    }
+
+    let http_request = http_request_result.unwrap();
     let (http_parts, _body) = http_request.into_parts();
     let request: ureq::Request = http_parts.into();
     // let response = request.send_bytes(&body);

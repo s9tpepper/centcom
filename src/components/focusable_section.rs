@@ -10,6 +10,7 @@ pub struct FocusableSection;
 pub struct FocusableSectionState {
     target: Value<Option<String>>,
     active_border_color: Value<String>,
+    url_update: Value<String>,
 }
 
 impl FocusableSectionState {
@@ -17,6 +18,7 @@ impl FocusableSectionState {
         FocusableSectionState {
             target: None.into(),
             active_border_color: String::from("#666666").into(),
+            url_update: String::from("").into(),
         }
     }
 }
@@ -55,18 +57,28 @@ impl Component for FocusableSection {
         value: anathema::state::CommonVal<'_>,
         state: &mut Self::State,
         _: anathema::widgets::Elements<'_, '_>,
-        _: anathema::prelude::Context<'_, Self::State>,
+        mut context: anathema::prelude::Context<'_, Self::State>,
     ) {
         if state.target.to_ref().is_none() {
             return;
         }
 
-        if ident == "input_focus" {
-            let focus = value.to_bool();
-            match focus {
-                true => state.active_border_color.set("#ffffff".to_string()),
-                false => state.active_border_color.set("#666666".to_string()),
+        match ident {
+            "input_focus" => {
+                let focus = value.to_bool();
+                match focus {
+                    true => state.active_border_color.set("#ffffff".to_string()),
+                    false => state.active_border_color.set("#666666".to_string()),
+                }
             }
+
+            "url_update" => {
+                state.url_update.set(value.to_string());
+
+                context.publish("url_update", |state| &state.url_update)
+            }
+
+            _ => {}
         }
     }
 }

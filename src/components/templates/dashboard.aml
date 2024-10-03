@@ -6,7 +6,7 @@ zstack
           text [foreground: #ffffff, text_align: "right"] method
 
       expand [axis: "horizontal"]
-        @url_input [id: "url"] { border_color: "#666666", target: "url_input" }
+        @url_input (url_update -> url_update) [id: "url"] { border_color: "#666666", target: "url_input" }
 
 
     expand [axis: "vertical"]

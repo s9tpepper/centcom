@@ -137,6 +137,7 @@ impl anathema::component::Component for TextArea {
         state.focused.set(false);
 
         context.publish("textarea_focus", |state| &state.focused);
+        context.set_focus("id", "app");
     }
 
     fn on_key(
@@ -338,9 +339,13 @@ impl TextArea {
                 // Get line lengths for all lines in input
                 let lines = text.get_lines();
                 let mut line_lengths: Vec<usize> = [].to_vec();
+
                 lines.enumerate().for_each(|(index, current_line)| {
                     log(format!("Looking at line_number: {index}\n"), None);
-                    log(format!("Length of line {index}: {}\n", current_line.width), None);
+                    log(
+                        format!("Length of line {index}: {}\n", current_line.width),
+                        None,
+                    );
 
                     line_lengths.push(current_line.width.into());
                 });

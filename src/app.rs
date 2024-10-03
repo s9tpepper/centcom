@@ -58,6 +58,20 @@ impl App {
     }
 
     fn register_components(&self, builder: &mut RuntimeBuilder<TuiBackend, ()>) {
+        let _dashboard_id = builder.register_component(
+            "dashboard",
+            DASHBOARD_TEMPLATE,
+            DashboardComponent,
+            DashboardState::new(),
+        );
+
+        let _ = builder.register_prototype(
+            "url_input",
+            "./src/components/templates/url_input.aml",
+            || FocusableSection,
+            FocusableSectionState::new,
+        );
+
         let _ = builder.register_prototype(
             "textinput",
             TEXTINPUT_TEMPLATE,
@@ -77,13 +91,6 @@ impl App {
             METHOD_SELECTOR_TEMPLATE,
             || MethodSelector,
             MethodSelectorState::new,
-        );
-
-        let _dashboard_id = builder.register_prototype(
-            "dashboard",
-            DASHBOARD_TEMPLATE,
-            || DashboardComponent,
-            DashboardState::new,
         );
 
         let _ = builder.register_component(
@@ -117,13 +124,6 @@ impl App {
         let _ = builder.register_prototype(
             "request_body_section",
             REQUEST_BODY_SECTION_TEMPLATE,
-            || FocusableSection,
-            FocusableSectionState::new,
-        );
-
-        let _ = builder.register_prototype(
-            "url_input",
-            "./src/components/templates/url_input.aml",
             || FocusableSection,
             FocusableSectionState::new,
         );
