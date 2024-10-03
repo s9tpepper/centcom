@@ -1,9 +1,9 @@
 zstack
   vstack
     hstack
-      @row {border_color: "#ffffff", top_label: "(M)ethod", expanding: false, minwidth: 13}
+      @row {border_color: "#666666", top_label: "(M)ethod", expanding: false, minwidth: 13}
         $children
-          text [foreground: #ffffff, text_align: "right"] method
+          text [foreground: #666666, text_align: "right"] method
 
       expand [axis: "horizontal"]
         @url_input (url_update -> url_update) [id: "url"] { border_color: "#666666", target: "url_input" }
