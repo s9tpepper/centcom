@@ -37,7 +37,7 @@ zstack
               show_bottom_label: true,
             }
               $children
-                @request_headers_editor
+                @request_headers_editor { headers: request_headers }
 
 
     container [height: 1, background: "blue", foreground: #131313]
@@ -46,6 +46,9 @@ zstack
           text " "
           for item in menu_items
             @menu_item
+
+  if show_add_header_window
+    @add_header_window (add_header->add_header, cancel_add_header->cancel_add_header) [id: "add_header_window"]
 
   if show_method_window
     @method_selector (cancel_method_selector->cancel_method_selector, new_method_selection->new_method_selection) [id: "method_selector"]

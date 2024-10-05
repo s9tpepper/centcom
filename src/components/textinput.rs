@@ -1,4 +1,5 @@
 use anathema::{
+    component::KeyCode,
     prelude::Context,
     state::{AnyState, Value},
     widgets::Elements,
@@ -38,6 +39,10 @@ impl anathema::component::Component for TextInput {
     type State = InputState;
     type Message = ();
 
+    fn accept_focus(&self) -> bool {
+        true
+    }
+
     fn on_focus(
         &mut self,
         state: &mut Self::State,
@@ -75,7 +80,9 @@ impl anathema::component::Component for TextInput {
         state.bg_color.set("".to_string());
         state.focused.set(false);
 
-        context.publish("textarea_focus", |state| &state.focused);
+        if !*state.focused.to_ref() {
+            context.publish("textarea_focus", |state| &state.focused);
+        }
     }
 
     fn on_key(
@@ -86,9 +93,9 @@ impl anathema::component::Component for TextInput {
         mut context: anathema::prelude::Context<'_, Self::State>,
     ) {
         // let mut input = state.input.to_mut();
-        if !*state.focused.to_ref() {
-            return;
-        }
+        // if !*state.focused.to_ref() {
+        //     return;
+        // }
 
         match event.code {
             // NOTE: Unused for TextInput
@@ -109,34 +116,34 @@ impl anathema::component::Component for TextInput {
             // Text Input events
 
             // TODO: Ask togglebit Discord if I'm supposed to get this key event
-            anathema::component::KeyCode::Tab => {
+            KeyCode::Tab => {
                 let char = '\u{0009}'; // Tab
                 self.add_character(char, state, context);
             }
 
-            anathema::component::KeyCode::Char(char) => self.add_character(char, state, context),
-            anathema::component::KeyCode::Backspace => self.backspace(state, context),
-            anathema::component::KeyCode::Delete => self.delete(state, context),
-            anathema::component::KeyCode::Left => self.move_cursor_left(state),
-            anathema::component::KeyCode::Right => self.move_cursor_right(state),
-            anathema::component::KeyCode::Up => self.move_cursor_up(state),
-            anathema::component::KeyCode::Down => self.move_cursor_down(state),
+            KeyCode::Char(char) => self.add_character(char, state, context),
+            KeyCode::Backspace => self.backspace(state, context),
+            KeyCode::Delete => self.delete(state, context),
+            KeyCode::Left => self.move_cursor_left(state),
+            KeyCode::Right => self.move_cursor_right(state),
+            KeyCode::Up => self.move_cursor_up(state),
+            KeyCode::Down => self.move_cursor_down(state),
 
             // TODO: This will need to call some callback or something?
-            anathema::component::KeyCode::Enter => todo!(),
+            KeyCode::Enter => todo!(),
 
             // TODO: Maybe I'll implement this later
-            anathema::component::KeyCode::Insert => todo!(),
+            KeyCode::Insert => todo!(),
 
             // TODO: Ask togglebit Discord if I'm supposed to get this key event
-            anathema::component::KeyCode::BackTab => todo!(),
+            KeyCode::BackTab => todo!(),
 
             // TODO: Maybe implement this later, this will require implementing selections in the
             // input
-            anathema::component::KeyCode::CtrlC => todo!(),
+            KeyCode::CtrlC => todo!(),
 
             // Move focus with this
-            anathema::component::KeyCode::Esc => {
+            KeyCode::Esc => {
                 context.set_focus("id", "app");
 
                 context.publish("textarea_focus", |state| &state.focused);

@@ -5,6 +5,8 @@ use anathema::{
     widgets::Elements,
 };
 
+use crate::components::request_headers_editor::Header;
+
 pub const DASHBOARD_TEMPLATE: &str = "./src/components/templates/dashboard.aml";
 
 enum MainDisplay {
@@ -32,8 +34,10 @@ struct MenuItem {
 pub struct DashboardState {
     url: Value<String>,
     method: Value<String>,
+    request_headers: Value<List<Header>>,
     response: Value<String>,
     show_method_window: Value<bool>,
+    show_add_header_window: Value<bool>,
     main_display: Value<MainDisplay>,
     menu_items: Value<List<MenuItem>>,
     logs: Value<String>,
@@ -46,6 +50,7 @@ impl DashboardState {
             method: "GET".to_string().into(),
             response: "".to_string().into(),
             show_method_window: false.into(),
+            show_add_header_window: false.into(),
             main_display: Value::<MainDisplay>::new(MainDisplay::RequestBody),
             logs: "".to_string().into(),
             menu_items: List::from_iter([
@@ -56,6 +61,7 @@ impl DashboardState {
                     label: "(O)ptions".to_string().into(),
                 },
             ]),
+            request_headers: List::from_iter(get_default_headers()),
         }
     }
 }
@@ -73,7 +79,24 @@ impl anathema::component::Component for DashboardComponent {
         _elements: Elements<'_, '_>,
         mut context: Context<'_, Self::State>,
     ) {
+        println!("Dashboard received message: {ident}");
+
         match ident {
+            "add_header" => {
+                println!("dashboard received add_header event");
+                let header: Header = value.into();
+                state.request_headers.push(header);
+
+                state.show_add_header_window.set(false);
+                context.set_focus("id", "app");
+            }
+
+            "cancel_add_header" => {
+                println!("dashboard received cancel_add_header event");
+                state.show_add_header_window.set(false);
+                context.set_focus("id", "app");
+            }
+
             "log_output" => {
                 let value = &*value.to_common_str();
                 let mut logs = state.logs.to_mut();
@@ -112,18 +135,29 @@ impl anathema::component::Component for DashboardComponent {
     ) {
         match event.code {
             KeyCode::Char(char) => match char {
+                'n' => context.set_focus("id", "header_name_input"),
+                'v' => context.set_focus("id", "header_value_input"),
+
                 'u' => context.set_focus("id", "url_input"),
                 'q' => context.set_focus("id", "textarea"),
 
+                'r' => do_request(state, context, elements),
+                'b' => state.main_display.set(MainDisplay::RequestBody),
+                'd' => state.main_display.set(MainDisplay::RequestHeadersEditor),
+
+                // floating windows
                 'm' => {
                     state.show_method_window.set(true);
                     context.set_focus("id", "method_selector");
                 }
-                'r' => do_request(state, context, elements),
-                'b' => state.main_display.set(MainDisplay::RequestBody),
-                'd' => state.main_display.set(MainDisplay::RequestHeadersEditor),
+                'a' => {
+                    state.show_add_header_window.set(true);
+                    context.set_focus("id", "add_header_window");
+                }
                 _ => {}
             },
+
+            KeyCode::Esc => context.set_focus("id", "app"),
 
             KeyCode::Enter => todo!(),
             _ => {}
@@ -172,4 +206,17 @@ fn do_request(
     }
 
     context.set_focus("id", "app");
+}
+
+fn get_default_headers() -> Vec<Header> {
+    vec![
+        Header {
+            name: "user-agent".to_string().into(),
+            value: "centcom-tui".to_string().into(),
+        },
+        Header {
+            name: "content-type".to_string().into(),
+            value: "application/json".to_string().into(),
+        },
+    ]
 }

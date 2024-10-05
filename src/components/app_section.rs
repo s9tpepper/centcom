@@ -30,7 +30,7 @@ impl Component for AppSection {
     fn tick(
         &mut self,
         state: &mut Self::State,
-        _elements: anathema::widgets::Elements<'_, '_>,
+        elements: anathema::widgets::Elements<'_, '_>,
         context: anathema::prelude::Context<'_, Self::State>,
         _dt: std::time::Duration,
     ) {
@@ -53,6 +53,8 @@ impl Component for AppSection {
                 state.section_text_id.set(Some(text_id));
             }
         }
+
+        self.resize(state, elements, context);
     }
 
     fn receive(

@@ -4,6 +4,7 @@ use anathema::{
 };
 
 use crate::components::{
+    add_header_window::{AddHeaderWindow, AddHeaderWindowState, ADD_HEADER_WINDOW_TEMPLATE},
     app_layout::{AppLayoutComponent, AppLayoutState, APP_LAYOUT_TEMPLATE},
     app_section::{AppSection, AppSectionState, APP_SECTION_TEMPLATE},
     dashboard::{DashboardComponent, DashboardState, DASHBOARD_TEMPLATE},
@@ -34,7 +35,7 @@ impl App {
         let doc = Document::new("@app");
 
         let tui = TuiBackend::builder()
-            .enable_alt_screen()
+            // .enable_alt_screen()
             .enable_raw_mode()
             .hide_cursor()
             .finish();
@@ -126,6 +127,13 @@ impl App {
             REQUEST_BODY_SECTION_TEMPLATE,
             || FocusableSection,
             FocusableSectionState::new,
+        );
+
+        let _ = builder.register_prototype(
+            "add_header_window",
+            ADD_HEADER_WINDOW_TEMPLATE,
+            || AddHeaderWindow,
+            AddHeaderWindowState::new,
         );
 
         let _ = builder.register_prototype("row", ROW_TEMPLATE, || Row, RowState::new);

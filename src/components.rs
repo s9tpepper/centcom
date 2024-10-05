@@ -1,3 +1,4 @@
+pub mod add_header_window;
 pub mod app_layout;
 pub mod app_section;
 pub mod dashboard;

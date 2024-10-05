@@ -1,0 +1,34 @@
+align [alignment: "center"]
+  container [background: "black"]
+    zstack
+      // NOTE: Prevents the glyphs behind the window from showing in the
+      // floating dialog window
+      vstack
+        text "              "
+        text "              "
+        text "              "
+        text "              "
+        text "              "
+        text "              "
+        text "              "
+      zstack
+        border [foreground: #ffffff, border_style: "╭─╮│╯─╰│"]
+          vstack
+            container [height: 3]
+              @row {border_color: "#FFFFFF", top_label: "(N)ame", expanding: false, minwidth: 40}
+                $children
+                  @textinput (text_change->header_name_update, textarea_focus -> name_input_focus) [id: "header_name_input"]
+
+            container [height: 3]
+              @row {border_color: "#FFFFFF", top_label: "(V)alue", expanding: false, minwidth: 40}
+                $children
+                  @textinput (text_change->header_value_update, textarea_focus -> value_input_focus) [id: "header_value_input"]
+
+        vstack [height: 8]
+          text "╭─Add Header:"
+          spacer
+          text [min_height: 1] "╰"
+            span [foreground: border_color] "─"
+            span [foreground: border_color] "["
+            span [foreground: border_color] "(S)ubmit"
+            span [foreground: border_color] "]"
