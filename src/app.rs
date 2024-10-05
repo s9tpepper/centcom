@@ -49,11 +49,14 @@ impl App {
         let mut runtime_builder = Runtime::builder(doc, backend);
         self.register_components(&mut runtime_builder);
 
-        let mut runtime = runtime_builder.finish().unwrap();
+        let runtime = runtime_builder.finish();
+        if let Ok(mut runtime) = runtime {
+            let _emitter = runtime.emitter();
 
-        let _emitter = runtime.emitter();
-
-        runtime.run();
+            runtime.run();
+        } else if let Err(error) = runtime {
+            println!("{:?}", error);
+        }
 
         Ok(())
     }
