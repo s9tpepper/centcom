@@ -15,12 +15,12 @@ align [alignment: "center"]
         border [foreground: #ffffff, border_style: "╭─╮│╯─╰│"]
           vstack
             container [height: 3]
-              @row {border_color: "#FFFFFF", top_label: "(N)ame", expanding: false, minwidth: 40}
+              @row [ border_color: "#FFFFFF", top_label: "(N)ame", expanding: false, minwidth: 40 ]
                 $children
                   @textinput (text_change->header_name_update, textarea_focus -> name_input_focus) [id: "header_name_input"]
 
             container [height: 3]
-              @row {border_color: "#FFFFFF", top_label: "(V)alue", expanding: false, minwidth: 40}
+              @row [ border_color: "#FFFFFF", top_label: "(V)alue", expanding: false, minwidth: 40 ]
                 $children
                   @textinput (text_change->header_value_update, textarea_focus -> value_input_focus) [id: "header_value_input"]
 

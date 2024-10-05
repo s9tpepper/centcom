@@ -1,11 +1,11 @@
-@app_section {
+@app_section [
   border_color: active_border_color,
   top_label: "Re(q)uest Body",
   show_top_label: true,
   show_bottom_label: true,
-  bottom_label: ["Send (R)equest", "Show Request Hea(d)ers"]
-  section_id: "request_body_border"
+  bottom_label: ["Send (R)equest", "Show Request Hea(d)ers"],
+  section_id: "request_body_border",
   section_text_id: "textarea"
-}
+]
   $children
     @textarea (textarea_focus -> input_focus) [id: "textarea"]
