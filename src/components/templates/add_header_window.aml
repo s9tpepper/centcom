@@ -3,14 +3,6 @@ align [alignment: "center"]
     zstack
       // NOTE: Prevents the glyphs behind the window from showing in the
       // floating dialog window
-      vstack
-        text "              "
-        text "              "
-        text "              "
-        text "              "
-        text "              "
-        text "              "
-        text "              "
       zstack
         border [foreground: #ffffff, border_style: "╭─╮│╯─╰│"]
           vstack

@@ -41,6 +41,8 @@ pub struct DashboardState {
     main_display: Value<MainDisplay>,
     menu_items: Value<List<MenuItem>>,
     logs: Value<String>,
+    new_header_name: Value<String>,
+    new_header_value: Value<String>,
 }
 
 impl DashboardState {
@@ -49,6 +51,8 @@ impl DashboardState {
             url: "".to_string().into(),
             method: "GET".to_string().into(),
             response: "".to_string().into(),
+            new_header_name: "".to_string().into(),
+            new_header_value: "".to_string().into(),
             show_method_window: false.into(),
             show_add_header_window: false.into(),
             main_display: Value::<MainDisplay>::new(MainDisplay::RequestBody),
@@ -79,21 +83,26 @@ impl anathema::component::Component for DashboardComponent {
         _elements: Elements<'_, '_>,
         mut context: Context<'_, Self::State>,
     ) {
-        println!("Dashboard received message: {ident}");
-
         match ident {
             "add_header" => {
-                println!("dashboard received add_header event");
-                let header: Header = value.into();
-                state.request_headers.push(header);
+                let header_name = state.new_header_name.to_ref().to_string();
+                let header_value = state.new_header_value.to_ref().to_string();
 
+                let header = Header {
+                    name: header_name.into(),
+                    value: header_value.into(),
+                };
+
+                state.request_headers.push(header);
                 state.show_add_header_window.set(false);
+
                 context.set_focus("id", "app");
             }
 
             "cancel_add_header" => {
-                println!("dashboard received cancel_add_header event");
                 state.show_add_header_window.set(false);
+                state.new_header_name.set("".to_string());
+                state.new_header_value.set("".to_string());
                 context.set_focus("id", "app");
             }
 
@@ -121,6 +130,14 @@ impl anathema::component::Component for DashboardComponent {
                 context.set_focus("id", "url_input");
                 context.set_focus("id", "app");
             }
+
+            "header_name_update" => {
+                let new_header_name = value.to_string();
+                println!("header_name_update: {new_header_name}");
+
+                state.new_header_name.set(new_header_name);
+            }
+            "header_value_update" => state.new_header_value.set(value.to_string()),
 
             _ => {}
         }

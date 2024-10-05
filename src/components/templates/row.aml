@@ -1,6 +1,5 @@
 container [height: 3, max_height: 3]
   zstack
-    $children
     border [foreground: border_color, border_style: "╭─╮│╯─╰│", min_width: minwidth]
       if expanding
         expand [axis: "horizontal"]

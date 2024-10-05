@@ -46,7 +46,7 @@ zstack
             @menu_item
 
   if show_add_header_window
-    @add_header_window (add_header->add_header, cancel_add_header->cancel_add_header) [id: "add_header_window"]
+    @add_header_window (add_header->add_header, cancel_add_header->cancel_add_header, header_name_update->header_name_update, header_value_update->header_value_update) [id: "add_header_window"]
 
   if show_method_window
     @method_selector (cancel_method_selector->cancel_method_selector, new_method_selection->new_method_selection) [id: "method_selector"]
