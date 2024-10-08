@@ -18,7 +18,7 @@ zstack
             @app_section [
               border_color: "#ffffff",
               top_label: "Response Body",
-              bottom_label: ["(B)ack to Request", "Sho(w) Response Headers"],
+              bottom_label: ["(B)ack to Request", "Show Response (H)eaders"],
               show_top_label: true,
               show_bottom_label: true
             ]
@@ -36,6 +36,18 @@ zstack
             ]
               $children
                 @request_headers_editor [ headers: request_headers ]
+
+        if main_display == "response_headers"
+          expand
+            @app_section [
+              border_color: "#ffffff",
+              top_label: "Response Headers",
+              bottom_label: ["Back to Res(p)onse"],
+              show_top_label: true,
+              show_bottom_label: true
+            ]
+              $children
+                @request_headers_editor [ headers: response_headers ]
 
 
     container [height: 1, background: "blue", foreground: #131313]

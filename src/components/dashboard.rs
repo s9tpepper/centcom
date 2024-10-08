@@ -13,6 +13,7 @@ enum MainDisplay {
     RequestBody,
     RequestHeadersEditor,
     ResponseBody,
+    ResponseHeaders,
 }
 
 impl anathema::state::State for MainDisplay {
@@ -21,6 +22,7 @@ impl anathema::state::State for MainDisplay {
             MainDisplay::RequestBody => Some(CommonVal::Str("request_body")),
             MainDisplay::RequestHeadersEditor => Some(CommonVal::Str("request_headers_editor")),
             MainDisplay::ResponseBody => Some(CommonVal::Str("response_body")),
+            MainDisplay::ResponseHeaders => Some(CommonVal::Str("response_headers")),
         }
     }
 }
@@ -35,6 +37,7 @@ pub struct DashboardState {
     url: Value<String>,
     method: Value<String>,
     request_headers: Value<List<Header>>,
+    response_headers: Value<List<Header>>,
     response: Value<String>,
     show_method_window: Value<bool>,
     show_add_header_window: Value<bool>,
@@ -66,6 +69,7 @@ impl DashboardState {
                 },
             ]),
             request_headers: List::from_iter(get_default_headers()),
+            response_headers: List::from_iter(vec![]),
         }
     }
 }
@@ -133,7 +137,6 @@ impl anathema::component::Component for DashboardComponent {
 
             "header_name_update" => {
                 let new_header_name = value.to_string();
-                println!("header_name_update: {new_header_name}");
 
                 state.new_header_name.set(new_header_name);
             }
@@ -161,6 +164,8 @@ impl anathema::component::Component for DashboardComponent {
                 'r' => do_request(state, context, elements),
                 'b' => state.main_display.set(MainDisplay::RequestBody),
                 'd' => state.main_display.set(MainDisplay::RequestHeadersEditor),
+                'p' => state.main_display.set(MainDisplay::ResponseBody),
+                'h' => state.main_display.set(MainDisplay::ResponseHeaders),
 
                 // floating windows
                 'm' => {
@@ -209,9 +214,7 @@ fn do_request(
         .uri(url.as_str())
         .body(vec![0u8]);
 
-    if let Err(http_request_error) = http_request_result {
-        dbg!(http_request_error);
-        println!("url: {}", url);
+    if http_request_result.is_err() {
         return;
     }
 
@@ -223,6 +226,26 @@ fn do_request(
     let response = request.send_string("");
     if let Ok(response) = response {
         let _status = response.status();
+
+        loop {
+            if state.response_headers.len() > 0 {
+                state.response_headers.pop_back();
+            } else {
+                break;
+            }
+        }
+
+        for name in response.headers_names() {
+            let Some(value) = response.header(&name) else {
+                continue;
+            };
+
+            state.response_headers.push(Header {
+                name: name.into(),
+                value: value.to_string().into(),
+            });
+        }
+
         let body = response
             .into_string()
             .unwrap_or("Could not read response body".to_string());
