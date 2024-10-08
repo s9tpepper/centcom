@@ -192,10 +192,19 @@ fn do_request(
     _elements: anathema::widgets::Elements<'_, '_>,
 ) {
     let url = state.url.to_ref().clone();
-
     let method = state.method.to_ref().clone();
+    let headers = state.request_headers.to_ref();
 
-    let http_request_result = http::Request::builder()
+    let mut request_builder = http::Request::builder();
+    for header_value in headers.iter() {
+        let header = header_value.to_ref();
+        let header_name = header.name.to_ref().to_string();
+        let header_value = header.value.to_ref().to_string();
+
+        request_builder = request_builder.header(header_name, header_value);
+    }
+
+    let http_request_result = request_builder
         .method(method.as_str())
         .uri(url.as_str())
         .body(vec![0u8]);
