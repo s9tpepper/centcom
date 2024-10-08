@@ -154,34 +154,42 @@ impl anathema::component::Component for DashboardComponent {
         mut context: anathema::prelude::Context<'_, Self::State>,
     ) {
         match event.code {
-            KeyCode::Char(char) => match char {
-                'n' => context.set_focus("id", "header_name_input"),
-                'v' => context.set_focus("id", "header_value_input"),
+            KeyCode::Char(char) => {
+                match char {
+                    'n' => context.set_focus("id", "header_name_input"),
+                    'v' => context.set_focus("id", "header_value_input"),
 
-                'u' => context.set_focus("id", "url_input"),
-                'q' => context.set_focus("id", "textarea"),
+                    'u' => context.set_focus("id", "url_input"),
+                    'q' => context.set_focus("id", "textarea"),
 
-                'r' => do_request(state, context, elements),
-                'b' => state.main_display.set(MainDisplay::RequestBody),
-                'd' => state.main_display.set(MainDisplay::RequestHeadersEditor),
-                'p' => state.main_display.set(MainDisplay::ResponseBody),
-                'h' => state.main_display.set(MainDisplay::ResponseHeaders),
+                    'r' => do_request(state, context, elements),
+                    'b' => state.main_display.set(MainDisplay::RequestBody),
+                    'd' => state.main_display.set(MainDisplay::RequestHeadersEditor),
+                    'p' => {
+                        state.main_display.set(MainDisplay::ResponseBody);
+                        context.set_focus("id", "response");
+                    }
+                    'h' => state.main_display.set(MainDisplay::ResponseHeaders),
 
-                // floating windows
-                'm' => {
-                    state.show_method_window.set(true);
-                    context.set_focus("id", "method_selector");
+                    // floating windows
+                    'm' => {
+                        state.show_method_window.set(true);
+                        context.set_focus("id", "method_selector");
+                    }
+                    'a' => {
+                        state.show_add_header_window.set(true);
+                        context.set_focus("id", "add_header_window");
+                    }
+                    _ => {}
                 }
-                'a' => {
-                    state.show_add_header_window.set(true);
-                    context.set_focus("id", "add_header_window");
-                }
-                _ => {}
-            },
+            }
 
             KeyCode::Esc => context.set_focus("id", "app"),
 
-            KeyCode::Enter => todo!(),
+            KeyCode::Enter => {
+                // TODO: Do something with the Enter button
+            }
+
             _ => {}
         }
     }
@@ -252,6 +260,8 @@ fn do_request(
 
         state.response.set(body);
         state.main_display.set(MainDisplay::ResponseBody);
+
+        context.set_focus("id", "response");
     }
 
     context.set_focus("id", "app");

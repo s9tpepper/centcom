@@ -30,6 +30,9 @@ pub struct TextAreaInputState {
     fg_color: Value<String>,
     bg_color: Value<String>,
     focused: Value<bool>,
+    width: Value<usize>,
+    height: Value<usize>,
+    scroll_position: Value<usize>,
 }
 
 #[derive(Default, anathema::state::State)]
@@ -60,8 +63,45 @@ impl TextAreaInputState {
             bg_color: String::from("").into(),
             focused: false.into(),
             log_output: String::from("").into(),
+            width: 0.into(),
+            height: 0.into(),
+            scroll_position: 0.into(),
         }
     }
+}
+
+enum ScrollDirection {
+    Up,
+    Down,
+}
+
+fn scroll(
+    state: &mut TextAreaInputState,
+    mut elements: Elements<'_, '_>,
+    context: Context<'_, TextAreaInputState>,
+    direction: ScrollDirection,
+) {
+    elements
+        .by_attribute("id", "container")
+        .each(|el, _attributes| {
+            let overflow = el.to::<Overflow>();
+
+            let scroll_amount = context.viewport.size().height / 2;
+            let scroll_position = *state.scroll_position.to_ref();
+            let new_scroll_position = match direction {
+                ScrollDirection::Up => scroll_position.saturating_sub(scroll_amount),
+                ScrollDirection::Down => scroll_position + scroll_amount,
+            };
+
+            state.scroll_position.set(new_scroll_position);
+
+            let pos = Pos {
+                x: 0,
+                y: new_scroll_position as i32,
+            };
+
+            overflow.scroll_to(pos);
+        });
 }
 
 impl anathema::component::Component for TextArea {
@@ -144,7 +184,7 @@ impl anathema::component::Component for TextArea {
         &mut self,
         event: anathema::component::KeyEvent,
         state: &mut Self::State,
-        elements: anathema::widgets::Elements<'_, '_>,
+        mut elements: anathema::widgets::Elements<'_, '_>,
         mut context: anathema::prelude::Context<'_, Self::State>,
     ) {
         // let mut input = state.input.to_mut();
@@ -176,9 +216,14 @@ impl anathema::component::Component for TextArea {
                 self.add_character(char, state, context, elements, event);
             }
 
-            anathema::component::KeyCode::Char(char) => {
-                self.add_character(char, state, context, elements, event)
-            }
+            anathema::component::KeyCode::Char(char) => match event.ctrl {
+                true => match char {
+                    'd' => scroll(state, elements, context, ScrollDirection::Down),
+                    'u' => scroll(state, elements, context, ScrollDirection::Up),
+                    _ => {}
+                },
+                false => self.add_character(char, state, context, elements, event),
+            },
             anathema::component::KeyCode::Backspace => self.backspace(state, context, elements),
             anathema::component::KeyCode::Delete => self.delete(state, context),
             anathema::component::KeyCode::Left => self.move_cursor_left(state, elements),
