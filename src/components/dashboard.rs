@@ -6,6 +6,10 @@ use anathema::{
 };
 
 use crate::components::request_headers_editor::Header;
+use syntect::highlighting::{Style, ThemeSet};
+use syntect::parsing::SyntaxSet;
+use syntect::util::{as_24_bit_terminal_escaped, LinesWithEndings};
+use syntect::{easy::HighlightLines, parsing::SyntaxReference};
 
 pub const DASHBOARD_TEMPLATE: &str = "./src/components/templates/dashboard.aml";
 
@@ -70,7 +74,120 @@ impl DashboardState {
     }
 }
 
-pub struct DashboardComponent;
+pub struct DashboardComponent {
+    syntax_set: Option<SyntaxSet>,
+    theme_set: Option<ThemeSet>,
+}
+
+impl DashboardComponent {
+    pub fn new() -> DashboardComponent {
+        DashboardComponent {
+            syntax_set: Some(SyntaxSet::load_defaults_newlines()),
+            theme_set: Some(ThemeSet::load_defaults()),
+        }
+    }
+
+    fn do_request(
+        &self,
+        state: &mut DashboardState,
+        mut context: anathema::prelude::Context<'_, DashboardState>,
+        _: anathema::widgets::Elements<'_, '_>,
+    ) {
+        let url = state.url.to_ref().clone();
+        let method = state.method.to_ref().clone();
+        let headers = state.request_headers.to_ref();
+
+        let mut request_builder = http::Request::builder();
+        for header_value in headers.iter() {
+            let header = header_value.to_ref();
+            let header_name = header.name.to_ref().to_string();
+            let header_value = header.value.to_ref().to_string();
+
+            request_builder = request_builder.header(header_name, header_value);
+        }
+
+        let http_request_result = request_builder
+            .method(method.as_str())
+            .uri(url.as_str())
+            .body(vec![0u8]);
+
+        if let Err(http_request_error) = http_request_result {
+            dbg!(http_request_error);
+            println!("url: {}", url);
+            return;
+        }
+
+        let http_request = http_request_result.unwrap();
+        let (http_parts, _body) = http_request.into_parts();
+        let request: ureq::Request = http_parts.into();
+        // let response = request.send_bytes(&body);
+
+        let response = request.call();
+        if response.is_err() {
+            return;
+        }
+
+        let response = response.unwrap();
+        // let _status = response.status();
+
+        // let content_type: Option<&str> = Some("text/plain");
+        // let mut c: &str = response.content_type();
+        let content_type: &str = "text/html";
+
+        let mut body = String::new();
+        let mut reader = response.into_reader();
+        let _ = reader.read_to_string(&mut body);
+
+        // let mut body = response
+        //     .into_string()
+        //     .unwrap_or("Could not read response body".to_string());
+
+        // let content_type = &mut response.header("content-type");
+        // response.
+
+        println!("Checking");
+        if let Some((_, content_type)) = content_type.split_once("/") {
+            println!("Adding syntax highlighting...");
+
+            if self.syntax_set.is_none() || self.theme_set.is_none() {
+                return;
+            }
+
+            let syntax_set = self.syntax_set.as_ref().unwrap();
+
+            let syntax: Option<&SyntaxReference> = if content_type != "plain" {
+                syntax_set.find_syntax_by_extension(content_type)
+            } else {
+                Some(syntax_set.find_syntax_plain_text())
+            };
+
+            if syntax.is_none() {
+                return;
+            }
+
+            let theme_set = self.theme_set.as_ref().unwrap();
+            let syntax = syntax.unwrap();
+            let mut highlighter =
+                HighlightLines::new(syntax, &theme_set.themes["base16-ocean.dark"]);
+
+            let raw_body = body.clone();
+            body.clear();
+
+            for line in LinesWithEndings::from(&raw_body) {
+                let ranges: Vec<(Style, &str)> =
+                    highlighter.highlight_line(line, syntax_set).unwrap();
+                let escaped = as_24_bit_terminal_escaped(&ranges[..], true);
+                body.push_str(&escaped);
+            }
+        }
+
+        state.response.set(body.to_string());
+        state.main_display.set(MainDisplay::ResponseBody);
+
+        context.set_focus("id", "app");
+    }
+}
+
 impl anathema::component::Component for DashboardComponent {
     type State = DashboardState;
     type Message = String;
@@ -83,6 +200,10 @@ impl anathema::component::Component for DashboardComponent {
         _elements: Elements<'_, '_>,
         mut context: Context<'_, Self::State>,
     ) {
+        // Load these once at the start of your program
+        // let ps = SyntaxSet::load_defaults_newlines();
+        // let ts = ThemeSet::load_defaults();
+
         match ident {
             "add_header" => {
                 let header_name = state.new_header_name.to_ref().to_string();
@@ -158,7 +279,7 @@ impl anathema::component::Component for DashboardComponent {
                 'u' => context.set_focus("id", "url_input"),
                 'q' => context.set_focus("id", "textarea"),
 
-                'r' => do_request(state, context, elements),
+                'r' => self.do_request(state, context, elements),
                 'b' => state.main_display.set(MainDisplay::RequestBody),
                 'd' => state.main_display.set(MainDisplay::RequestHeadersEditor),
 
@@ -184,54 +305,6 @@ impl anathema::component::Component for DashboardComponent {
     fn accept_focus(&self) -> bool {
         true
     }
-}
-
-fn do_request(
-    state: &mut DashboardState,
-    mut context: anathema::prelude::Context<'_, DashboardState>,
-    _elements: anathema::widgets::Elements<'_, '_>,
-) {
-    let url = state.url.to_ref().clone();
-    let method = state.method.to_ref().clone();
-    let headers = state.request_headers.to_ref();
-
-    let mut request_builder = http::Request::builder();
-    for header_value in headers.iter() {
-        let header = header_value.to_ref();
-        let header_name = header.name.to_ref().to_string();
-        let header_value = header.value.to_ref().to_string();
-
-        request_builder = request_builder.header(header_name, header_value);
-    }
-
-    let http_request_result = request_builder
-        .method(method.as_str())
-        .uri(url.as_str())
-        .body(vec![0u8]);
-
-    if let Err(http_request_error) = http_request_result {
-        dbg!(http_request_error);
-        println!("url: {}", url);
-        return;
-    }
-
-    let http_request = http_request_result.unwrap();
-    let (http_parts, _body) = http_request.into_parts();
-    let request: ureq::Request = http_parts.into();
-    // let response = request.send_bytes(&body);
-
-    let response = request.send_string("");
-    if let Ok(response) = response {
-        let _status = response.status();
-        let body = response
-            .into_string()
-            .unwrap_or("Could not read response body".to_string());
-
-        state.response.set(body);
-        state.main_display.set(MainDisplay::ResponseBody);
-    }
-
-    context.set_focus("id", "app");
 }
 
 fn get_default_headers() -> Vec<Header> {

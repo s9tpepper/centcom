@@ -35,7 +35,7 @@ impl App {
         let doc = Document::new("@app");
 
         let tui = TuiBackend::builder()
-            .enable_alt_screen()
+            // .enable_alt_screen()
             .enable_raw_mode()
             .hide_cursor()
             .finish();
@@ -65,7 +65,7 @@ impl App {
         let _dashboard_id = builder.register_component(
             "dashboard",
             DASHBOARD_TEMPLATE,
-            DashboardComponent,
+            DashboardComponent::new(),
             DashboardState::new(),
         );
 
