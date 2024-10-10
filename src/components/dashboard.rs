@@ -174,30 +174,49 @@ impl anathema::component::Component for DashboardComponent {
         match event.code {
             KeyCode::Char(char) => {
                 match char {
+                    // Sets focus to header name text input
                     'n' => context.set_focus("id", "header_name_input"),
+
+                    // Sets focus to header value text input
                     'v' => context.set_focus("id", "header_value_input"),
 
+                    // Set focus to the request url text input
                     'u' => context.set_focus("id", "url_input"),
+
+                    // Set focus to the request body textarea
                     'q' => context.set_focus("id", "textarea"),
 
+                    // Make the request
                     'r' => do_request(state, context, elements),
+
+                    // Show request body editor window
                     'b' => state.main_display.set(MainDisplay::RequestBody),
+
+                    // Show request headers editor window
                     'd' => state.main_display.set(MainDisplay::RequestHeadersEditor),
+
+                    // Show response body window
                     'p' => {
                         state.main_display.set(MainDisplay::ResponseBody);
                         context.set_focus("id", "response");
                     }
+
+                    // Show response headers display
                     'h' => state.main_display.set(MainDisplay::ResponseHeaders),
 
-                    // floating windows
+                    // Open Request Method selection window
                     'm' => {
                         state.show_method_window.set(true);
                         context.set_focus("id", "method_selector");
                     }
+
+                    // Open header window
                     'a' => {
                         state.show_add_header_window.set(true);
                         context.set_focus("id", "add_header_window");
                     }
+
+                    // Copy response body to clipboard
                     'y' => {
                         let Ok(mut clipboard) = Clipboard::new() else {
                             state
