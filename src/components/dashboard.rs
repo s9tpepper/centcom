@@ -1,7 +1,7 @@
 use anathema::{
     component::{KeyCode, KeyEvent},
     prelude::Context,
-    state::{CommonVal, List, Value},
+    state::{CommonVal, List, State, Value},
     widgets::Elements,
 };
 
@@ -42,6 +42,8 @@ pub struct DashboardState {
     response: Value<String>,
     show_method_window: Value<bool>,
     show_add_header_window: Value<bool>,
+    show_error_window: Value<bool>,
+    error_message: Value<String>,
     main_display: Value<MainDisplay>,
     menu_items: Value<List<MenuItem>>,
     logs: Value<String>,
@@ -55,10 +57,12 @@ impl DashboardState {
             url: "".to_string().into(),
             method: "GET".to_string().into(),
             response: "".to_string().into(),
+            error_message: "".to_string().into(),
             new_header_name: "".to_string().into(),
             new_header_value: "".to_string().into(),
             show_method_window: false.into(),
             show_add_header_window: false.into(),
+            show_error_window: false.into(),
             main_display: Value::<MainDisplay>::new(MainDisplay::RequestBody),
             logs: "".to_string().into(),
             menu_items: List::from_iter([
@@ -188,7 +192,13 @@ impl anathema::component::Component for DashboardComponent {
                 }
             }
 
-            KeyCode::Esc => context.set_focus("id", "app"),
+            KeyCode::Esc => {
+                context.set_focus("id", "app");
+
+                if state.show_error_window.to_ref().to_bool() {
+                    state.show_error_window.set(false);
+                }
+            }
 
             KeyCode::Enter => {
                 // TODO: Do something with the Enter button
@@ -232,7 +242,9 @@ fn do_request(
         .body(vec![0u8]);
 
     if http_request_result.is_err() {
-        // TODO: Notify user that there was an error
+        let error = http_request_result.unwrap_err();
+        state.error_message.set(error.to_string());
+        state.show_error_window.set(true);
         return;
     }
 
@@ -285,7 +297,10 @@ fn do_request(
 
         context.set_focus("id", "response");
     } else {
-        // TODO: Notify user that an error has happened
+        let error = response.unwrap_err();
+
+        state.error_message.set(error.to_string());
+        state.show_error_window.set(true);
     }
 
     context.set_focus("id", "app");

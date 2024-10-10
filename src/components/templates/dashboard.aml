@@ -62,3 +62,17 @@ zstack
 
   if show_method_window
     @method_selector (cancel_method_selector->cancel_method_selector, new_method_selection->new_method_selection) [id: "method_selector"]
+
+  if show_error_window
+    align [alignment: "center"]
+      container [background: "#fedbe2", max_height: 3]
+        padding [padding: 0]
+          @app_section [
+            border_color: "#ff77aa",
+            top_label: "ERROR",
+            bottom_label: ["C(l)ose"],
+            show_top_label: true,
+            show_bottom_label: false
+          ]
+            $children
+              text error_message
