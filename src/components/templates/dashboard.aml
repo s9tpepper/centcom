@@ -17,7 +17,7 @@ zstack
           expand
             @app_section [
               border_color: "#ffffff",
-              top_label: "Response Body",
+              top_label: response_body_window_label,
               bottom_label: ["(B)ack to Request", "Show Response (H)eaders"],
               show_top_label: true,
               show_bottom_label: true

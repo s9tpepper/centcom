@@ -40,6 +40,7 @@ pub struct DashboardState {
     request_body: Value<String>,
     response_headers: Value<List<Header>>,
     response: Value<String>,
+    response_body_window_label: Value<String>,
     show_method_window: Value<bool>,
     show_add_header_window: Value<bool>,
     show_error_window: Value<bool>,
@@ -57,6 +58,7 @@ impl DashboardState {
             url: "".to_string().into(),
             method: "GET".to_string().into(),
             response: "".to_string().into(),
+            response_body_window_label: "".to_string().into(),
             error_message: "".to_string().into(),
             new_header_name: "".to_string().into(),
             new_header_value: "".to_string().into(),
@@ -267,7 +269,7 @@ fn do_request(
     };
 
     if let Ok(response) = response {
-        let _status = response.status();
+        let status = response.status();
 
         loop {
             if state.response_headers.len() > 0 {
@@ -292,7 +294,9 @@ fn do_request(
             .into_string()
             .unwrap_or("Could not read response body".to_string());
 
+        let window_label = format!("Response Body (Status Code: {status})");
         state.response.set(body);
+        state.response_body_window_label.set(window_label);
         state.main_display.set(MainDisplay::ResponseBody);
 
         context.set_focus("id", "response");
