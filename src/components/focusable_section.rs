@@ -11,6 +11,7 @@ pub struct FocusableSectionState {
     target: Value<Option<String>>,
     active_border_color: Value<String>,
     url_update: Value<String>,
+    request_body_update: Value<String>,
 }
 
 impl FocusableSectionState {
@@ -19,6 +20,7 @@ impl FocusableSectionState {
             target: None.into(),
             active_border_color: String::from("#666666").into(),
             url_update: String::from("").into(),
+            request_body_update: String::from("").into(),
         }
     }
 }
@@ -76,6 +78,12 @@ impl Component for FocusableSection {
                 state.url_update.set(value.to_string());
 
                 context.publish("url_update", |state| &state.url_update)
+            }
+
+            "request_body_update" => {
+                state.request_body_update.set(value.to_string());
+
+                context.publish("request_body_update", |state| &state.request_body_update)
             }
 
             _ => {}

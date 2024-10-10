@@ -184,7 +184,7 @@ impl anathema::component::Component for TextArea {
         &mut self,
         event: anathema::component::KeyEvent,
         state: &mut Self::State,
-        mut elements: anathema::widgets::Elements<'_, '_>,
+        elements: anathema::widgets::Elements<'_, '_>,
         mut context: anathema::prelude::Context<'_, Self::State>,
     ) {
         // let mut input = state.input.to_mut();
@@ -484,7 +484,7 @@ impl TextArea {
     fn backspace(
         &mut self,
         state: &mut TextAreaInputState,
-        _context: Context<'_, TextAreaInputState>,
+        mut context: Context<'_, TextAreaInputState>,
         mut elements: anathema::widgets::Elements<'_, '_>,
     ) {
         elements
@@ -502,7 +502,7 @@ impl TextArea {
                 let line_lengths = get_line_lengths(lines);
 
                 let mut input = state.input.to_mut();
-                let mut backspace_index = input.len() - 1;
+                let mut backspace_index = input.len().saturating_sub(1);
                 log(
                     format!("backspace_index: {backspace_index}\n"),
                     Some("backspace.txt"),
@@ -527,6 +527,7 @@ impl TextArea {
                         Some("backspace.txt"),
                     );
                     input.remove(backspace_index);
+                    context.publish("text_change", |state| &state.input);
 
                     // let mut prefix = state.cursor_prefix.to_mut();
                     // prefix.remove(backspace_index);

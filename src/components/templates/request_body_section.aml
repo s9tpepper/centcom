@@ -8,4 +8,4 @@
   section_text_id: "textarea"
 ]
   $children
-    @textarea (textarea_focus -> input_focus) [id: "textarea"]
+    @textarea (textarea_focus -> input_focus, text_change -> request_body_update) [id: "textarea"]

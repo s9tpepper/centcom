@@ -37,6 +37,7 @@ pub struct DashboardState {
     url: Value<String>,
     method: Value<String>,
     request_headers: Value<List<Header>>,
+    request_body: Value<String>,
     response_headers: Value<List<Header>>,
     response: Value<String>,
     show_method_window: Value<bool>,
@@ -69,6 +70,7 @@ impl DashboardState {
                 },
             ]),
             request_headers: List::from_iter(get_default_headers()),
+            request_body: "".to_string().into(),
             response_headers: List::from_iter(vec![]),
         }
     }
@@ -142,6 +144,8 @@ impl anathema::component::Component for DashboardComponent {
             }
             "header_value_update" => state.new_header_value.set(value.to_string()),
 
+            "request_body_update" => state.request_body.set(value.to_string()),
+
             _ => {}
         }
     }
@@ -208,11 +212,16 @@ fn do_request(
     let method = state.method.to_ref().clone();
     let headers = state.request_headers.to_ref();
 
+    let mut content_type = String::new();
     let mut request_builder = http::Request::builder();
     for header_value in headers.iter() {
         let header = header_value.to_ref();
         let header_name = header.name.to_ref().to_string();
         let header_value = header.value.to_ref().to_string();
+
+        if header_name.to_lowercase() == "content-type" {
+            content_type.push_str(header_value.as_str());
+        }
 
         request_builder = request_builder.header(header_name, header_value);
     }
@@ -223,6 +232,7 @@ fn do_request(
         .body(vec![0u8]);
 
     if http_request_result.is_err() {
+        // TODO: Notify user that there was an error
         return;
     }
 
@@ -230,8 +240,20 @@ fn do_request(
     let (http_parts, _body) = http_request.into_parts();
     let request: ureq::Request = http_parts.into();
     // let response = request.send_bytes(&body);
+    // let request_body = state.in
+    let response = match content_type.as_str() {
+        "application/json" => {
+            let req_body = state.request_body.to_ref().clone();
 
-    let response = request.send_string("");
+            request.send_string(&req_body)
+        }
+
+        // TODO: Figure out how to support form k/v pairs in the request body builder interface
+        // "multipart/form" => request.send_form("")
+        //
+        _ => request.send_string(""),
+    };
+
     if let Ok(response) = response {
         let _status = response.status();
 
@@ -262,6 +284,8 @@ fn do_request(
         state.main_display.set(MainDisplay::ResponseBody);
 
         context.set_focus("id", "response");
+    } else {
+        // TODO: Notify user that an error has happened
     }
 
     context.set_focus("id", "app");
