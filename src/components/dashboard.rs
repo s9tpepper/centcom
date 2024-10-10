@@ -5,6 +5,8 @@ use anathema::{
     widgets::Elements,
 };
 
+use arboard::Clipboard;
+
 use crate::components::request_headers_editor::Header;
 
 pub const DASHBOARD_TEMPLATE: &str = "./src/components/templates/dashboard.aml";
@@ -45,6 +47,9 @@ pub struct DashboardState {
     show_add_header_window: Value<bool>,
     show_error_window: Value<bool>,
     error_message: Value<String>,
+    show_message_window: Value<bool>,
+    message: Value<String>,
+    message_label: Value<String>,
     main_display: Value<MainDisplay>,
     menu_items: Value<List<MenuItem>>,
     logs: Value<String>,
@@ -58,6 +63,8 @@ impl DashboardState {
             url: "".to_string().into(),
             method: "GET".to_string().into(),
             response: "".to_string().into(),
+            message: "".to_string().into(),
+            message_label: "".to_string().into(),
             response_body_window_label: "".to_string().into(),
             error_message: "".to_string().into(),
             new_header_name: "".to_string().into(),
@@ -65,6 +72,7 @@ impl DashboardState {
             show_method_window: false.into(),
             show_add_header_window: false.into(),
             show_error_window: false.into(),
+            show_message_window: false.into(),
             main_display: Value::<MainDisplay>::new(MainDisplay::RequestBody),
             logs: "".to_string().into(),
             menu_items: List::from_iter([
@@ -190,6 +198,31 @@ impl anathema::component::Component for DashboardComponent {
                         state.show_add_header_window.set(true);
                         context.set_focus("id", "add_header_window");
                     }
+                    'y' => {
+                        let Ok(mut clipboard) = Clipboard::new() else {
+                            state
+                                .error_message
+                                .set("Error accessing your clipboard".to_string());
+                            state.show_error_window.set(true);
+                            return;
+                        };
+
+                        let set_operation = clipboard.set();
+                        match set_operation.text(state.response.to_ref().clone()) {
+                            Ok(_) => {
+                                state
+                                    .message
+                                    .set("Response copied to clipboard".to_string());
+                                state.message_label.set("Clipboard".to_string());
+                                state.show_message_window.set(true);
+                            }
+
+                            Err(error) => {
+                                state.error_message.set(error.to_string());
+                                state.show_error_window.set(true);
+                            }
+                        }
+                    }
                     _ => {}
                 }
             }
@@ -199,6 +232,10 @@ impl anathema::component::Component for DashboardComponent {
 
                 if state.show_error_window.to_ref().to_bool() {
                     state.show_error_window.set(false);
+                }
+
+                if state.show_message_window.to_ref().to_bool() {
+                    state.show_message_window.set(false);
                 }
             }
 

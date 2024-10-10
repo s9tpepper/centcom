@@ -18,7 +18,7 @@ zstack
             @app_section [
               border_color: "#ffffff",
               top_label: response_body_window_label,
-              bottom_label: ["(B)ack to Request", "Show Response (H)eaders"],
+              bottom_label: ["(B)ack to Request", "Show Response (H)eaders", "Cop(y) Response"],
               show_top_label: true,
               show_bottom_label: true
             ]
@@ -70,9 +70,21 @@ zstack
           @app_section [
             border_color: "#ff77aa",
             top_label: "ERROR",
-            bottom_label: ["C(l)ose"],
             show_top_label: true,
             show_bottom_label: false
           ]
             $children
               text error_message
+
+  if show_message_window
+    align [alignment: "center"]
+      container [background: "#e2ffe2", max_height: 3]
+        padding [padding: 0]
+          @app_section [
+            border_color: "#5bb450",
+            top_label: message_label,
+            show_top_label: true,
+            show_bottom_label: false
+          ]
+            $children
+              text message
