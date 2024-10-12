@@ -64,8 +64,16 @@ impl Component for EditHeaderWindow {
             }
 
             KeyCode::Char(char) => {
-                if char == 's' {
-                    context.publish("edit_header", |state| &state.name)
+                match char {
+                    's' => context.publish("edit_header", |state| &state.name),
+
+                    // Sets focus to header name text input
+                    'n' => context.set_focus("id", "edit_header_name_input_id"),
+
+                    // Sets focus to header value text input
+                    'v' => context.set_focus("id", "edit_header_value_input_id"),
+
+                    _ => {}
                 }
             }
 

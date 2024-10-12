@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use anathema::{
-    component::{ComponentId, Emitter, KeyCode, KeyEvent},
+    component::{ComponentId, KeyCode, KeyEvent},
     prelude::Context,
     state::{CommonVal, List, State, Value},
     widgets::Elements,
@@ -226,8 +226,6 @@ impl anathema::component::Component for DashboardComponent {
                 state.show_edit_header_selector.set(false);
                 state.show_edit_header_window.set(true);
 
-                context.set_focus("id", "edit_header_window");
-
                 let edit_header_name_input_id = self.component_ids.get("edit_header_name_input");
                 if let Some(id) = edit_header_name_input_id {
                     context.emit(*id, state.edit_header_name.to_ref().clone());
@@ -237,6 +235,8 @@ impl anathema::component::Component for DashboardComponent {
                 if let Some(id) = edit_header_value_input_id {
                     context.emit(*id, state.edit_header_value.to_ref().clone());
                 }
+
+                context.set_focus("id", "edit_header_window");
             }
             _ => {}
         }
@@ -252,11 +252,11 @@ impl anathema::component::Component for DashboardComponent {
         match event.code {
             KeyCode::Char(char) => {
                 match char {
-                    // Sets focus to header name text input
-                    'n' => context.set_focus("id", "header_name_input"),
-
-                    // Sets focus to header value text input
-                    'v' => context.set_focus("id", "header_value_input"),
+                    // // Sets focus to header name text input
+                    // 'n' => context.set_focus("id", "header_name_input"),
+                    //
+                    // // Sets focus to header value text input
+                    // 'v' => context.set_focus("id", "header_value_input"),
 
                     // Set focus to the request url text input
                     'u' => context.set_focus("id", "url_input"),

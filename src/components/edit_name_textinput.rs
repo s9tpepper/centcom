@@ -13,8 +13,10 @@ impl anathema::component::Component for EditNameTextInput {
         &mut self,
         state: &mut Self::State,
         elements: Elements<'_, '_>,
-        context: Context<'_, Self::State>,
+        mut context: Context<'_, Self::State>,
     ) {
+        context.set_focus("id", "edit_header_window");
+
         self._on_blur(state, elements, context);
     }
 
