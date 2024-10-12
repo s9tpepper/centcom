@@ -18,6 +18,8 @@ use crate::components::{
     edit_name_textinput::EditNameTextInput,
     edit_value_textinput::EditValueTextInput,
     focusable_section::{FocusableSection, FocusableSectionState},
+    header_name_textinput::HeaderNameTextInput,
+    header_value_textinput::HeaderValueTextInput,
     menu_item::{MenuItem, MenuItemState, MENU_ITEM_TEMPLATE},
     method_selector::{MethodSelector, MethodSelectorState, METHOD_SELECTOR_TEMPLATE},
     request_body_section::REQUEST_BODY_SECTION_TEMPLATE,
@@ -165,6 +167,20 @@ impl App {
         );
 
         let _ = builder.register_prototype("row", ROW_TEMPLATE, || Row, RowState::new);
+
+        let _ = builder.register_component(
+            "headernameinput",
+            TEXTINPUT_TEMPLATE,
+            HeaderNameTextInput,
+            InputState::new(),
+        );
+
+        let _ = builder.register_component(
+            "headervalueinput",
+            TEXTINPUT_TEMPLATE,
+            HeaderValueTextInput,
+            InputState::new(),
+        );
 
         let edit_header_name_id = builder.register_component(
             "editheadername",

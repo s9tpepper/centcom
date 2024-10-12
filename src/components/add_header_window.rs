@@ -74,8 +74,16 @@ impl Component for AddHeaderWindow {
             }
 
             KeyCode::Char(char) => {
-                if char == 's' {
-                    context.publish("add_header", |state| &state.name)
+                match char {
+                    's' => context.publish("add_header", |state| &state.name),
+
+                    // Sets focus to header name text input
+                    'n' => context.set_focus("id", "header_name_input"),
+
+                    // Sets focus to header value text input
+                    'v' => context.set_focus("id", "header_value_input"),
+
+                    _ => {}
                 }
             }
 

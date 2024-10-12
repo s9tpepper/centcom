@@ -6,15 +6,19 @@ align [alignment: "center"]
       zstack
         border [foreground: #ffffff, border_style: "╭─╮│╯─╰│"]
           vstack
-            container [height: 3]
-              @row [ border_color: "#FFFFFF", top_label: "(N)ame", expanding: false, minwidth: 40 ]
-                $children
-                  @textinput (text_change->header_name_update, textarea_focus -> name_input_focus) [id: "header_name_input"]
+            container [height: 3, max_height: 3]
+              zstack
+                border [foreground: border_color, border_style: "╭─╮│╯─╰│", min_width: minwidth, max_width: 60]
+                  expand [axis: "horizontal"]
+                    @headernameinput (text_change -> header_name_update, textarea_focus -> name_input_focus) [id: "header_name_input"]
+                text "╭─(N)ame:"
 
-            container [height: 3]
-              @row [ border_color: "#FFFFFF", top_label: "(V)alue", expanding: false, minwidth: 40 ]
-                $children
-                  @textinput (text_change->header_value_update, textarea_focus -> value_input_focus) [id: "header_value_input"]
+            container [height: 3, max_height: 3]
+              zstack
+                border [foreground: border_color, border_style: "╭─╮│╯─╰│", min_width: minwidth, max_width: 60]
+                  expand [axis: "horizontal"]
+                    @headervalueinput (text_change -> header_value_update, textarea_focus -> value_input_focus) [id: "header_value_input"]
+                text "╭─(V)alue:"
 
         vstack [height: 8]
           text "╭─Add Header:"
