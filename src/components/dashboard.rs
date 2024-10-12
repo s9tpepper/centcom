@@ -207,7 +207,10 @@ impl anathema::component::Component for DashboardComponent {
 
             "request_body_update" => state.request_body.set(value.to_string()),
 
-            "cancel_header_selection" => state.show_edit_header_selector.set(false),
+            "cancel_header_selection" => {
+                state.show_edit_header_selector.set(false);
+                context.set_focus("id", "app");
+            }
 
             "header_selection" => {
                 let selection: usize = value.to_string().parse().unwrap();

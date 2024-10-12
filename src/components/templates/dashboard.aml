@@ -90,7 +90,7 @@ zstack
               text message
 
   if show_edit_header_selector
-    @edit_header_selector (header_selection -> header_selection) [id: "edit_header_selector", headers: request_headers]
+    @edit_header_selector (header_selection -> header_selection, cancel_header_selection -> cancel_header_selection) [id: "edit_header_selector", headers: request_headers]
 
   if show_edit_header_window
     @edit_header_window (

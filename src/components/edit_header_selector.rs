@@ -30,15 +30,6 @@ impl Component for EditHeaderSelector {
         true
     }
 
-    fn on_focus(
-        &mut self,
-        _: &mut Self::State,
-        _: anathema::widgets::Elements<'_, '_>,
-        _: anathema::prelude::Context<'_, Self::State>,
-    ) {
-        println!("Edit header selection window got focused");
-    }
-
     fn on_key(
         &mut self,
         event: anathema::component::KeyEvent,
@@ -53,7 +44,11 @@ impl Component for EditHeaderSelector {
                     context.publish("header_selection", |state| &state.selection)
                 }
             }
+
             anathema::component::KeyCode::Esc => {
+                // NOTE: This selection state needs a Some in order for the associated function to
+                // fire
+                state.selection.set(Some('x'));
                 context.publish("cancel_header_selection", |state| &state.selection)
             }
 
