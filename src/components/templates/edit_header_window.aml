@@ -1,0 +1,27 @@
+align [alignment: "center"]
+  container [background: "black"]
+    zstack
+      zstack
+        border [foreground: #ffffff, border_style: "╭─╮│╯─╰│"]
+          vstack
+            container [height: 3, max_height: 3]
+              zstack
+                border [foreground: border_color, border_style: "╭─╮│╯─╰│", min_width: minwidth, max_width: 60]
+                  expand [axis: "horizontal"]
+                    @editheadername (text_change->edit_header_name_update, textarea_focus -> edit_name_input_focus) [id: "edit_header_name_input_id"]
+
+                text "╭─(N)ame:"
+
+            container [height: 3]
+              @row [ border_color: "#FFFFFF", top_label: "(V)alue", expanding: false, minwidth: 40 ]
+                $children
+                  @textinput (text_change->edit_header_value_update, textarea_focus -> edit_value_input_focus) [id: "edit_header_value_input"]
+
+        vstack [height: 8]
+          text "╭─Edit Header:"
+          spacer
+          text [min_height: 1] "╰"
+            span [foreground: border_color] "─"
+            span [foreground: border_color] "["
+            span [foreground: border_color] "(S)ubmit"
+            span [foreground: border_color] "]"

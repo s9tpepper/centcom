@@ -30,7 +30,7 @@ zstack
             @app_section [
               border_color: "#ffffff",
               top_label: "Request Headers",
-              bottom_label: ["Send (R)equest", "(A)dd Header", "(B)ack to Request"],
+              bottom_label: ["Send (R)equest", "(A)dd Header", "(E)dit Header", "(B)ack to Request"],
               show_top_label: true,
               show_bottom_label: true
             ]
@@ -58,7 +58,7 @@ zstack
             @menu_item
 
   if show_add_header_window
-    @add_header_window (add_header->add_header, cancel_add_header->cancel_add_header, header_name_update->header_name_update, header_value_update->header_value_update) [id: "add_header_window"]
+    @add_header_window (add_header->add_header, cancel_add_header->cancel_add_header, header_name_update->header_name_update, header_value_update->header_value_update) [id: "add_header_window", name: edit_header_name, value: edit_header_value]
 
   if show_method_window
     @method_selector (cancel_method_selector->cancel_method_selector, new_method_selection->new_method_selection) [id: "method_selector"]
@@ -88,3 +88,18 @@ zstack
           ]
             $children
               text message
+
+  if show_edit_header_selector
+    @edit_header_selector (header_selection -> header_selection) [id: "edit_header_selector", headers: request_headers]
+
+  if show_edit_header_window
+    @edit_header_window (
+      edit_header->edit_header,
+      cancel_edit_header->cancel_edit_header,
+      edit_header_name_update->edit_header_name_update,
+      edit_header_value_update->edit_header_value_update
+    ) [
+      id: "edit_header_window",
+      name: edit_header_name,
+      value: edit_header_value
+    ]

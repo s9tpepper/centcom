@@ -5,15 +5,13 @@ use anathema::{
     widgets::Elements,
 };
 
-pub const TEXTINPUT_TEMPLATE: &str = "./src/components/templates/textinput.aml";
+pub const EDIT_NAME_INPUT_TEMPLATE: &str = "./src/components/templates/editnametextinput.aml";
 
 #[derive(Default)]
-pub struct TextInput {
-    pub input_override: Option<String>,
-}
+pub struct EditNameTextInput;
 
 #[derive(Default, anathema::state::State)]
-pub struct InputState {
+pub struct EditNameInputState {
     input: Value<String>,
     cursor_prefix: Value<String>,
     cursor_char: Value<String>,
@@ -23,9 +21,9 @@ pub struct InputState {
     focused: Value<bool>,
 }
 
-impl InputState {
+impl EditNameInputState {
     pub fn new() -> Self {
-        InputState {
+        EditNameInputState {
             input: String::from("").into(),
             cursor_prefix: String::from("").into(),
             cursor_char: String::from("").into(),
@@ -37,8 +35,8 @@ impl InputState {
     }
 }
 
-impl anathema::component::Component for TextInput {
-    type State = InputState;
+impl anathema::component::Component for EditNameTextInput {
+    type State = EditNameInputState;
     type Message = String;
 
     fn message(
@@ -50,19 +48,6 @@ impl anathema::component::Component for TextInput {
     ) {
         println!("Text input got message: {message}");
         state.input.set(message);
-    }
-
-    fn tick(
-        &mut self,
-        state: &mut Self::State,
-        _: Elements<'_, '_>,
-        _: Context<'_, Self::State>,
-        _: std::time::Duration,
-    ) {
-        if let Some(new_input) = &self.input_override {
-            state.input.set(new_input.to_string());
-            self.input_override = None;
-        }
     }
 
     fn accept_focus(&self) -> bool {
@@ -180,16 +165,12 @@ impl anathema::component::Component for TextInput {
     }
 }
 
-impl TextInput {
-    pub fn set_input_override(&mut self, input: String) {
-        self.input_override = Some(input);
-    }
-
+impl EditNameTextInput {
     fn add_character(
         &mut self,
         char: char,
-        state: &mut InputState,
-        mut context: Context<'_, InputState>,
+        state: &mut EditNameInputState,
+        mut context: Context<'_, EditNameInputState>,
     ) {
         let mut input = state.input.to_mut();
         let Some(cursor_position) = state.cursor_position.to_number() else {
@@ -222,7 +203,7 @@ impl TextInput {
         context.publish("text_change", |state| &state.input)
     }
 
-    fn delete(&self, state: &mut InputState, mut context: Context<'_, InputState>) {
+    fn delete(&self, state: &mut EditNameInputState, mut context: Context<'_, EditNameInputState>) {
         let mut input = state.input.to_mut();
         let Some(cursor_position) = state.cursor_position.to_number() else {
             return;
@@ -249,7 +230,11 @@ impl TextInput {
         context.publish("text_change", |state| &state.input)
     }
 
-    fn backspace(&mut self, state: &mut InputState, mut context: Context<'_, InputState>) {
+    fn backspace(
+        &mut self,
+        state: &mut EditNameInputState,
+        mut context: Context<'_, EditNameInputState>,
+    ) {
         let mut input = state.input.to_mut();
         let Some(cursor_position) = state.cursor_position.to_number() else {
             return;
@@ -279,7 +264,7 @@ impl TextInput {
         context.publish("text_change", |state| &state.input)
     }
 
-    fn move_cursor_left(&self, state: &mut InputState) {
+    fn move_cursor_left(&self, state: &mut EditNameInputState) {
         let input = state.input.to_mut();
         let Some(cursor_position) = state.cursor_position.to_number() else {
             return;
@@ -301,7 +286,7 @@ impl TextInput {
         }
     }
 
-    fn move_cursor_right(&self, state: &mut InputState) {
+    fn move_cursor_right(&self, state: &mut EditNameInputState) {
         let input = state.input.to_mut();
         let Some(cursor_position) = state.cursor_position.to_number() else {
             return;
@@ -325,7 +310,7 @@ impl TextInput {
         }
     }
 
-    fn move_cursor_up(&self, state: &mut InputState) {
+    fn move_cursor_up(&self, state: &mut EditNameInputState) {
         let input = state.input.to_mut();
 
         state.cursor_position.set(input.len());
@@ -333,7 +318,7 @@ impl TextInput {
         state.cursor_prefix.set(input.to_string());
     }
 
-    fn move_cursor_down(&self, state: &mut InputState) {
+    fn move_cursor_down(&self, state: &mut EditNameInputState) {
         let input = state.input.to_mut();
 
         state.cursor_position.set(0);

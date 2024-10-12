@@ -1,0 +1,12 @@
+align [alignment: "center"]
+  @app_section [
+    border_color: "#ffffff",
+    top_label: "Choose Header to Edit",
+    bottom_label: "hello",
+    show_top_label: true,
+    show_bottom_label: false
+  ]
+    $children
+      vstack
+        for header in headers
+          text loop ". " header.name ": " header.value

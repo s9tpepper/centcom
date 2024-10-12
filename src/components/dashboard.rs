@@ -1,5 +1,7 @@
+use std::collections::HashMap;
+
 use anathema::{
-    component::{KeyCode, KeyEvent},
+    component::{ComponentId, Emitter, KeyCode, KeyEvent},
     prelude::Context,
     state::{CommonVal, List, State, Value},
     widgets::Elements,
@@ -45,7 +47,9 @@ pub struct DashboardState {
     response_body_window_label: Value<String>,
     show_method_window: Value<bool>,
     show_add_header_window: Value<bool>,
+    show_edit_header_window: Value<bool>,
     show_error_window: Value<bool>,
+    show_edit_header_selector: Value<bool>,
     error_message: Value<String>,
     show_message_window: Value<bool>,
     message: Value<String>,
@@ -55,6 +59,10 @@ pub struct DashboardState {
     logs: Value<String>,
     new_header_name: Value<String>,
     new_header_value: Value<String>,
+    edit_header_name: Value<String>,
+    edit_header_value: Value<String>,
+
+    header_being_edited: Value<Option<Value<Header>>>,
 }
 
 impl DashboardState {
@@ -69,10 +77,14 @@ impl DashboardState {
             error_message: "".to_string().into(),
             new_header_name: "".to_string().into(),
             new_header_value: "".to_string().into(),
+            edit_header_name: "".to_string().into(),
+            edit_header_value: "".to_string().into(),
             show_method_window: false.into(),
             show_add_header_window: false.into(),
+            show_edit_header_window: false.into(),
             show_error_window: false.into(),
             show_message_window: false.into(),
+            show_edit_header_selector: false.into(),
             main_display: Value::<MainDisplay>::new(MainDisplay::RequestBody),
             logs: "".to_string().into(),
             menu_items: List::from_iter([
@@ -86,11 +98,15 @@ impl DashboardState {
             request_headers: List::from_iter(get_default_headers()),
             request_body: "".to_string().into(),
             response_headers: List::from_iter(vec![]),
+            header_being_edited: None.into(),
         }
     }
 }
 
-pub struct DashboardComponent;
+pub struct DashboardComponent {
+    pub component_ids: HashMap<String, ComponentId<String>>,
+}
+
 impl anathema::component::Component for DashboardComponent {
     type State = DashboardState;
     type Message = String;
@@ -119,10 +135,42 @@ impl anathema::component::Component for DashboardComponent {
                 context.set_focus("id", "app");
             }
 
+            "edit_header" => {
+                let header_name = state.edit_header_name.to_ref().to_string();
+                let header_value = state.edit_header_value.to_ref().to_string();
+
+                let header = Header {
+                    name: header_name.into(),
+                    value: header_value.into(),
+                };
+
+                state.request_headers.push(header);
+                state.show_edit_header_window.set(false);
+
+                context.set_focus("id", "app");
+            }
+
             "cancel_add_header" => {
                 state.show_add_header_window.set(false);
                 state.new_header_name.set("".to_string());
                 state.new_header_value.set("".to_string());
+                context.set_focus("id", "app");
+            }
+
+            "cancel_edit_header" => {
+                state.show_edit_header_window.set(false);
+                state.edit_header_name.set("".to_string());
+                state.edit_header_value.set("".to_string());
+
+                let header = state.header_being_edited.to_mut();
+                let header = header.as_ref();
+                if let Some(header) = header {
+                    state.request_headers.push(Header {
+                        name: header.to_ref().name.to_ref().clone().into(),
+                        value: header.to_ref().value.to_ref().clone().into(),
+                    });
+                }
+
                 context.set_focus("id", "app");
             }
 
@@ -151,15 +199,37 @@ impl anathema::component::Component for DashboardComponent {
                 context.set_focus("id", "app");
             }
 
-            "header_name_update" => {
-                let new_header_name = value.to_string();
-
-                state.new_header_name.set(new_header_name);
-            }
+            "header_name_update" => state.new_header_name.set(value.to_string()),
             "header_value_update" => state.new_header_value.set(value.to_string()),
+
+            "edit_header_name_update" => state.edit_header_name.set(value.to_string()),
+            "edit_header_value_update" => state.edit_header_value.set(value.to_string()),
 
             "request_body_update" => state.request_body.set(value.to_string()),
 
+            "cancel_header_selection" => state.show_edit_header_selector.set(false),
+
+            "header_selection" => {
+                let selection: usize = value.to_string().parse().unwrap();
+                let header = state.request_headers.remove(selection);
+                if let Some(selected_header) = &header {
+                    let header = selected_header.to_ref();
+                    state.edit_header_name.set(header.name.to_ref().clone());
+                    state.edit_header_value.set(header.value.to_ref().clone());
+                };
+
+                state.header_being_edited.set(header);
+
+                state.show_edit_header_selector.set(false);
+                state.show_edit_header_window.set(true);
+
+                context.set_focus("id", "edit_header_window");
+
+                let edit_header_name_input_id = self.component_ids.get("edit_header_name_input");
+                if let Some(id) = edit_header_name_input_id {
+                    context.emit(*id, "testing comms".to_string());
+                }
+            }
             _ => {}
         }
     }
@@ -194,6 +264,11 @@ impl anathema::component::Component for DashboardComponent {
 
                     // Show request headers editor window
                     'd' => state.main_display.set(MainDisplay::RequestHeadersEditor),
+
+                    'e' => {
+                        state.show_edit_header_selector.set(true);
+                        context.set_focus("id", "edit_header_selector");
+                    }
 
                     // Show response body window
                     'p' => {

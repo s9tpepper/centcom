@@ -1,4 +1,7 @@
+use std::collections::HashMap;
+
 use anathema::{
+    component::ComponentId,
     prelude::{Document, TuiBackend},
     runtime::{Runtime, RuntimeBuilder},
 };
@@ -8,6 +11,11 @@ use crate::components::{
     app_layout::{AppLayoutComponent, AppLayoutState, APP_LAYOUT_TEMPLATE},
     app_section::{AppSection, AppSectionState, APP_SECTION_TEMPLATE},
     dashboard::{DashboardComponent, DashboardState, DASHBOARD_TEMPLATE},
+    edit_header_selector::{
+        EditHeaderSelector, EditHeaderSelectorState, EDIT_HEADER_SELECTOR_TEMPLATE,
+    },
+    edit_header_window::{EditHeaderWindow, EditHeaderWindowState, EDIT_HEADER_WINDOW_TEMPLATE},
+    edit_name_textinput::{EditNameInputState, EditNameTextInput, EDIT_NAME_INPUT_TEMPLATE},
     focusable_section::{FocusableSection, FocusableSectionState},
     menu_item::{MenuItem, MenuItemState, MENU_ITEM_TEMPLATE},
     method_selector::{MethodSelector, MethodSelectorState, METHOD_SELECTOR_TEMPLATE},
@@ -24,18 +32,22 @@ pub fn app() {
     let _ = App::new().run();
 }
 
-struct App {}
+struct App {
+    component_ids: HashMap<String, ComponentId<String>>,
+}
 
 impl App {
     pub fn new() -> Self {
-        App {}
+        App {
+            component_ids: HashMap::new(),
+        }
     }
 
     pub fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let doc = Document::new("@app");
 
         let tui = TuiBackend::builder()
-            .enable_alt_screen()
+            // .enable_alt_screen()
             .enable_raw_mode()
             .hide_cursor()
             .finish();
@@ -61,14 +73,7 @@ impl App {
         Ok(())
     }
 
-    fn register_components(&self, builder: &mut RuntimeBuilder<TuiBackend, ()>) {
-        let _dashboard_id = builder.register_component(
-            "dashboard",
-            DASHBOARD_TEMPLATE,
-            DashboardComponent,
-            DashboardState::new(),
-        );
-
+    fn register_components(&mut self, builder: &mut RuntimeBuilder<TuiBackend, ()>) {
         let _ = builder.register_prototype(
             "url_input",
             "./src/components/templates/url_input.aml",
@@ -79,7 +84,9 @@ impl App {
         let _ = builder.register_prototype(
             "textinput",
             TEXTINPUT_TEMPLATE,
-            || TextInput,
+            || TextInput {
+                input_override: None,
+            },
             InputState::new,
         );
 
@@ -139,6 +146,52 @@ impl App {
             AddHeaderWindowState::new,
         );
 
+        let edit_header_window_id = builder.register_component(
+            "edit_header_window",
+            EDIT_HEADER_WINDOW_TEMPLATE,
+            EditHeaderWindow,
+            EditHeaderWindowState::new(),
+        );
+
+        if let Ok(edit_header_window_id) = edit_header_window_id {
+            self.component_ids
+                .insert("edit_header_window".to_string(), edit_header_window_id);
+        }
+
+        let _ = builder.register_prototype(
+            "edit_header_selector",
+            EDIT_HEADER_SELECTOR_TEMPLATE,
+            || EditHeaderSelector,
+            EditHeaderSelectorState::new,
+        );
+
         let _ = builder.register_prototype("row", ROW_TEMPLATE, || Row, RowState::new);
+
+        let edit_header_name_id = builder.register_component(
+            "editheadername",
+            EDIT_NAME_INPUT_TEMPLATE,
+            EditNameTextInput,
+            EditNameInputState::new(),
+        );
+        if let Ok(edit_header_name_id) = edit_header_name_id {
+            self.component_ids
+                .insert("edit_header_name_input".to_string(), edit_header_name_id);
+        }
+
+        let dashboard = DashboardComponent {
+            component_ids: self.component_ids.clone(),
+        };
+
+        let dashboard_id = builder.register_component(
+            "dashboard",
+            DASHBOARD_TEMPLATE,
+            dashboard,
+            DashboardState::new(),
+        );
+
+        if let Ok(dashboard_id) = dashboard_id {
+            self.component_ids
+                .insert("dashboard".to_string(), dashboard_id);
+        }
     }
 }

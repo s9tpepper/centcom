@@ -6,9 +6,8 @@ zstack
     if show_top_label
       text "╭─" top_label ":"
 
-    spacer
-
     if show_bottom_label
+      //spacer
       vstack
         spacer
         text [min_height: 1] "╰"
