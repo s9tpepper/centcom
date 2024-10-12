@@ -5,6 +5,7 @@ pub mod dashboard;
 pub mod edit_header_selector;
 pub mod edit_header_window;
 pub mod edit_name_textinput;
+pub mod edit_value_textinput;
 pub mod focusable_section;
 pub mod menu_item;
 pub mod method_selector;

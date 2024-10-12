@@ -230,7 +230,12 @@ impl anathema::component::Component for DashboardComponent {
 
                 let edit_header_name_input_id = self.component_ids.get("edit_header_name_input");
                 if let Some(id) = edit_header_name_input_id {
-                    context.emit(*id, "testing comms".to_string());
+                    context.emit(*id, state.edit_header_name.to_ref().clone());
+                }
+
+                let edit_header_value_input_id = self.component_ids.get("edit_header_value_input");
+                if let Some(id) = edit_header_value_input_id {
+                    context.emit(*id, state.edit_header_value.to_ref().clone());
                 }
             }
             _ => {}

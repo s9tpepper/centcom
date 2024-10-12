@@ -15,7 +15,8 @@ use crate::components::{
         EditHeaderSelector, EditHeaderSelectorState, EDIT_HEADER_SELECTOR_TEMPLATE,
     },
     edit_header_window::{EditHeaderWindow, EditHeaderWindowState, EDIT_HEADER_WINDOW_TEMPLATE},
-    edit_name_textinput::{EditNameInputState, EditNameTextInput, EDIT_NAME_INPUT_TEMPLATE},
+    edit_name_textinput::EditNameTextInput,
+    edit_value_textinput::EditValueTextInput,
     focusable_section::{FocusableSection, FocusableSectionState},
     menu_item::{MenuItem, MenuItemState, MENU_ITEM_TEMPLATE},
     method_selector::{MethodSelector, MethodSelectorState, METHOD_SELECTOR_TEMPLATE},
@@ -84,9 +85,7 @@ impl App {
         let _ = builder.register_prototype(
             "textinput",
             TEXTINPUT_TEMPLATE,
-            || TextInput {
-                input_override: None,
-            },
+            || TextInput,
             InputState::new,
         );
 
@@ -169,13 +168,24 @@ impl App {
 
         let edit_header_name_id = builder.register_component(
             "editheadername",
-            EDIT_NAME_INPUT_TEMPLATE,
+            TEXTINPUT_TEMPLATE,
             EditNameTextInput,
-            EditNameInputState::new(),
+            InputState::new(),
         );
         if let Ok(edit_header_name_id) = edit_header_name_id {
             self.component_ids
                 .insert("edit_header_name_input".to_string(), edit_header_name_id);
+        }
+
+        let edit_header_value_id = builder.register_component(
+            "editheadervalue",
+            TEXTINPUT_TEMPLATE,
+            EditValueTextInput,
+            InputState::new(),
+        );
+        if let Ok(edit_header_value_id) = edit_header_value_id {
+            self.component_ids
+                .insert("edit_header_value_input".to_string(), edit_header_value_id);
         }
 
         let dashboard = DashboardComponent {

@@ -1,5 +1,5 @@
 use anathema::{
-    component::KeyCode,
+    component::{Component, KeyCode},
     prelude::Context,
     state::{AnyState, Value},
     widgets::Elements,
@@ -8,19 +8,17 @@ use anathema::{
 pub const TEXTINPUT_TEMPLATE: &str = "./src/components/templates/textinput.aml";
 
 #[derive(Default)]
-pub struct TextInput {
-    pub input_override: Option<String>,
-}
+pub struct TextInput;
 
 #[derive(Default, anathema::state::State)]
 pub struct InputState {
-    input: Value<String>,
-    cursor_prefix: Value<String>,
-    cursor_char: Value<String>,
-    cursor_position: Value<usize>,
-    fg_color: Value<String>,
-    bg_color: Value<String>,
-    focused: Value<bool>,
+    pub input: Value<String>,
+    pub cursor_prefix: Value<String>,
+    pub cursor_char: Value<String>,
+    pub cursor_position: Value<usize>,
+    pub fg_color: Value<String>,
+    pub bg_color: Value<String>,
+    pub focused: Value<bool>,
 }
 
 impl InputState {
@@ -37,43 +35,73 @@ impl InputState {
     }
 }
 
-impl anathema::component::Component for TextInput {
+impl Component for TextInput {
     type State = InputState;
     type Message = String;
 
-    fn message(
-        &mut self,
-        message: Self::Message,
-        state: &mut Self::State,
-        _: Elements<'_, '_>,
-        _: Context<'_, Self::State>,
-    ) {
-        println!("Text input got message: {message}");
-        state.input.set(message);
-    }
-
-    fn tick(
+    fn on_blur(
         &mut self,
         state: &mut Self::State,
-        _: Elements<'_, '_>,
-        _: Context<'_, Self::State>,
-        _: std::time::Duration,
+        elements: Elements<'_, '_>,
+        context: Context<'_, Self::State>,
     ) {
-        if let Some(new_input) = &self.input_override {
-            state.input.set(new_input.to_string());
-            self.input_override = None;
-        }
-    }
-
-    fn accept_focus(&self) -> bool {
-        true
+        self._on_blur(state, elements, context);
     }
 
     fn on_focus(
         &mut self,
         state: &mut Self::State,
+        elements: Elements<'_, '_>,
+        context: Context<'_, Self::State>,
+    ) {
+        self._on_focus(state, elements, context);
+    }
+
+    fn on_key(
+        &mut self,
+        key: anathema::component::KeyEvent,
+        state: &mut Self::State,
+        elements: Elements<'_, '_>,
+        context: Context<'_, Self::State>,
+    ) {
+        self._on_key(key, state, elements, context);
+    }
+
+    fn message(
+        &mut self,
+        message: Self::Message,
+        state: &mut Self::State,
+        elements: Elements<'_, '_>,
+        context: Context<'_, Self::State>,
+    ) {
+        self._message(message, state, elements, context);
+    }
+
+    fn accept_focus(&self) -> bool {
+        true
+    }
+}
+
+impl InputReceiver for TextInput {}
+
+pub trait InputReceiver {
+    #[allow(dead_code)]
+    fn _message(
+        &mut self,
+        message: String,
+        state: &mut InputState,
         _: Elements<'_, '_>,
-        mut context: Context<'_, Self::State>,
+        _: Context<'_, InputState>,
+    ) {
+        state.input.set(message);
+    }
+
+    #[allow(dead_code)]
+    fn _on_focus(
+        &mut self,
+        state: &mut InputState,
+        _: Elements<'_, '_>,
+        mut context: Context<'_, InputState>,
     ) {
         let input = state.input.to_ref();
         let Some(cursor_position) = state.cursor_position.to_number() else {
@@ -95,11 +123,12 @@ impl anathema::component::Component for TextInput {
         context.publish("textarea_focus", |state| &state.focused);
     }
 
-    fn on_blur(
+    #[allow(dead_code)]
+    fn _on_blur(
         &mut self,
-        state: &mut Self::State,
+        state: &mut InputState,
         _elements: Elements<'_, '_>,
-        mut context: Context<'_, Self::State>,
+        mut context: Context<'_, InputState>,
     ) {
         state.cursor_char.set("".to_string());
         state.fg_color.set("white".to_string());
@@ -111,12 +140,13 @@ impl anathema::component::Component for TextInput {
         }
     }
 
-    fn on_key(
+    #[allow(dead_code)]
+    fn _on_key(
         &mut self,
         event: anathema::component::KeyEvent,
-        state: &mut Self::State,
+        state: &mut InputState,
         _: anathema::widgets::Elements<'_, '_>,
-        mut context: anathema::prelude::Context<'_, Self::State>,
+        mut context: anathema::prelude::Context<'_, InputState>,
     ) {
         // let mut input = state.input.to_mut();
         // if !*state.focused.to_ref() {
@@ -155,11 +185,8 @@ impl anathema::component::Component for TextInput {
             KeyCode::Up => self.move_cursor_up(state),
             KeyCode::Down => self.move_cursor_down(state),
 
-            // TODO: This will need to call some callback or something?
-            KeyCode::Enter => todo!(),
-
-            // TODO: Maybe I'll implement this later
-            KeyCode::Insert => todo!(),
+            KeyCode::Enter => {}
+            KeyCode::Insert => {}
 
             // TODO: Ask togglebit Discord if I'm supposed to get this key event
             KeyCode::BackTab => todo!(),
@@ -177,12 +204,6 @@ impl anathema::component::Component for TextInput {
 
             _ => {}
         }
-    }
-}
-
-impl TextInput {
-    pub fn set_input_override(&mut self, input: String) {
-        self.input_override = Some(input);
     }
 
     fn add_character(

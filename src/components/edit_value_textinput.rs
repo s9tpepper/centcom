@@ -3,9 +3,9 @@ use anathema::{prelude::Context, widgets::Elements};
 use super::textinput::{InputReceiver, InputState};
 
 #[derive(Default)]
-pub struct EditNameTextInput;
+pub struct EditValueTextInput;
 
-impl anathema::component::Component for EditNameTextInput {
+impl anathema::component::Component for EditValueTextInput {
     type State = InputState;
     type Message = String;
 
@@ -52,4 +52,4 @@ impl anathema::component::Component for EditNameTextInput {
     }
 }
 
-impl InputReceiver for EditNameTextInput {}
+impl InputReceiver for EditValueTextInput {}

@@ -27,16 +27,6 @@ impl Component for EditHeaderWindow {
     type State = EditHeaderWindowState;
     type Message = String;
 
-    fn message(
-        &mut self,
-        message: Self::Message,
-        state: &mut Self::State,
-        mut elements: component::Elements<'_, '_>,
-        mut context: anathema::prelude::Context<'_, Self::State>,
-    ) {
-        println!("I got a message!: {message}");
-    }
-
     fn receive(
         &mut self,
         ident: &str,
