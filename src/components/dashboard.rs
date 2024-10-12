@@ -124,15 +124,18 @@ impl anathema::component::Component for DashboardComponent {
                 let header_name = state.new_header_name.to_ref().to_string();
                 let header_value = state.new_header_value.to_ref().to_string();
 
+                state.show_add_header_window.set(false);
+                context.set_focus("id", "app");
+
+                if header_name.trim().is_empty() || header_value.trim().is_empty() {
+                    return;
+                }
+
                 let header = Header {
                     name: header_name.into(),
                     value: header_value.into(),
                 };
-
                 state.request_headers.push(header);
-                state.show_add_header_window.set(false);
-
-                context.set_focus("id", "app");
             }
 
             "edit_header" => {
@@ -252,12 +255,6 @@ impl anathema::component::Component for DashboardComponent {
         match event.code {
             KeyCode::Char(char) => {
                 match char {
-                    // // Sets focus to header name text input
-                    // 'n' => context.set_focus("id", "header_name_input"),
-                    //
-                    // // Sets focus to header value text input
-                    // 'v' => context.set_focus("id", "header_value_input"),
-
                     // Set focus to the request url text input
                     'u' => context.set_focus("id", "url_input"),
 
