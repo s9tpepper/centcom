@@ -1,0 +1,22 @@
+align [alignment: "center"]
+  border [foreground: border_color, border_style: "╭─╮│╯─╰│", min_width: minwidth, max_width: 80]
+    vstack
+      container [height: 1, background: "yellow", foreground: #131313]
+        expand
+          hstack
+            text " Project: " current_project
+            spacer
+            text "[(P)rojects: " project_count "]"
+
+      for project in window_list
+        hstack [fill: "‧", foreground: project.row_color]
+          text project.name
+          spacer
+          text "9"
+
+      container [height: 1, background: "red", foreground: #131313]
+        expand
+          hstack
+            text " hjkl"
+            spacer
+            text "[(A)dd New] [(R)ename] [(D)elete]"

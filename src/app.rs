@@ -22,6 +22,7 @@ use crate::components::{
     header_value_textinput::HeaderValueTextInput,
     menu_item::{MenuItem, MenuItemState, MENU_ITEM_TEMPLATE},
     method_selector::{MethodSelector, MethodSelectorState, METHOD_SELECTOR_TEMPLATE},
+    project_window::{ProjectWindow, ProjectWindowState, PROJECT_WINDOW_TEMPLATE},
     request_body_section::REQUEST_BODY_SECTION_TEMPLATE,
     request_headers_editor::{
         RequestHeadersEditor, RequestHeadersEditorState, REQUEST_HEADERS_EDITOR_TEMPLATE,
@@ -202,6 +203,17 @@ impl App {
         if let Ok(edit_header_value_id) = edit_header_value_id {
             self.component_ids
                 .insert("edit_header_value_input".to_string(), edit_header_value_id);
+        }
+
+        let project_window_id = builder.register_component(
+            "project_window",
+            PROJECT_WINDOW_TEMPLATE,
+            ProjectWindow::new(),
+            ProjectWindowState::new(),
+        );
+        if let Ok(project_window_id) = project_window_id {
+            self.component_ids
+                .insert("project_window".to_string(), project_window_id);
         }
 
         let dashboard = DashboardComponent {

@@ -10,7 +10,7 @@ pub const REQUEST_HEADERS_EDITOR_TEMPLATE: &str =
 pub struct RequestHeadersEditor;
 
 #[derive(Debug, Default, State)]
-pub struct Header {
+pub struct HeaderState {
     pub name: Value<String>,
     pub value: Value<String>,
 }

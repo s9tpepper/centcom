@@ -1,5 +1,11 @@
 zstack
   vstack
+    container [height: 1, background: "green", foreground: #131313]
+      expand
+        hstack
+          text " Project: " current_project
+          spacer
+          text "[(P)rojects: " project_count "]"
     hstack
       @row [border_color: "#666666", top_label: "(M)ethod", expanding: false, minwidth: 13]
         $children
@@ -42,7 +48,7 @@ zstack
             @app_section [
               border_color: "#ffffff",
               top_label: "Response Headers",
-              bottom_label: ["Back to Res(p)onse"],
+              bottom_label: ["(B)ack to Response"],
               show_top_label: true,
               show_bottom_label: true
             ]
@@ -53,7 +59,8 @@ zstack
     container [height: 1, background: "blue", foreground: #131313]
       expand
         hstack
-          text " "
+          text " [Unnamed]"
+          spacer
           for item in menu_items
             @menu_item
 
@@ -103,3 +110,6 @@ zstack
       name: edit_header_name,
       value: edit_header_value
     ]
+
+  if show_project_window
+    @project_window (cancel_project_window -> cancel_project_window) [id: "project_window"]

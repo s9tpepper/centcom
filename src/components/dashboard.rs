@@ -9,10 +9,11 @@ use anathema::{
 
 use arboard::Clipboard;
 
-use crate::components::request_headers_editor::Header;
+use crate::components::request_headers_editor::HeaderState;
 
 pub const DASHBOARD_TEMPLATE: &str = "./src/components/templates/dashboard.aml";
 
+#[derive(Copy, Clone)]
 enum MainDisplay {
     RequestBody,
     RequestHeadersEditor,
@@ -40,9 +41,9 @@ struct MenuItem {
 pub struct DashboardState {
     url: Value<String>,
     method: Value<String>,
-    request_headers: Value<List<Header>>,
+    request_headers: Value<List<HeaderState>>,
     request_body: Value<String>,
-    response_headers: Value<List<Header>>,
+    response_headers: Value<List<HeaderState>>,
     response: Value<String>,
     response_body_window_label: Value<String>,
     show_method_window: Value<bool>,
@@ -50,24 +51,29 @@ pub struct DashboardState {
     show_edit_header_window: Value<bool>,
     show_error_window: Value<bool>,
     show_edit_header_selector: Value<bool>,
+    show_project_window: Value<bool>,
     error_message: Value<String>,
     show_message_window: Value<bool>,
     message: Value<String>,
     message_label: Value<String>,
     main_display: Value<MainDisplay>,
     menu_items: Value<List<MenuItem>>,
+    top_menu_items: Value<List<MenuItem>>,
     logs: Value<String>,
     new_header_name: Value<String>,
     new_header_value: Value<String>,
     edit_header_name: Value<String>,
     edit_header_value: Value<String>,
-
-    header_being_edited: Value<Option<Value<Header>>>,
+    current_project: Value<String>,
+    header_being_edited: Value<Option<Value<HeaderState>>>,
+    project_count: Value<u8>,
 }
 
 impl DashboardState {
     pub fn new() -> Self {
         DashboardState {
+            project_count: 0.into(),
+            current_project: "[None]".to_string().into(),
             url: "".to_string().into(),
             method: "GET".to_string().into(),
             response: "".to_string().into(),
@@ -85,6 +91,7 @@ impl DashboardState {
             show_error_window: false.into(),
             show_message_window: false.into(),
             show_edit_header_selector: false.into(),
+            show_project_window: false.into(),
             main_display: Value::<MainDisplay>::new(MainDisplay::RequestBody),
             logs: "".to_string().into(),
             menu_items: List::from_iter([
@@ -95,6 +102,9 @@ impl DashboardState {
                     label: "(O)ptions".to_string().into(),
                 },
             ]),
+            top_menu_items: List::from_iter([MenuItem {
+                label: "(P)rojects".to_string().into(),
+            }]),
             request_headers: List::from_iter(get_default_headers()),
             request_body: "".to_string().into(),
             response_headers: List::from_iter(vec![]),
@@ -131,7 +141,7 @@ impl anathema::component::Component for DashboardComponent {
                     return;
                 }
 
-                let header = Header {
+                let header = HeaderState {
                     name: header_name.into(),
                     value: header_value.into(),
                 };
@@ -142,7 +152,7 @@ impl anathema::component::Component for DashboardComponent {
                 let header_name = state.edit_header_name.to_ref().to_string();
                 let header_value = state.edit_header_value.to_ref().to_string();
 
-                let header = Header {
+                let header = HeaderState {
                     name: header_name.into(),
                     value: header_value.into(),
                 };
@@ -168,7 +178,7 @@ impl anathema::component::Component for DashboardComponent {
                 let header = state.header_being_edited.to_mut();
                 let header = header.as_ref();
                 if let Some(header) = header {
-                    state.request_headers.push(Header {
+                    state.request_headers.push(HeaderState {
                         name: header.to_ref().name.to_ref().clone().into(),
                         value: header.to_ref().value.to_ref().clone().into(),
                     });
@@ -241,6 +251,12 @@ impl anathema::component::Component for DashboardComponent {
 
                 context.set_focus("id", "edit_header_window");
             }
+
+            "cancel_project_window" => {
+                state.show_project_window.set(false);
+                context.set_focus("id", "app");
+            }
+
             _ => {}
         }
     }
@@ -254,6 +270,8 @@ impl anathema::component::Component for DashboardComponent {
     ) {
         match event.code {
             KeyCode::Char(char) => {
+                let main_display = *state.main_display.to_ref();
+
                 match char {
                     // Set focus to the request url text input
                     'u' => context.set_focus("id", "url_input"),
@@ -265,7 +283,18 @@ impl anathema::component::Component for DashboardComponent {
                     'r' => do_request(state, context, elements),
 
                     // Show request body editor window
-                    'b' => state.main_display.set(MainDisplay::RequestBody),
+                    'b' => match main_display {
+                        MainDisplay::RequestBody => {}
+                        MainDisplay::RequestHeadersEditor => {
+                            state.main_display.set(MainDisplay::RequestBody);
+                        }
+                        MainDisplay::ResponseBody => {
+                            state.main_display.set(MainDisplay::RequestBody);
+                        }
+                        MainDisplay::ResponseHeaders => {
+                            state.main_display.set(MainDisplay::ResponseBody)
+                        }
+                    },
 
                     // Show request headers editor window
                     'd' => state.main_display.set(MainDisplay::RequestHeadersEditor),
@@ -275,10 +304,14 @@ impl anathema::component::Component for DashboardComponent {
                         context.set_focus("id", "edit_header_selector");
                     }
 
-                    // Show response body window
+                    // Show projects window
                     'p' => {
-                        state.main_display.set(MainDisplay::ResponseBody);
-                        context.set_focus("id", "response");
+                        state.show_project_window.set(true);
+                        if let Some(id) = self.component_ids.get("project_window") {
+                            context.emit(*id, "load".to_string());
+                        }
+
+                        context.set_focus("id", "project_window");
                     }
 
                     // Show response headers display
@@ -420,7 +453,7 @@ fn do_request(
                 continue;
             };
 
-            state.response_headers.push(Header {
+            state.response_headers.push(HeaderState {
                 name: name.into(),
                 value: value.to_string().into(),
             });
@@ -446,13 +479,13 @@ fn do_request(
     context.set_focus("id", "app");
 }
 
-fn get_default_headers() -> Vec<Header> {
+fn get_default_headers() -> Vec<HeaderState> {
     vec![
-        Header {
+        HeaderState {
             name: "user-agent".to_string().into(),
             value: "centcom-tui".to_string().into(),
         },
-        Header {
+        HeaderState {
             name: "content-type".to_string().into(),
             value: "application/json".to_string().into(),
         },
