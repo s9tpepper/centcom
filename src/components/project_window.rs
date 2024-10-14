@@ -21,12 +21,14 @@ pub struct ProjectWindowState {
     current_last_index: Value<u8>,
     visible_projects: Value<u8>,
     window_list: Value<List<ProjectState>>,
+    project_count: Value<u8>,
 }
 
 impl ProjectWindowState {
     pub fn new() -> Self {
         ProjectWindowState {
             cursor: 0.into(),
+            project_count: 0.into(),
             current_first_index: 0.into(),
             current_last_index: 4.into(),
             visible_projects: 5.into(),
@@ -184,7 +186,7 @@ impl Component for ProjectWindow {
     ) {
         // NOTE: Should this stay on focus? Focus is triggered whenever the window is opened
         // This data should come from disk, eventually from GitHub?
-        self.load();
+        self.load(state);
 
         let first_index: usize = *state.current_first_index.to_ref() as usize;
         let last_index: usize = *state.current_last_index.to_ref() as usize;
@@ -213,7 +215,7 @@ impl ProjectWindow {
         }
     }
 
-    fn load(&mut self) {
+    fn load(&mut self, state: &mut ProjectWindowState) {
         // println!("self.load()");
 
         // TODO: Replace this hard coded list of test data with data read from disk
@@ -247,6 +249,8 @@ impl ProjectWindow {
                 requests: vec![],
             },
         ];
+
+        state.project_count.set(self.project_list.len() as u8);
     }
 }
 
