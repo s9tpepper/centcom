@@ -100,27 +100,9 @@ impl ProjectWindow {
         state: &mut ProjectWindowState,
     ) {
         let display_projects = &self.project_list[first_index..=last_index];
-
-        let new_project_list = display_projects.iter().map(|project| {
-            let requests = project.requests.iter().map(|request| {
-                let headers = request.headers.iter().map(|header| HeaderState {
-                    name: header.name.clone().into(),
-                    value: header.value.clone().into(),
-                });
-
-                RequestState {
-                    name: request.name.clone().into(),
-                    method: request.method.clone().into(),
-                    url: request.url.clone().into(),
-                    headers: List::from_iter(headers),
-                }
-            });
-
-            ProjectState {
-                row_color: DEFAULT_PROJECT_ROW_COLOR.to_string().into(),
-                name: project.name.clone().into(),
-                requests: List::from_iter(requests),
-            }
+        let mut new_project_list: Vec<ProjectState> = vec![];
+        display_projects.iter().for_each(|display_project| {
+            new_project_list.push(ProjectState::from(display_project.clone()));
         });
 
         loop {
@@ -132,6 +114,7 @@ impl ProjectWindow {
         }
 
         new_project_list
+            .into_iter()
             .enumerate()
             .for_each(|(index, mut project)| {
                 let visible_index = selected_index.saturating_sub(first_index);
@@ -279,7 +262,7 @@ impl ProjectWindow {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Default, Debug, Deserialize, Serialize)]
 pub struct Project {
     pub name: String,
     pub requests: Vec<Request>,
@@ -308,7 +291,7 @@ impl From<Project> for ProjectState {
 
         ProjectState {
             row_color: DEFAULT_PROJECT_ROW_COLOR.to_string().into(),
-            name: project.name.into(),
+            name: project.name.clone().into(),
             requests,
         }
     }
@@ -349,7 +332,7 @@ impl From<ProjectState> for Project {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Request {
     pub name: String,
     pub url: String,
@@ -357,20 +340,20 @@ pub struct Request {
     pub headers: Vec<Header>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Header {
     pub name: String,
     pub value: String,
 }
 
-#[derive(Default, State)]
+#[derive(Debug, Default, State)]
 pub struct ProjectState {
     row_color: Value<String>,
     name: Value<String>,
     requests: Value<List<RequestState>>,
 }
 
-#[derive(Default, State)]
+#[derive(Debug, Default, State)]
 struct RequestState {
     name: Value<String>,
     url: Value<String>,
