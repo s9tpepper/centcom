@@ -10,6 +10,9 @@ use crate::components::{
     add_header_window::{AddHeaderWindow, AddHeaderWindowState, ADD_HEADER_WINDOW_TEMPLATE},
     app_layout::{AppLayoutComponent, AppLayoutState, APP_LAYOUT_TEMPLATE},
     app_section::{AppSection, AppSectionState, APP_SECTION_TEMPLATE},
+    confirm_action_window::{
+        self, ConfirmActionWindow, ConfirmActionWindowState, CONFIRM_ACTION_WINDOW_TEMPLATE,
+    },
     dashboard::{DashboardComponent, DashboardState, DASHBOARD_TEMPLATE},
     edit_header_selector::{
         EditHeaderSelector, EditHeaderSelectorState, EDIT_HEADER_SELECTOR_TEMPLATE,
@@ -214,6 +217,19 @@ impl App {
         if let Ok(project_window_id) = project_window_id {
             self.component_ids
                 .insert("project_window".to_string(), project_window_id);
+        }
+
+        let confirm_action_window_id = builder.register_component(
+            "confirm_action_window",
+            CONFIRM_ACTION_WINDOW_TEMPLATE,
+            ConfirmActionWindow::new(),
+            ConfirmActionWindowState::new(),
+        );
+        if let Ok(confirm_action_window_id) = confirm_action_window_id {
+            self.component_ids.insert(
+                "confirm_action_window".to_string(),
+                confirm_action_window_id,
+            );
         }
 
         let dashboard = DashboardComponent {

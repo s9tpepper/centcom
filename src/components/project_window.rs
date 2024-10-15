@@ -148,6 +148,24 @@ impl Component for ProjectWindow {
             anathema::component::KeyCode::Char(char) => match char {
                 'j' => self.move_cursor_down(state),
                 'k' => self.move_cursor_up(state),
+                'd' => {
+                    let selected_index = *state.cursor.to_ref() as usize;
+                    let project = self.project_list.get(selected_index);
+
+                    match project {
+                        Some(project) => match serde_json::to_string(project) {
+                            Ok(project_json) => {
+                                state.selected_project.set(project_json);
+                                context.publish("delete_project", |state| &state.selected_project)
+                            }
+
+                            Err(_) => {
+                                context.publish("cancel_project_window", |state| &state.cursor)
+                            }
+                        },
+                        None => context.publish("cancel_project_window", |state| &state.cursor),
+                    }
+                }
                 _ => {}
             },
 

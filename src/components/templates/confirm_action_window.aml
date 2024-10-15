@@ -1,0 +1,17 @@
+align [alignment: "center"]
+  border [foreground: border_color, border_style: "╭─╮│╯─╰│", min_width: minwidth, max_width: 50]
+    vstack
+      container [height: 1, background: "yellow", foreground: #131313]
+        expand
+          hstack
+            text title
+
+      padding [padding: 2]
+        text message
+
+      hstack
+        spacer
+        text "(Y)es"
+        spacer
+        text "(N)o"
+        spacer

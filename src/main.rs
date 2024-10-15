@@ -4,6 +4,7 @@ use clap::{Parser, Subcommand};
 
 mod app;
 mod components;
+mod messages;
 
 use crate::app::app;
 

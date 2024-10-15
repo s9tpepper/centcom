@@ -9,7 +9,10 @@ use anathema::{
 
 use arboard::Clipboard;
 
-use crate::components::request_headers_editor::HeaderState;
+use crate::{
+    components::request_headers_editor::HeaderState,
+    messages::confirm_delete_project::ConfirmDeleteProject,
+};
 
 use super::project_window::{Project, ProjectState};
 
@@ -70,6 +73,7 @@ pub struct DashboardState {
     header_being_edited: Value<Option<Value<HeaderState>>>,
     project_count: Value<u8>,
     selected_project: Value<Option<ProjectState>>,
+    show_confirm_project_delete: Value<bool>,
 }
 
 impl DashboardState {
@@ -95,6 +99,7 @@ impl DashboardState {
             show_message_window: false.into(),
             show_edit_header_selector: false.into(),
             show_project_window: false.into(),
+            show_confirm_project_delete: false.into(),
             main_display: Value::<MainDisplay>::new(MainDisplay::RequestBody),
             logs: "".to_string().into(),
             menu_items: List::from_iter([
@@ -272,6 +277,33 @@ impl anathema::component::Component for DashboardComponent {
                     Ok(project) => {
                         state.current_project.set(project.name.clone());
                         state.selected_project.set(Some(project.into()));
+                    }
+                    Err(_) => todo!(),
+                }
+            }
+
+            "delete_project" => {
+                state.show_project_window.set(false);
+                state.show_confirm_project_delete.set(true);
+
+                let value = &*value.to_common_str();
+                let project = serde_json::from_str::<Project>(value);
+
+                match project {
+                    Ok(project) => {
+                        let confirm_message = ConfirmDeleteProject {
+                            title: format!("Delete {}", project.name),
+                            message: "Are you sure you want to delete?".into(),
+                            project,
+                        };
+
+                        if let Ok(message) = serde_json::to_string(&confirm_message) {
+                            let confirm_action_window_id =
+                                self.component_ids.get("confirm_action_window");
+                            if let Some(id) = confirm_action_window_id {
+                                context.emit(*id, message);
+                            }
+                        }
                     }
                     Err(_) => todo!(),
                 }

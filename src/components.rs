@@ -1,6 +1,7 @@
 pub mod add_header_window;
 pub mod app_layout;
 pub mod app_section;
+pub mod confirm_action_window;
 pub mod dashboard;
 pub mod edit_header_selector;
 pub mod edit_header_window;
