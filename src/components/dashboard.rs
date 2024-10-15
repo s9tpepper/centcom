@@ -11,6 +11,8 @@ use arboard::Clipboard;
 
 use crate::components::request_headers_editor::HeaderState;
 
+use super::project_window::{Project, ProjectState};
+
 pub const DASHBOARD_TEMPLATE: &str = "./src/components/templates/dashboard.aml";
 
 #[derive(Copy, Clone)]
@@ -67,6 +69,7 @@ pub struct DashboardState {
     current_project: Value<String>,
     header_being_edited: Value<Option<Value<HeaderState>>>,
     project_count: Value<u8>,
+    selected_project: Value<Option<ProjectState>>,
 }
 
 impl DashboardState {
@@ -109,6 +112,7 @@ impl DashboardState {
             request_body: "".to_string().into(),
             response_headers: List::from_iter(vec![]),
             header_being_edited: None.into(),
+            selected_project: None.into(),
         }
     }
 }
@@ -255,6 +259,22 @@ impl anathema::component::Component for DashboardComponent {
             "cancel_project_window" => {
                 state.show_project_window.set(false);
                 context.set_focus("id", "app");
+            }
+
+            "project_selection" => {
+                state.show_project_window.set(false);
+                context.set_focus("id", "app");
+
+                let value = &*value.to_common_str();
+                let project = serde_json::from_str::<Project>(value);
+
+                match project {
+                    Ok(project) => {
+                        state.current_project.set(project.name.clone());
+                        state.selected_project.set(Some(project.into()));
+                    }
+                    Err(_) => todo!(),
+                }
             }
 
             _ => {}

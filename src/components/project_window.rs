@@ -22,6 +22,7 @@ pub struct ProjectWindowState {
     visible_projects: Value<u8>,
     window_list: Value<List<ProjectState>>,
     project_count: Value<u8>,
+    selected_project: Value<String>,
 }
 
 impl ProjectWindowState {
@@ -33,6 +34,7 @@ impl ProjectWindowState {
             current_last_index: 4.into(),
             visible_projects: 5.into(),
             window_list: List::empty(),
+            selected_project: "".to_string().into(),
         }
     }
 }
@@ -132,14 +134,14 @@ impl ProjectWindow {
         new_project_list
             .enumerate()
             .for_each(|(index, mut project)| {
-                let visible_index = selected_index - first_index;
+                let visible_index = selected_index.saturating_sub(first_index);
                 if index == visible_index {
                     project.row_color = SELECTED_PROJECT_ROW_COLOR.to_string().into();
                 } else {
                     project.row_color = DEFAULT_PROJECT_ROW_COLOR.to_string().into();
                 }
 
-                state.window_list.push(project)
+                state.window_list.push(project);
             });
     }
 }
@@ -174,6 +176,22 @@ impl Component for ProjectWindow {
                 context.publish("cancel_project_window", |state| &state.cursor)
             }
 
+            anathema::component::KeyCode::Enter => {
+                let selected_index = *state.cursor.to_ref() as usize;
+                let project = self.project_list.get(selected_index);
+
+                match project {
+                    Some(project) => match serde_json::to_string(project) {
+                        Ok(project_json) => {
+                            state.selected_project.set(project_json);
+                            context.publish("project_selection", |state| &state.selected_project);
+                        }
+                        Err(_) => context.publish("cancel_project_window", |state| &state.cursor),
+                    },
+                    None => context.publish("cancel_project_window", |state| &state.cursor),
+                }
+            }
+
             _ => {}
         }
     }
@@ -187,6 +205,13 @@ impl Component for ProjectWindow {
         // NOTE: Should this stay on focus? Focus is triggered whenever the window is opened
         // This data should come from disk, eventually from GitHub?
         self.load(state);
+
+        // Reset navigation state
+        state.cursor.set(0);
+        state.current_first_index.set(0);
+        state
+            .current_last_index
+            .set(state.visible_projects.to_ref().saturating_sub(1));
 
         let first_index: usize = *state.current_first_index.to_ref() as usize;
         let last_index: usize = *state.current_last_index.to_ref() as usize;
@@ -255,27 +280,91 @@ impl ProjectWindow {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-struct Project {
-    name: String,
-    requests: Vec<Request>,
+pub struct Project {
+    pub name: String,
+    pub requests: Vec<Request>,
+}
+
+impl From<Project> for ProjectState {
+    fn from(project: Project) -> Self {
+        let mut requests: Value<List<RequestState>> = List::empty();
+        project.requests.iter().for_each(|request| {
+            let mut headers: Value<List<HeaderState>> = List::empty();
+
+            request.headers.iter().for_each(|header| {
+                headers.push(HeaderState {
+                    name: header.name.clone().into(),
+                    value: header.value.clone().into(),
+                })
+            });
+
+            requests.push(RequestState {
+                name: request.name.clone().into(),
+                url: request.url.clone().into(),
+                method: request.method.clone().into(),
+                headers,
+            });
+        });
+
+        ProjectState {
+            row_color: DEFAULT_PROJECT_ROW_COLOR.to_string().into(),
+            name: project.name.into(),
+            requests,
+        }
+    }
+}
+
+impl From<ProjectState> for Project {
+    fn from(project_state: ProjectState) -> Self {
+        let mut requests: Vec<Request> = vec![];
+
+        let request_states = project_state.requests.to_ref();
+        request_states.iter().for_each(|req| {
+            let request_state = req.to_ref();
+
+            let mut headers: Vec<Header> = vec![];
+            let request_state_headers = request_state.headers.to_ref();
+            request_state_headers
+                .iter()
+                .for_each(|request_state_header| {
+                    let rsh = request_state_header.to_ref();
+                    headers.push(Header {
+                        name: rsh.name.to_ref().to_string(),
+                        value: rsh.value.to_ref().to_string(),
+                    });
+                });
+
+            requests.push(Request {
+                name: request_state.name.to_ref().to_string(),
+                method: request_state.method.to_ref().to_string(),
+                url: request_state.url.to_ref().to_string(),
+                headers,
+            });
+        });
+
+        Project {
+            name: project_state.name.to_ref().to_string(),
+            requests,
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-struct Request {
-    name: String,
-    url: String,
-    method: String,
-    headers: Vec<Header>,
+pub struct Request {
+    pub name: String,
+    pub url: String,
+    pub method: String,
+    pub headers: Vec<Header>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-struct Header {
-    name: String,
-    value: String,
+pub struct Header {
+    pub name: String,
+    pub value: String,
 }
 
 #[derive(Default, State)]
-struct ProjectState {
+pub struct ProjectState {
     row_color: Value<String>,
     name: Value<String>,
     requests: Value<List<RequestState>>,

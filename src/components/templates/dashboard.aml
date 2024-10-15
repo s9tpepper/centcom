@@ -112,4 +112,4 @@ zstack
     ]
 
   if show_project_window
-    @project_window (cancel_project_window -> cancel_project_window) [id: "project_window"]
+    @project_window (cancel_project_window -> cancel_project_window, project_selection -> project_selection) [id: "project_window"]
