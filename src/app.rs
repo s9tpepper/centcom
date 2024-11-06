@@ -1,24 +1,21 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use anathema::{
-    component::{Component, ComponentId},
-    prelude::{Document, ToSourceKind, TuiBackend},
+    component::ComponentId,
+    prelude::{Document, TuiBackend},
     runtime::{Runtime, RuntimeBuilder},
-    state::State,
 };
 
 use crate::components::{
     add_header_window::{AddHeaderWindow, AddHeaderWindowState, ADD_HEADER_WINDOW_TEMPLATE},
     app_layout::{AppLayoutComponent, AppLayoutState, APP_LAYOUT_TEMPLATE},
     app_section::{AppSection, AppSectionState, APP_SECTION_TEMPLATE},
-    confirm_action_window::{
-        ConfirmActionWindow, ConfirmActionWindowState, CONFIRM_ACTION_WINDOW_TEMPLATE,
-    },
-    dashboard::{DashboardComponent, DashboardState, DASHBOARD_TEMPLATE},
+    confirm_action_window::ConfirmActionWindow,
+    dashboard::DashboardComponent,
     edit_header_selector::{
         EditHeaderSelector, EditHeaderSelectorState, EDIT_HEADER_SELECTOR_TEMPLATE,
     },
-    edit_header_window::{EditHeaderWindow, EditHeaderWindowState, EDIT_HEADER_WINDOW_TEMPLATE},
+    edit_header_window::EditHeaderWindow,
     edit_name_textinput::EditNameTextInput,
     edit_value_textinput::EditValueTextInput,
     focusable_section::{FocusableSection, FocusableSectionState},
@@ -26,7 +23,7 @@ use crate::components::{
     header_value_textinput::HeaderValueTextInput,
     menu_item::{MenuItem, MenuItemState, MENU_ITEM_TEMPLATE},
     method_selector::{MethodSelector, MethodSelectorState, METHOD_SELECTOR_TEMPLATE},
-    project_window::{ProjectWindow, ProjectWindowState, PROJECT_WINDOW_TEMPLATE},
+    project_window::ProjectWindow,
     request_body_section::REQUEST_BODY_SECTION_TEMPLATE,
     request_headers_editor::{
         RequestHeadersEditor, RequestHeadersEditorState, REQUEST_HEADERS_EDITOR_TEMPLATE,
@@ -43,7 +40,6 @@ pub fn app() -> anyhow::Result<()> {
 }
 
 struct App {
-    // component_ids: HashMap<String, ComponentId<String>>,
     component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>,
 }
 
