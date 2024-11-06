@@ -7,6 +7,11 @@ use anathema::{
     state::{State, Value},
 };
 
+use super::{
+    dashboard::{DashboardMessageHandler, FloatingWindow},
+    request_headers_editor::HeaderState,
+};
+
 pub const EDIT_HEADER_WINDOW_TEMPLATE: &str = "./src/components/templates/edit_header_window.aml";
 
 #[derive(Default)]
@@ -56,6 +61,55 @@ impl EditHeaderWindowState {
     }
 }
 
+impl DashboardMessageHandler for EditHeaderWindow {
+    fn handle_message(
+        value: component::CommonVal<'_>,
+        ident: impl Into<String>,
+        state: &mut super::dashboard::DashboardState,
+        mut context: anathema::prelude::Context<'_, super::dashboard::DashboardState>,
+        _component_ids: std::cell::Ref<'_, HashMap<String, ComponentId<String>>>,
+    ) {
+        let event: String = ident.into();
+
+        match event.as_str() {
+            "edit_header__name_update" => state.edit_header_name.set(value.to_string()),
+            "edit_header__value_update" => state.edit_header_value.set(value.to_string()),
+            "edit_header__submit" => {
+                let header_name = state.edit_header_name.to_ref().to_string();
+                let header_value = state.edit_header_value.to_ref().to_string();
+
+                let header = HeaderState {
+                    name: header_name.into(),
+                    value: header_value.into(),
+                };
+
+                state.request_headers.push(header);
+                state.floating_window.set(FloatingWindow::None);
+
+                context.set_focus("id", "app");
+            }
+            "edit_header__cancel" => {
+                state.floating_window.set(FloatingWindow::None);
+                state.edit_header_name.set("".to_string());
+                state.edit_header_value.set("".to_string());
+
+                let header = state.header_being_edited.to_mut();
+                let header = header.as_ref();
+                if let Some(header) = header {
+                    state.request_headers.push(HeaderState {
+                        name: header.to_ref().name.to_ref().clone().into(),
+                        value: header.to_ref().value.to_ref().clone().into(),
+                    });
+                }
+
+                context.set_focus("id", "app");
+            }
+
+            _ => {}
+        }
+    }
+}
+
 impl Component for EditHeaderWindow {
     type State = EditHeaderWindowState;
     type Message = String;
@@ -72,13 +126,13 @@ impl Component for EditHeaderWindow {
             "edit_header_name_update" => {
                 state.name.set(value.to_string());
 
-                context.publish("edit_header_name_update", |state| &state.name)
+                context.publish("edit_header__name_update", |state| &state.name)
             }
 
             "edit_header_value_update" => {
                 state.value.set(value.to_string());
 
-                context.publish("edit_header_value_update", |state| &state.value)
+                context.publish("edit_header__value_update", |state| &state.value)
             }
             _ => {}
         }
@@ -93,12 +147,12 @@ impl Component for EditHeaderWindow {
     ) {
         match key.code {
             KeyCode::Esc => {
-                context.publish("cancel_edit_header", |state| &state.name);
+                context.publish("edit_header__cancel", |state| &state.name);
             }
 
             KeyCode::Char(char) => {
                 match char {
-                    's' => context.publish("edit_header", |state| &state.name),
+                    's' => context.publish("edit_header__submit", |state| &state.name),
 
                     // Sets focus to header name text input
                     'n' => context.set_focus("id", "edit_header_name_input_id"),

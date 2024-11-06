@@ -1,4 +1,8 @@
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::{
+    cell::{Ref, RefCell},
+    collections::HashMap,
+    rc::Rc,
+};
 
 use anathema::{
     component::{ComponentId, KeyCode, KeyEvent},
@@ -15,7 +19,13 @@ use crate::{
     messages::confirm_delete_project::ConfirmDeleteProject,
 };
 
-use super::project_window::{Project, ProjectState};
+use super::{
+    add_header_window::AddHeaderWindow,
+    edit_header_selector::EditHeaderSelector,
+    edit_header_window::EditHeaderWindow,
+    method_selector::MethodSelector,
+    project_window::{Project, ProjectState, ProjectWindow},
+};
 
 pub const DASHBOARD_TEMPLATE: &str = "./src/components/templates/dashboard.aml";
 
@@ -44,7 +54,7 @@ struct MenuItem {
 }
 
 #[derive(PartialEq, Eq)]
-enum FloatingWindow {
+pub enum FloatingWindow {
     None,
     Method,
     AddHeader,
@@ -74,29 +84,29 @@ impl State for FloatingWindow {
 
 #[derive(anathema::state::State)]
 pub struct DashboardState {
-    main_display: Value<MainDisplay>,
-    floating_window: Value<FloatingWindow>,
-    url: Value<String>,
-    method: Value<String>,
-    request_headers: Value<List<HeaderState>>,
-    request_body: Value<String>,
-    response_headers: Value<List<HeaderState>>,
-    response: Value<String>,
-    response_body_window_label: Value<String>,
-    error_message: Value<String>,
-    message: Value<String>,
-    message_label: Value<String>,
-    menu_items: Value<List<MenuItem>>,
-    top_menu_items: Value<List<MenuItem>>,
-    logs: Value<String>,
-    new_header_name: Value<String>,
-    new_header_value: Value<String>,
-    edit_header_name: Value<String>,
-    edit_header_value: Value<String>,
-    current_project: Value<String>,
-    header_being_edited: Value<Option<Value<HeaderState>>>,
-    project_count: Value<u8>,
-    selected_project: Value<Option<ProjectState>>,
+    pub main_display: Value<MainDisplay>,
+    pub floating_window: Value<FloatingWindow>,
+    pub url: Value<String>,
+    pub method: Value<String>,
+    pub request_headers: Value<List<HeaderState>>,
+    pub request_body: Value<String>,
+    pub response_headers: Value<List<HeaderState>>,
+    pub response: Value<String>,
+    pub response_body_window_label: Value<String>,
+    pub error_message: Value<String>,
+    pub message: Value<String>,
+    pub message_label: Value<String>,
+    pub menu_items: Value<List<MenuItem>>,
+    pub top_menu_items: Value<List<MenuItem>>,
+    pub logs: Value<String>,
+    pub new_header_name: Value<String>,
+    pub new_header_value: Value<String>,
+    pub edit_header_name: Value<String>,
+    pub edit_header_value: Value<String>,
+    pub current_project: Value<String>,
+    pub header_being_edited: Value<Option<Value<HeaderState>>>,
+    pub project_count: Value<u8>,
+    pub selected_project: Value<Option<ProjectState>>,
 }
 
 impl DashboardState {
@@ -168,6 +178,16 @@ impl DashboardComponent {
     }
 }
 
+pub trait DashboardMessageHandler {
+    fn handle_message(
+        value: CommonVal<'_>,
+        ident: impl Into<String>,
+        state: &mut DashboardState,
+        context: Context<'_, DashboardState>,
+        component_ids: Ref<'_, HashMap<String, ComponentId<String>>>,
+    );
+}
+
 impl anathema::component::Component for DashboardComponent {
     type State = DashboardState;
     type Message = String;
@@ -178,181 +198,54 @@ impl anathema::component::Component for DashboardComponent {
         value: CommonVal<'_>,
         state: &mut Self::State,
         _elements: Elements<'_, '_>,
-        mut context: Context<'_, Self::State>,
+        context: Context<'_, Self::State>,
     ) {
+        let (component, _) = ident.split_once("__").unwrap_or(("", ""));
+        if let Ok(component_ids) = self.component_ids.try_borrow() {
+            match component {
+                "add_header" => {
+                    AddHeaderWindow::handle_message(value, ident, state, context, component_ids);
+                }
+
+                "edit_header" => {
+                    EditHeaderWindow::handle_message(value, ident, state, context, component_ids);
+                }
+
+                "edit_header_selector" => {
+                    EditHeaderSelector::handle_message(value, ident, state, context, component_ids);
+                }
+
+                "method_selector" => {
+                    MethodSelector::handle_message(value, ident, state, context, component_ids);
+                }
+
+                "project_window" => {
+                    ProjectWindow::handle_message(value, ident, state, context, component_ids);
+                }
+
+                _ => {}
+            }
+        } else {
+            println!("Could not find id for {ident}");
+        }
+
         match ident {
-            "add_header" => {
-                let header_name = state.new_header_name.to_ref().to_string();
-                let header_value = state.new_header_value.to_ref().to_string();
+            // "log_output" => {
+            //     let value = &*value.to_common_str();
+            //     let mut logs = state.logs.to_mut();
+            //     logs.insert_str(0, value);
+            // }
 
-                state.floating_window.set(FloatingWindow::None);
-                context.set_focus("id", "app");
-
-                if header_name.trim().is_empty() || header_value.trim().is_empty() {
-                    return;
-                }
-
-                let header = HeaderState {
-                    name: header_name.into(),
-                    value: header_value.into(),
-                };
-                state.request_headers.push(header);
-            }
-
-            "edit_header" => {
-                let header_name = state.edit_header_name.to_ref().to_string();
-                let header_value = state.edit_header_value.to_ref().to_string();
-
-                let header = HeaderState {
-                    name: header_name.into(),
-                    value: header_value.into(),
-                };
-
-                state.request_headers.push(header);
-                state.floating_window.set(FloatingWindow::None);
-
-                context.set_focus("id", "app");
-            }
-
-            "cancel_add_header" => {
-                state.floating_window.set(FloatingWindow::None);
-                state.new_header_name.set("".to_string());
-                state.new_header_value.set("".to_string());
-                context.set_focus("id", "app");
-            }
-
-            "cancel_edit_header" => {
-                state.floating_window.set(FloatingWindow::None);
-                state.edit_header_name.set("".to_string());
-                state.edit_header_value.set("".to_string());
-
-                let header = state.header_being_edited.to_mut();
-                let header = header.as_ref();
-                if let Some(header) = header {
-                    state.request_headers.push(HeaderState {
-                        name: header.to_ref().name.to_ref().clone().into(),
-                        value: header.to_ref().value.to_ref().clone().into(),
-                    });
-                }
-
-                context.set_focus("id", "app");
-            }
-
-            "log_output" => {
-                let value = &*value.to_common_str();
-                let mut logs = state.logs.to_mut();
-                logs.insert_str(0, value);
-            }
-
+            // FIXME: This event should be a message from the section to the right component
+            // instead of going up two parents via FocusableSection component
             "url_update" => {
                 let value = &*value.to_common_str();
                 state.url.set(value.to_string());
             }
 
-            "cancel_method_selector" => {
-                state.floating_window.set(FloatingWindow::None);
-            }
-
-            "new_method_selection" => {
-                let value = &*value.to_common_str();
-
-                state.method.set(value.to_string());
-
-                // Trigger a resize on the text input by setting focus and then resetting it to app
-                context.set_focus("id", "url_input");
-                context.set_focus("id", "app");
-            }
-
-            "header_name_update" => state.new_header_name.set(value.to_string()),
-            "header_value_update" => state.new_header_value.set(value.to_string()),
-
-            "edit_header_name_update" => state.edit_header_name.set(value.to_string()),
-            "edit_header_value_update" => state.edit_header_value.set(value.to_string()),
-
+            // FIXME: This event should be a message from the section to the right component
+            // instead of going up two parents via FocusableSection component
             "request_body_update" => state.request_body.set(value.to_string()),
-
-            "cancel_header_selection" => {
-                state.floating_window.set(FloatingWindow::None);
-                context.set_focus("id", "app");
-            }
-
-            "header_selection" => {
-                let selection: usize = value.to_string().parse().unwrap();
-                let header = state.request_headers.remove(selection);
-                if let Some(selected_header) = &header {
-                    let header = selected_header.to_ref();
-                    state.edit_header_name.set(header.name.to_ref().clone());
-                    state.edit_header_value.set(header.value.to_ref().clone());
-                };
-
-                state.header_being_edited.set(header);
-
-                state.floating_window.set(FloatingWindow::EditHeader);
-
-                let component_ids = self.component_ids.try_borrow();
-                if let Ok(component_ids) = component_ids {
-                    let edit_header_name_input_id = component_ids.get("edit_header_name_input");
-                    if let Some(id) = edit_header_name_input_id {
-                        context.emit(*id, state.edit_header_name.to_ref().clone());
-                    }
-
-                    let edit_header_value_input_id = component_ids.get("edit_header_value_input");
-                    if let Some(id) = edit_header_value_input_id {
-                        context.emit(*id, state.edit_header_value.to_ref().clone());
-                    }
-                }
-
-                context.set_focus("id", "edit_header_window");
-            }
-
-            "cancel_project_window" => {
-                state.floating_window.set(FloatingWindow::None);
-                context.set_focus("id", "app");
-            }
-
-            "project_selection" => {
-                state.floating_window.set(FloatingWindow::None);
-                context.set_focus("id", "app");
-
-                let value = &*value.to_common_str();
-                let project = serde_json::from_str::<Project>(value);
-
-                match project {
-                    Ok(project) => {
-                        state.current_project.set(project.name.clone());
-                        state.selected_project.set(Some(project.into()));
-                    }
-                    Err(_) => todo!(),
-                }
-            }
-
-            "delete_project" => {
-                state.floating_window.set(FloatingWindow::ConfirmProject);
-
-                let value = &*value.to_common_str();
-                let project = serde_json::from_str::<Project>(value);
-
-                match project {
-                    Ok(project) => {
-                        let confirm_message = ConfirmDeleteProject {
-                            title: format!("Delete {}", project.name),
-                            message: "Are you sure you want to delete?".into(),
-                            project,
-                        };
-
-                        if let Ok(message) = serde_json::to_string(&confirm_message) {
-                            if let Ok(component_ids) = self.component_ids.try_borrow() {
-                                let confirm_action_window_id =
-                                    component_ids.get("confirm_action_window");
-                                if let Some(id) = confirm_action_window_id {
-                                    context.emit(*id, message);
-                                }
-                            }
-                        }
-                    }
-                    Err(_) => todo!(),
-                }
-            }
 
             _ => {}
         }

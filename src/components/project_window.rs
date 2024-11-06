@@ -13,7 +13,13 @@ use anathema::{
 };
 use serde::{Deserialize, Serialize};
 
-use super::{request_headers_editor::HeaderState, textinput::TEXTINPUT_TEMPLATE};
+use crate::messages::confirm_delete_project::ConfirmDeleteProject;
+
+use super::{
+    dashboard::{DashboardMessageHandler, FloatingWindow},
+    request_headers_editor::HeaderState,
+    textinput::TEXTINPUT_TEMPLATE,
+};
 
 pub const PROJECT_WINDOW_TEMPLATE: &str = "./src/components/templates/project_window.aml";
 
@@ -205,6 +211,69 @@ impl ProjectWindow {
     }
 }
 
+impl DashboardMessageHandler for ProjectWindow {
+    fn handle_message(
+        value: anathema::state::CommonVal<'_>,
+        ident: impl Into<String>,
+        state: &mut super::dashboard::DashboardState,
+        mut context: anathema::prelude::Context<'_, super::dashboard::DashboardState>,
+        component_ids: std::cell::Ref<'_, HashMap<String, ComponentId<String>>>,
+    ) {
+        let event: String = ident.into();
+
+        match event.as_str() {
+            "project_window__cancel" => {
+                state.floating_window.set(FloatingWindow::None);
+                context.set_focus("id", "app");
+            }
+
+            "project_window__selection" => {
+                state.floating_window.set(FloatingWindow::None);
+                context.set_focus("id", "app");
+
+                let value = &*value.to_common_str();
+                let project = serde_json::from_str::<Project>(value);
+
+                match project {
+                    Ok(project) => {
+                        state.current_project.set(project.name.clone());
+                        state.selected_project.set(Some(project.into()));
+                    }
+                    Err(_) => todo!(),
+                }
+            }
+
+            "project_window__delete" => {
+                state.floating_window.set(FloatingWindow::ConfirmProject);
+
+                let value = &*value.to_common_str();
+                let project = serde_json::from_str::<Project>(value);
+
+                match project {
+                    Ok(project) => {
+                        let confirm_message = ConfirmDeleteProject {
+                            title: format!("Delete {}", project.name),
+                            message: "Are you sure you want to delete?".into(),
+                            project,
+                        };
+
+                        if let Ok(message) = serde_json::to_string(&confirm_message) {
+                            let confirm_action_window_id =
+                                component_ids.get("confirm_action_window");
+                            if let Some(id) = confirm_action_window_id {
+                                context.emit(*id, message);
+                            }
+                        }
+                    }
+                    Err(_) => todo!(),
+                }
+            }
+
+            _ => {}
+        }
+    }
+}
+
 impl Component for ProjectWindow {
     type State = ProjectWindowState;
     type Message = String;
@@ -232,14 +301,16 @@ impl Component for ProjectWindow {
                         Some(project) => match serde_json::to_string(project) {
                             Ok(project_json) => {
                                 state.selected_project.set(project_json);
-                                context.publish("delete_project", |state| &state.selected_project)
+                                context.publish("project_window__delete", |state| {
+                                    &state.selected_project
+                                })
                             }
 
                             Err(_) => {
-                                context.publish("cancel_project_window", |state| &state.cursor)
+                                context.publish("project_window__cancel", |state| &state.cursor)
                             }
                         },
-                        None => context.publish("cancel_project_window", |state| &state.cursor),
+                        None => context.publish("project_window__cancel", |state| &state.cursor),
                     }
                 }
                 _ => {}
@@ -250,7 +321,7 @@ impl Component for ProjectWindow {
 
             anathema::component::KeyCode::Esc => {
                 // NOTE: This sends cursor to satisfy publish() but is not used
-                context.publish("cancel_project_window", |state| &state.cursor)
+                context.publish("project_window__cancel", |state| &state.cursor)
             }
 
             anathema::component::KeyCode::Enter => {
@@ -261,11 +332,13 @@ impl Component for ProjectWindow {
                     Some(project) => match serde_json::to_string(project) {
                         Ok(project_json) => {
                             state.selected_project.set(project_json);
-                            context.publish("project_selection", |state| &state.selected_project);
+                            context.publish("project_window__selection", |state| {
+                                &state.selected_project
+                            });
                         }
-                        Err(_) => context.publish("cancel_project_window", |state| &state.cursor),
+                        Err(_) => context.publish("project_window__cancel", |state| &state.cursor),
                     },
-                    None => context.publish("cancel_project_window", |state| &state.cursor),
+                    None => context.publish("project_window__cancel", |state| &state.cursor),
                 }
             }
 

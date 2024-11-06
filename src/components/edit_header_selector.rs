@@ -3,6 +3,8 @@ use anathema::{
     state::{State, Value},
 };
 
+use super::dashboard::{DashboardMessageHandler, FloatingWindow};
+
 pub const EDIT_HEADER_SELECTOR_TEMPLATE: &str =
     "./src/components/templates/edit_header_selector.aml";
 
@@ -18,6 +20,56 @@ impl EditHeaderSelectorState {
     pub fn new() -> Self {
         EditHeaderSelectorState {
             selection: None.into(),
+        }
+    }
+}
+
+impl DashboardMessageHandler for EditHeaderSelector {
+    fn handle_message(
+        value: anathema::state::CommonVal<'_>,
+        ident: impl Into<String>,
+        state: &mut super::dashboard::DashboardState,
+        mut context: anathema::prelude::Context<'_, super::dashboard::DashboardState>,
+        component_ids: std::cell::Ref<
+            '_,
+            std::collections::HashMap<String, anathema::component::ComponentId<String>>,
+        >,
+    ) {
+        let event: String = ident.into();
+
+        match event.as_str() {
+            "edit_header_selector__cancel" => {
+                state.floating_window.set(FloatingWindow::None);
+                context.set_focus("id", "app");
+            }
+
+            "edit_header_selector__selection" => {
+                let selection: usize = value.to_string().parse().unwrap();
+                let header = state.request_headers.remove(selection);
+                if let Some(selected_header) = &header {
+                    let header = selected_header.to_ref();
+                    state.edit_header_name.set(header.name.to_ref().clone());
+                    state.edit_header_value.set(header.value.to_ref().clone());
+                };
+
+                state.header_being_edited.set(header);
+
+                state.floating_window.set(FloatingWindow::EditHeader);
+
+                let edit_header_name_input_id = component_ids.get("edit_header_name_input");
+                if let Some(id) = edit_header_name_input_id {
+                    context.emit(*id, state.edit_header_name.to_ref().clone());
+                }
+
+                let edit_header_value_input_id = component_ids.get("edit_header_value_input");
+                if let Some(id) = edit_header_value_input_id {
+                    context.emit(*id, state.edit_header_value.to_ref().clone());
+                }
+
+                context.set_focus("id", "edit_header_window");
+            }
+
+            _ => {}
         }
     }
 }
@@ -41,7 +93,7 @@ impl Component for EditHeaderSelector {
             anathema::component::KeyCode::Char(char) => {
                 state.selection.set(Some(char));
                 if let '0'..='9' = char {
-                    context.publish("header_selection", |state| &state.selection)
+                    context.publish("edit_header_selector__selection", |state| &state.selection)
                 }
             }
 
@@ -49,7 +101,7 @@ impl Component for EditHeaderSelector {
                 // NOTE: This selection state needs a Some in order for the associated function to
                 // fire
                 state.selection.set(Some('x'));
-                context.publish("cancel_header_selection", |state| &state.selection)
+                context.publish("edit_header_selector__cancel", |state| &state.selection)
             }
 
             _ => {}

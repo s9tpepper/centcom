@@ -65,10 +65,18 @@ zstack
             @menu_item
 
   if floating_window == "AddHeader"
-    @add_header_window (add_header->add_header, cancel_add_header->cancel_add_header, header_name_update->header_name_update, header_value_update->header_value_update) [id: "add_header_window", name: edit_header_name, value: edit_header_value]
+    @add_header_window (
+      add_header__submit->add_header__submit,
+      add_header__cancel->add_header__cancel,
+      add_header__name_update->add_header__name_update,
+      add_header__value_update->add_header__value_update
+    ) [id: "add_header_window", name: edit_header_name, value: edit_header_value]
 
   if floating_window == "Method"
-    @method_selector (cancel_method_selector->cancel_method_selector, new_method_selection->new_method_selection) [id: "method_selector"]
+    @method_selector (
+      method_selector__cancel->method_selector__cancel,
+      method_selector__new->method_selector__new
+    ) [id: "method_selector"]
 
   if floating_window == "Error"
     align [alignment: "center"]
@@ -97,14 +105,17 @@ zstack
               text message
 
   if floating_window == "EditHeaderSelector"
-    @edit_header_selector (header_selection -> header_selection, cancel_header_selection -> cancel_header_selection) [id: "edit_header_selector", headers: request_headers]
+    @edit_header_selector (
+      edit_header_selector__selection -> edit_header_selector__selection,
+      edit_header_selector__cancel -> edit_header_selector__cancel
+    ) [id: "edit_header_selector", headers: request_headers]
 
   if floating_window == "EditHeader"
     @edit_header_window (
-      edit_header->edit_header,
-      cancel_edit_header->cancel_edit_header,
-      edit_header_name_update->edit_header_name_update,
-      edit_header_value_update->edit_header_value_update
+      edit_header__submit->edit_header__submit,
+      edit_header__cancel->edit_header__cancel,
+      edit_header__name_update->edit_header__name_update,
+      edit_header__value_update->edit_header__value_update
     ) [
       id: "edit_header_window",
       name: edit_header_name,
@@ -113,9 +124,9 @@ zstack
 
   if floating_window == "Project"
     @project_window (
-      cancel_project_window -> cancel_project_window,
-      project_selection -> project_selection,
-      delete_project -> delete_project
+      project_window__cancel -> project_window__cancel,
+      project_window__selection -> project_window__selection,
+      project_window__delete -> project_window__delete
     ) [id: "project_window"]
 
   if floating_window == "ConfirmProject"

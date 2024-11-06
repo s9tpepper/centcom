@@ -5,6 +5,8 @@ use anathema::{
     state::{State, Value},
 };
 
+use super::dashboard::{DashboardMessageHandler, FloatingWindow};
+
 pub const METHOD_SELECTOR_TEMPLATE: &str = "./src/components/templates/method_selector.aml";
 
 #[derive(Default)]
@@ -19,6 +21,39 @@ impl MethodSelectorState {
     pub fn new() -> Self {
         MethodSelectorState {
             selection: "GET".to_string().into(),
+        }
+    }
+}
+
+impl DashboardMessageHandler for MethodSelector {
+    fn handle_message(
+        value: anathema::state::CommonVal<'_>,
+        ident: impl Into<String>,
+        state: &mut super::dashboard::DashboardState,
+        mut context: anathema::prelude::Context<'_, super::dashboard::DashboardState>,
+        _component_ids: std::cell::Ref<
+            '_,
+            std::collections::HashMap<String, anathema::component::ComponentId<String>>,
+        >,
+    ) {
+        let event: String = ident.into();
+
+        match event.as_str() {
+            "method_selector__cancel" => {
+                state.floating_window.set(FloatingWindow::None);
+            }
+
+            "method_selector__new" => {
+                let value = &*value.to_common_str();
+
+                state.method.set(value.to_string());
+
+                // Trigger a resize on the text input by setting focus and then resetting it to app
+                context.set_focus("id", "url_input");
+                context.set_focus("id", "app");
+            }
+
+            _ => {}
         }
     }
 }
@@ -63,13 +98,13 @@ impl Component for MethodSelector {
                     }
                 };
 
-                context.publish("new_method_selection", |state| &state.selection);
-                context.publish("cancel_method_selector", |state| &state.selection);
+                context.publish("method_selector__new", |state| &state.selection);
+                context.publish("method_selector__cancel", |state| &state.selection);
                 context.set_focus("id", "app")
             }
 
             KeyCode::Esc => {
-                context.publish("cancel_method_selector", |state| &state.selection);
+                context.publish("method_selector__cancel", |state| &state.selection);
                 context.set_focus("id", "app")
             }
 
