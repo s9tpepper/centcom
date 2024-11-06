@@ -43,8 +43,39 @@ struct MenuItem {
     label: Value<String>,
 }
 
+#[derive(PartialEq, Eq)]
+enum FloatingWindow {
+    None,
+    Method,
+    AddHeader,
+    EditHeader,
+    Error,
+    EditHeaderSelector,
+    Project,
+    ConfirmProject,
+    Message,
+}
+
+impl State for FloatingWindow {
+    fn to_common(&self) -> Option<CommonVal<'_>> {
+        match self {
+            FloatingWindow::None => Some(CommonVal::Str("None")),
+            FloatingWindow::Method => Some(CommonVal::Str("Method")),
+            FloatingWindow::AddHeader => Some(CommonVal::Str("AddHeader")),
+            FloatingWindow::EditHeader => Some(CommonVal::Str("EditHeader")),
+            FloatingWindow::Error => Some(CommonVal::Str("Error")),
+            FloatingWindow::EditHeaderSelector => Some(CommonVal::Str("EditHeaderSelector")),
+            FloatingWindow::Project => Some(CommonVal::Str("Project")),
+            FloatingWindow::ConfirmProject => Some(CommonVal::Str("ConfirmProject")),
+            FloatingWindow::Message => Some(CommonVal::Str("Message")),
+        }
+    }
+}
+
 #[derive(anathema::state::State)]
 pub struct DashboardState {
+    main_display: Value<MainDisplay>,
+    floating_window: Value<FloatingWindow>,
     url: Value<String>,
     method: Value<String>,
     request_headers: Value<List<HeaderState>>,
@@ -52,17 +83,9 @@ pub struct DashboardState {
     response_headers: Value<List<HeaderState>>,
     response: Value<String>,
     response_body_window_label: Value<String>,
-    show_method_window: Value<bool>,
-    show_add_header_window: Value<bool>,
-    show_edit_header_window: Value<bool>,
-    show_error_window: Value<bool>,
-    show_edit_header_selector: Value<bool>,
-    show_project_window: Value<bool>,
     error_message: Value<String>,
-    show_message_window: Value<bool>,
     message: Value<String>,
     message_label: Value<String>,
-    main_display: Value<MainDisplay>,
     menu_items: Value<List<MenuItem>>,
     top_menu_items: Value<List<MenuItem>>,
     logs: Value<String>,
@@ -74,7 +97,6 @@ pub struct DashboardState {
     header_being_edited: Value<Option<Value<HeaderState>>>,
     project_count: Value<u8>,
     selected_project: Value<Option<ProjectState>>,
-    show_confirm_project_delete: Value<bool>,
 }
 
 impl DashboardState {
@@ -93,14 +115,7 @@ impl DashboardState {
             new_header_value: "".to_string().into(),
             edit_header_name: "".to_string().into(),
             edit_header_value: "".to_string().into(),
-            show_method_window: false.into(),
-            show_add_header_window: false.into(),
-            show_edit_header_window: false.into(),
-            show_error_window: false.into(),
-            show_message_window: false.into(),
-            show_edit_header_selector: false.into(),
-            show_project_window: false.into(),
-            show_confirm_project_delete: false.into(),
+            floating_window: FloatingWindow::None.into(),
             main_display: Value::<MainDisplay>::new(MainDisplay::RequestBody),
             logs: "".to_string().into(),
             menu_items: List::from_iter([
@@ -170,7 +185,7 @@ impl anathema::component::Component for DashboardComponent {
                 let header_name = state.new_header_name.to_ref().to_string();
                 let header_value = state.new_header_value.to_ref().to_string();
 
-                state.show_add_header_window.set(false);
+                state.floating_window.set(FloatingWindow::None);
                 context.set_focus("id", "app");
 
                 if header_name.trim().is_empty() || header_value.trim().is_empty() {
@@ -194,20 +209,20 @@ impl anathema::component::Component for DashboardComponent {
                 };
 
                 state.request_headers.push(header);
-                state.show_edit_header_window.set(false);
+                state.floating_window.set(FloatingWindow::None);
 
                 context.set_focus("id", "app");
             }
 
             "cancel_add_header" => {
-                state.show_add_header_window.set(false);
+                state.floating_window.set(FloatingWindow::None);
                 state.new_header_name.set("".to_string());
                 state.new_header_value.set("".to_string());
                 context.set_focus("id", "app");
             }
 
             "cancel_edit_header" => {
-                state.show_edit_header_window.set(false);
+                state.floating_window.set(FloatingWindow::None);
                 state.edit_header_name.set("".to_string());
                 state.edit_header_value.set("".to_string());
 
@@ -235,7 +250,7 @@ impl anathema::component::Component for DashboardComponent {
             }
 
             "cancel_method_selector" => {
-                state.show_method_window.set(false);
+                state.floating_window.set(FloatingWindow::None);
             }
 
             "new_method_selection" => {
@@ -257,7 +272,7 @@ impl anathema::component::Component for DashboardComponent {
             "request_body_update" => state.request_body.set(value.to_string()),
 
             "cancel_header_selection" => {
-                state.show_edit_header_selector.set(false);
+                state.floating_window.set(FloatingWindow::None);
                 context.set_focus("id", "app");
             }
 
@@ -272,8 +287,7 @@ impl anathema::component::Component for DashboardComponent {
 
                 state.header_being_edited.set(header);
 
-                state.show_edit_header_selector.set(false);
-                state.show_edit_header_window.set(true);
+                state.floating_window.set(FloatingWindow::EditHeader);
 
                 let component_ids = self.component_ids.try_borrow();
                 if let Ok(component_ids) = component_ids {
@@ -292,12 +306,12 @@ impl anathema::component::Component for DashboardComponent {
             }
 
             "cancel_project_window" => {
-                state.show_project_window.set(false);
+                state.floating_window.set(FloatingWindow::None);
                 context.set_focus("id", "app");
             }
 
             "project_selection" => {
-                state.show_project_window.set(false);
+                state.floating_window.set(FloatingWindow::None);
                 context.set_focus("id", "app");
 
                 let value = &*value.to_common_str();
@@ -313,8 +327,7 @@ impl anathema::component::Component for DashboardComponent {
             }
 
             "delete_project" => {
-                state.show_project_window.set(false);
-                state.show_confirm_project_delete.set(true);
+                state.floating_window.set(FloatingWindow::ConfirmProject);
 
                 let value = &*value.to_common_str();
                 let project = serde_json::from_str::<Project>(value);
@@ -384,13 +397,15 @@ impl anathema::component::Component for DashboardComponent {
                     'd' => state.main_display.set(MainDisplay::RequestHeadersEditor),
 
                     'e' => {
-                        state.show_edit_header_selector.set(true);
+                        state
+                            .floating_window
+                            .set(FloatingWindow::EditHeaderSelector);
                         context.set_focus("id", "edit_header_selector");
                     }
 
                     // Show projects window
                     'p' => {
-                        state.show_project_window.set(true);
+                        state.floating_window.set(FloatingWindow::Project);
                         if let Ok(component_ids) = self.component_ids.try_borrow() {
                             if let Some(id) = component_ids.get("project_window") {
                                 context.emit(*id, "load".to_string());
@@ -405,13 +420,13 @@ impl anathema::component::Component for DashboardComponent {
 
                     // Open Request Method selection window
                     'm' => {
-                        state.show_method_window.set(true);
+                        state.floating_window.set(FloatingWindow::Method);
                         context.set_focus("id", "method_selector");
                     }
 
                     // Open header window
                     'a' => {
-                        state.show_add_header_window.set(true);
+                        state.floating_window.set(FloatingWindow::AddHeader);
                         context.set_focus("id", "add_header_window");
                     }
 
@@ -421,7 +436,7 @@ impl anathema::component::Component for DashboardComponent {
                             state
                                 .error_message
                                 .set("Error accessing your clipboard".to_string());
-                            state.show_error_window.set(true);
+                            state.floating_window.set(FloatingWindow::Error);
                             return;
                         };
 
@@ -432,12 +447,12 @@ impl anathema::component::Component for DashboardComponent {
                                     .message
                                     .set("Response copied to clipboard".to_string());
                                 state.message_label.set("Clipboard".to_string());
-                                state.show_message_window.set(true);
+                                state.floating_window.set(FloatingWindow::Message);
                             }
 
                             Err(error) => {
                                 state.error_message.set(error.to_string());
-                                state.show_error_window.set(true);
+                                state.floating_window.set(FloatingWindow::Error);
                             }
                         }
                     }
@@ -448,12 +463,8 @@ impl anathema::component::Component for DashboardComponent {
             KeyCode::Esc => {
                 context.set_focus("id", "app");
 
-                if state.show_error_window.to_ref().to_bool() {
-                    state.show_error_window.set(false);
-                }
-
-                if state.show_message_window.to_ref().to_bool() {
-                    state.show_message_window.set(false);
+                if *state.floating_window.to_ref() != FloatingWindow::None {
+                    state.floating_window.set(FloatingWindow::None);
                 }
             }
 
@@ -501,7 +512,7 @@ fn do_request(
     if http_request_result.is_err() {
         let error = http_request_result.unwrap_err();
         state.error_message.set(error.to_string());
-        state.show_error_window.set(true);
+        state.floating_window.set(FloatingWindow::Error);
         return;
     }
 
@@ -559,7 +570,7 @@ fn do_request(
         let error = response.unwrap_err();
 
         state.error_message.set(error.to_string());
-        state.show_error_window.set(true);
+        state.floating_window.set(FloatingWindow::Error);
     }
 
     context.set_focus("id", "app");

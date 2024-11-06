@@ -64,13 +64,13 @@ zstack
           for item in menu_items
             @menu_item
 
-  if show_add_header_window
+  if floating_window == "AddHeader"
     @add_header_window (add_header->add_header, cancel_add_header->cancel_add_header, header_name_update->header_name_update, header_value_update->header_value_update) [id: "add_header_window", name: edit_header_name, value: edit_header_value]
 
-  if show_method_window
+  if floating_window == "Method"
     @method_selector (cancel_method_selector->cancel_method_selector, new_method_selection->new_method_selection) [id: "method_selector"]
 
-  if show_error_window
+  if floating_window == "Error"
     align [alignment: "center"]
       container [background: "#fedbe2", max_height: 3]
         padding [padding: 0]
@@ -83,7 +83,7 @@ zstack
             $children
               text error_message
 
-  if show_message_window
+  if floating_window == "Message"
     align [alignment: "center"]
       container [background: "#e2ffe2", max_height: 3]
         padding [padding: 0]
@@ -96,10 +96,10 @@ zstack
             $children
               text message
 
-  if show_edit_header_selector
+  if floating_window == "EditHeaderSelector"
     @edit_header_selector (header_selection -> header_selection, cancel_header_selection -> cancel_header_selection) [id: "edit_header_selector", headers: request_headers]
 
-  if show_edit_header_window
+  if floating_window == "EditHeader"
     @edit_header_window (
       edit_header->edit_header,
       cancel_edit_header->cancel_edit_header,
@@ -111,12 +111,12 @@ zstack
       value: edit_header_value
     ]
 
-  if show_project_window
+  if floating_window == "Project"
     @project_window (
       cancel_project_window -> cancel_project_window,
       project_selection -> project_selection,
       delete_project -> delete_project
     ) [id: "project_window"]
 
-  if show_confirm_project_delete
+  if floating_window == "ConfirmProject"
     @confirm_action_window
