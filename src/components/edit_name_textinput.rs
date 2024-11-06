@@ -1,9 +1,47 @@
-use anathema::{prelude::Context, widgets::Elements};
+use anathema::{
+    component::ComponentId,
+    prelude::{Context, TuiBackend},
+    runtime::RuntimeBuilder,
+    widgets::Elements,
+};
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
-use super::textinput::{InputReceiver, InputState};
+use super::{
+    header_value_textinput::HeaderValueTextInput,
+    textinput::{InputReceiver, InputState, TEXTINPUT_TEMPLATE},
+};
 
 #[derive(Default)]
-pub struct EditNameTextInput;
+pub struct EditNameTextInput {
+    #[allow(dead_code)]
+    component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>,
+}
+
+impl EditNameTextInput {
+    pub fn register(
+        ids: &Rc<RefCell<HashMap<String, ComponentId<String>>>>,
+        builder: &mut RuntimeBuilder<TuiBackend, ()>,
+    ) -> anyhow::Result<()> {
+        let id = builder.register_component(
+            "editheadername",
+            TEXTINPUT_TEMPLATE,
+            EditNameTextInput {
+                component_ids: ids.clone(),
+            },
+            InputState::new(),
+        )?;
+
+        let ids_ref = ids.clone();
+        ids_ref.replace_with(|old| {
+            let mut new_map = old.clone();
+            new_map.insert(String::from("edit_header_name_input"), id);
+
+            new_map
+        });
+
+        Ok(())
+    }
+}
 
 impl anathema::component::Component for EditNameTextInput {
     type State = InputState;

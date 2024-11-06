@@ -1,9 +1,45 @@
-use anathema::{prelude::Context, widgets::Elements};
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
-use super::textinput::{InputReceiver, InputState};
+use anathema::{
+    component::ComponentId,
+    prelude::{Context, TuiBackend},
+    runtime::RuntimeBuilder,
+    widgets::Elements,
+};
+
+use super::textinput::{InputReceiver, InputState, TEXTINPUT_TEMPLATE};
 
 #[derive(Default)]
-pub struct HeaderValueTextInput;
+pub struct HeaderValueTextInput {
+    #[allow(dead_code)]
+    component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>,
+}
+
+impl HeaderValueTextInput {
+    pub fn register(
+        ids: &Rc<RefCell<HashMap<String, ComponentId<String>>>>,
+        builder: &mut RuntimeBuilder<TuiBackend, ()>,
+    ) -> anyhow::Result<()> {
+        let id = builder.register_component(
+            "headervalueinput",
+            TEXTINPUT_TEMPLATE,
+            HeaderValueTextInput {
+                component_ids: ids.clone(),
+            },
+            InputState::new(),
+        )?;
+
+        let ids_ref = ids.clone();
+        ids_ref.replace_with(|old| {
+            let mut new_map = old.clone();
+            new_map.insert(String::from("headervalueinput"), id);
+
+            new_map
+        });
+
+        Ok(())
+    }
+}
 
 impl anathema::component::Component for HeaderValueTextInput {
     type State = InputState;

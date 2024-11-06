@@ -1,8 +1,9 @@
-use std::collections::HashMap;
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use anathema::{
     component::{ComponentId, KeyCode, KeyEvent},
-    prelude::Context,
+    prelude::{Context, TuiBackend},
+    runtime::RuntimeBuilder,
     state::{CommonVal, List, State, Value},
     widgets::Elements,
 };
@@ -123,7 +124,33 @@ impl DashboardState {
 }
 
 pub struct DashboardComponent {
-    pub component_ids: HashMap<String, ComponentId<String>>,
+    pub component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>,
+}
+
+impl DashboardComponent {
+    pub fn register(
+        ids: &Rc<RefCell<HashMap<String, ComponentId<String>>>>,
+        builder: &mut RuntimeBuilder<TuiBackend, ()>,
+    ) -> anyhow::Result<()> {
+        let id = builder.register_component(
+            "dashboard",
+            DASHBOARD_TEMPLATE,
+            DashboardComponent {
+                component_ids: ids.clone(),
+            },
+            DashboardState::new(),
+        )?;
+
+        let ids_ref = ids.clone();
+        ids_ref.replace_with(|old| {
+            let mut new_map = old.clone();
+            new_map.insert(String::from("dashboard"), id);
+
+            new_map
+        });
+
+        Ok(())
+    }
 }
 
 impl anathema::component::Component for DashboardComponent {
@@ -248,14 +275,17 @@ impl anathema::component::Component for DashboardComponent {
                 state.show_edit_header_selector.set(false);
                 state.show_edit_header_window.set(true);
 
-                let edit_header_name_input_id = self.component_ids.get("edit_header_name_input");
-                if let Some(id) = edit_header_name_input_id {
-                    context.emit(*id, state.edit_header_name.to_ref().clone());
-                }
+                let component_ids = self.component_ids.try_borrow();
+                if let Ok(component_ids) = component_ids {
+                    let edit_header_name_input_id = component_ids.get("edit_header_name_input");
+                    if let Some(id) = edit_header_name_input_id {
+                        context.emit(*id, state.edit_header_name.to_ref().clone());
+                    }
 
-                let edit_header_value_input_id = self.component_ids.get("edit_header_value_input");
-                if let Some(id) = edit_header_value_input_id {
-                    context.emit(*id, state.edit_header_value.to_ref().clone());
+                    let edit_header_value_input_id = component_ids.get("edit_header_value_input");
+                    if let Some(id) = edit_header_value_input_id {
+                        context.emit(*id, state.edit_header_value.to_ref().clone());
+                    }
                 }
 
                 context.set_focus("id", "edit_header_window");
@@ -298,10 +328,12 @@ impl anathema::component::Component for DashboardComponent {
                         };
 
                         if let Ok(message) = serde_json::to_string(&confirm_message) {
-                            let confirm_action_window_id =
-                                self.component_ids.get("confirm_action_window");
-                            if let Some(id) = confirm_action_window_id {
-                                context.emit(*id, message);
+                            if let Ok(component_ids) = self.component_ids.try_borrow() {
+                                let confirm_action_window_id =
+                                    component_ids.get("confirm_action_window");
+                                if let Some(id) = confirm_action_window_id {
+                                    context.emit(*id, message);
+                                }
                             }
                         }
                     }
@@ -359,8 +391,10 @@ impl anathema::component::Component for DashboardComponent {
                     // Show projects window
                     'p' => {
                         state.show_project_window.set(true);
-                        if let Some(id) = self.component_ids.get("project_window") {
-                            context.emit(*id, "load".to_string());
+                        if let Ok(component_ids) = self.component_ids.try_borrow() {
+                            if let Some(id) = component_ids.get("project_window") {
+                                context.emit(*id, "load".to_string());
+                            }
                         }
 
                         context.set_focus("id", "project_window");

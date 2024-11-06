@@ -1,9 +1,10 @@
-use std::collections::HashMap;
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use anathema::{
-    component::ComponentId,
-    prelude::{Document, TuiBackend},
+    component::{Component, ComponentId},
+    prelude::{Document, ToSourceKind, TuiBackend},
     runtime::{Runtime, RuntimeBuilder},
+    state::State,
 };
 
 use crate::components::{
@@ -11,7 +12,7 @@ use crate::components::{
     app_layout::{AppLayoutComponent, AppLayoutState, APP_LAYOUT_TEMPLATE},
     app_section::{AppSection, AppSectionState, APP_SECTION_TEMPLATE},
     confirm_action_window::{
-        self, ConfirmActionWindow, ConfirmActionWindowState, CONFIRM_ACTION_WINDOW_TEMPLATE,
+        ConfirmActionWindow, ConfirmActionWindowState, CONFIRM_ACTION_WINDOW_TEMPLATE,
     },
     dashboard::{DashboardComponent, DashboardState, DASHBOARD_TEMPLATE},
     edit_header_selector::{
@@ -35,22 +36,25 @@ use crate::components::{
     textinput::{InputState, TextInput, TEXTINPUT_TEMPLATE},
 };
 
-pub fn app() {
-    let _ = App::new().run();
+pub fn app() -> anyhow::Result<()> {
+    App::new().run()?;
+
+    Ok(())
 }
 
 struct App {
-    component_ids: HashMap<String, ComponentId<String>>,
+    // component_ids: HashMap<String, ComponentId<String>>,
+    component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>,
 }
 
 impl App {
     pub fn new() -> Self {
         App {
-            component_ids: HashMap::new(),
+            component_ids: Rc::new(RefCell::new(HashMap::new())),
         }
     }
 
-    pub fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn run(&mut self) -> anyhow::Result<()> {
         let doc = Document::new("@app");
 
         let tui = TuiBackend::builder()
@@ -66,7 +70,7 @@ impl App {
 
         let backend = tui.unwrap();
         let mut runtime_builder = Runtime::builder(doc, backend);
-        self.register_components(&mut runtime_builder);
+        self.register_components(&mut runtime_builder)?;
 
         let runtime = runtime_builder.finish();
         if let Ok(mut runtime) = runtime {
@@ -80,7 +84,7 @@ impl App {
         Ok(())
     }
 
-    fn register_components(&mut self, builder: &mut RuntimeBuilder<TuiBackend, ()>) {
+    fn register_prototypes(&self, builder: &mut RuntimeBuilder<TuiBackend, ()>) {
         let _ = builder.register_prototype(
             "url_input",
             "./src/components/templates/url_input.aml",
@@ -107,13 +111,6 @@ impl App {
             METHOD_SELECTOR_TEMPLATE,
             || MethodSelector,
             MethodSelectorState::new,
-        );
-
-        let _ = builder.register_component(
-            "app",
-            APP_LAYOUT_TEMPLATE,
-            AppLayoutComponent,
-            AppLayoutState {},
         );
 
         let _ = builder.register_prototype(
@@ -151,18 +148,6 @@ impl App {
             AddHeaderWindowState::new,
         );
 
-        let edit_header_window_id = builder.register_component(
-            "edit_header_window",
-            EDIT_HEADER_WINDOW_TEMPLATE,
-            EditHeaderWindow,
-            EditHeaderWindowState::new(),
-        );
-
-        if let Ok(edit_header_window_id) = edit_header_window_id {
-            self.component_ids
-                .insert("edit_header_window".to_string(), edit_header_window_id);
-        }
-
         let _ = builder.register_prototype(
             "edit_header_selector",
             EDIT_HEADER_SELECTOR_TEMPLATE,
@@ -171,81 +156,30 @@ impl App {
         );
 
         let _ = builder.register_prototype("row", ROW_TEMPLATE, || Row, RowState::new);
+    }
+
+    fn register_components(
+        &mut self,
+        builder: &mut RuntimeBuilder<TuiBackend, ()>,
+    ) -> anyhow::Result<()> {
+        self.register_prototypes(builder);
 
         let _ = builder.register_component(
-            "headernameinput",
-            TEXTINPUT_TEMPLATE,
-            HeaderNameTextInput,
-            InputState::new(),
+            "app",
+            APP_LAYOUT_TEMPLATE,
+            AppLayoutComponent,
+            AppLayoutState {},
         );
 
-        let _ = builder.register_component(
-            "headervalueinput",
-            TEXTINPUT_TEMPLATE,
-            HeaderValueTextInput,
-            InputState::new(),
-        );
+        EditHeaderWindow::register(&self.component_ids, builder)?;
+        HeaderNameTextInput::register(&self.component_ids, builder)?;
+        HeaderValueTextInput::register(&self.component_ids, builder)?;
+        EditNameTextInput::register(&self.component_ids, builder)?;
+        EditValueTextInput::register(&self.component_ids, builder)?;
+        ProjectWindow::register(&self.component_ids, builder)?;
+        ConfirmActionWindow::register(&self.component_ids, builder)?;
+        DashboardComponent::register(&self.component_ids, builder)?;
 
-        let edit_header_name_id = builder.register_component(
-            "editheadername",
-            TEXTINPUT_TEMPLATE,
-            EditNameTextInput,
-            InputState::new(),
-        );
-        if let Ok(edit_header_name_id) = edit_header_name_id {
-            self.component_ids
-                .insert("edit_header_name_input".to_string(), edit_header_name_id);
-        }
-
-        let edit_header_value_id = builder.register_component(
-            "editheadervalue",
-            TEXTINPUT_TEMPLATE,
-            EditValueTextInput,
-            InputState::new(),
-        );
-        if let Ok(edit_header_value_id) = edit_header_value_id {
-            self.component_ids
-                .insert("edit_header_value_input".to_string(), edit_header_value_id);
-        }
-
-        let project_window_id = builder.register_component(
-            "project_window",
-            PROJECT_WINDOW_TEMPLATE,
-            ProjectWindow::new(),
-            ProjectWindowState::new(),
-        );
-        if let Ok(project_window_id) = project_window_id {
-            self.component_ids
-                .insert("project_window".to_string(), project_window_id);
-        }
-
-        let confirm_action_window_id = builder.register_component(
-            "confirm_action_window",
-            CONFIRM_ACTION_WINDOW_TEMPLATE,
-            ConfirmActionWindow::new(),
-            ConfirmActionWindowState::new(),
-        );
-        if let Ok(confirm_action_window_id) = confirm_action_window_id {
-            self.component_ids.insert(
-                "confirm_action_window".to_string(),
-                confirm_action_window_id,
-            );
-        }
-
-        let dashboard = DashboardComponent {
-            component_ids: self.component_ids.clone(),
-        };
-
-        let dashboard_id = builder.register_component(
-            "dashboard",
-            DASHBOARD_TEMPLATE,
-            dashboard,
-            DashboardState::new(),
-        );
-
-        if let Ok(dashboard_id) = dashboard_id {
-            self.component_ids
-                .insert("dashboard".to_string(), dashboard_id);
-        }
+        Ok(())
     }
 }

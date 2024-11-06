@@ -1,4 +1,4 @@
-use std::env;
+use std::{any, env};
 
 use clap::{Parser, Subcommand};
 
@@ -20,20 +20,24 @@ struct Cli {
     commands: Cmds,
 }
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     let args = env::args().collect::<Vec<_>>();
 
     match args.len() {
         1 => {
-            app();
+            app()?;
+
+            Ok(())
         }
 
         _ => {
-            let cli = Cli::parse();
+            // let cli = Cli::parse();
 
-            match cli.commands {
-                Cmds::Test => todo!(),
-            }
+            // match cli.commands {
+            //     Cmds::Test => Ok::<(), anyhow::Error>(()),
+            // };
+
+            Ok(())
         }
     }
 }

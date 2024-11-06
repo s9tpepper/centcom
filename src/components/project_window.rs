@@ -1,12 +1,19 @@
-use std::cmp::{max, min};
+use std::{
+    cell::RefCell,
+    cmp::{max, min},
+    collections::HashMap,
+    rc::Rc,
+};
 
 use anathema::{
-    component::Component,
+    component::{Component, ComponentId},
+    prelude::TuiBackend,
+    runtime::RuntimeBuilder,
     state::{List, State, Value},
 };
 use serde::{Deserialize, Serialize};
 
-use super::request_headers_editor::HeaderState;
+use super::{request_headers_editor::HeaderState, textinput::TEXTINPUT_TEMPLATE};
 
 pub const PROJECT_WINDOW_TEMPLATE: &str = "./src/components/templates/project_window.aml";
 
@@ -41,10 +48,79 @@ impl ProjectWindowState {
 
 #[derive(Default)]
 pub struct ProjectWindow {
+    #[allow(dead_code)]
+    component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>,
     project_list: Vec<Project>,
 }
 
 impl ProjectWindow {
+    pub fn register(
+        ids: &Rc<RefCell<HashMap<String, ComponentId<String>>>>,
+        builder: &mut RuntimeBuilder<TuiBackend, ()>,
+    ) -> anyhow::Result<()> {
+        let id = builder.register_component(
+            "project_window",
+            PROJECT_WINDOW_TEMPLATE,
+            ProjectWindow::new(ids.clone()),
+            ProjectWindowState::new(),
+        )?;
+
+        let ids_ref = ids.clone();
+        ids_ref.replace_with(|old| {
+            let mut new_map = old.clone();
+            new_map.insert(String::from("project_window"), id);
+
+            new_map
+        });
+
+        Ok(())
+    }
+
+    pub fn new(component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>) -> Self {
+        ProjectWindow {
+            component_ids,
+            project_list: vec![],
+        }
+    }
+
+    fn load(&mut self, state: &mut ProjectWindowState) {
+        // println!("self.load()");
+
+        // TODO: Replace this hard coded list of test data with data read from disk
+        self.project_list = vec![
+            Project {
+                name: "Twitch API".into(),
+                requests: vec![],
+            },
+            Project {
+                name: "Twitter API".into(),
+                requests: vec![],
+            },
+            Project {
+                name: "Facebook API".into(),
+                requests: vec![],
+            },
+            Project {
+                name: "OpenAI".into(),
+                requests: vec![],
+            },
+            Project {
+                name: "Claude".into(),
+                requests: vec![],
+            },
+            Project {
+                name: "Spotify API".into(),
+                requests: vec![],
+            },
+            Project {
+                name: "TikTok API".into(),
+                requests: vec![],
+            },
+        ];
+
+        state.project_count.set(self.project_list.len() as u8);
+    }
+
     fn move_cursor_down(&self, state: &mut ProjectWindowState) {
         let last_complete_list_index = self.project_list.len().saturating_sub(1);
         let new_cursor = min(*state.cursor.to_ref() + 1, last_complete_list_index as u8);
@@ -231,52 +307,6 @@ impl Component for ProjectWindow {
         // println!("Received message in project window: {message}");
         // NOTE: The currently selected project might need to be sent from the dashboard
         // when opening the project window after choosing a project
-    }
-}
-
-impl ProjectWindow {
-    pub fn new() -> Self {
-        ProjectWindow {
-            project_list: vec![],
-        }
-    }
-
-    fn load(&mut self, state: &mut ProjectWindowState) {
-        // println!("self.load()");
-
-        // TODO: Replace this hard coded list of test data with data read from disk
-        self.project_list = vec![
-            Project {
-                name: "Twitch API".into(),
-                requests: vec![],
-            },
-            Project {
-                name: "Twitter API".into(),
-                requests: vec![],
-            },
-            Project {
-                name: "Facebook API".into(),
-                requests: vec![],
-            },
-            Project {
-                name: "OpenAI".into(),
-                requests: vec![],
-            },
-            Project {
-                name: "Claude".into(),
-                requests: vec![],
-            },
-            Project {
-                name: "Spotify API".into(),
-                requests: vec![],
-            },
-            Project {
-                name: "TikTok API".into(),
-                requests: vec![],
-            },
-        ];
-
-        state.project_count.set(self.project_list.len() as u8);
     }
 }
 

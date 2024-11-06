@@ -1,12 +1,45 @@
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
+
 use anathema::{
-    component::{self, Component, KeyCode},
+    component::{self, Component, ComponentId, KeyCode},
+    prelude::TuiBackend,
+    runtime::RuntimeBuilder,
     state::{State, Value},
 };
 
 pub const EDIT_HEADER_WINDOW_TEMPLATE: &str = "./src/components/templates/edit_header_window.aml";
 
 #[derive(Default)]
-pub struct EditHeaderWindow;
+pub struct EditHeaderWindow {
+    #[allow(dead_code)]
+    component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>,
+}
+
+impl EditHeaderWindow {
+    pub fn register(
+        ids: &Rc<RefCell<HashMap<String, ComponentId<String>>>>,
+        builder: &mut RuntimeBuilder<TuiBackend, ()>,
+    ) -> anyhow::Result<()> {
+        let edit_header_window_id = builder.register_component(
+            "edit_header_window",
+            EDIT_HEADER_WINDOW_TEMPLATE,
+            EditHeaderWindow {
+                component_ids: ids.clone(),
+            },
+            EditHeaderWindowState::new(),
+        )?;
+
+        let ids_ref = ids.clone();
+        ids_ref.replace_with(|old| {
+            let mut new_map = old.clone();
+            new_map.insert(String::from("edit_header_window"), edit_header_window_id);
+
+            new_map
+        });
+
+        Ok(())
+    }
+}
 
 #[derive(Default, State)]
 pub struct EditHeaderWindowState {
