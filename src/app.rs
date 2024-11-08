@@ -1,9 +1,11 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use anathema::{
-    component::ComponentId,
-    prelude::{Document, TuiBackend},
+    component::{Component, ComponentId},
+    prelude::{Document, ToSourceKind, TuiBackend},
     runtime::{Runtime, RuntimeBuilder},
+    state::State,
+    widgets::components::AnyComponent,
 };
 
 use crate::components::{
@@ -80,93 +82,128 @@ impl App {
         Ok(())
     }
 
-    fn register_prototypes(&self, builder: &mut RuntimeBuilder<TuiBackend, ()>) {
-        let _ = builder.register_prototype(
+    // impl<T, G> RuntimeBuilder<T, G>
+    // pub fn register_prototype<FC, FS, C>(&mut self, ident: impl Into<String>, template: impl ToSourceKind, proto: FC, state: FS) -> Result<()>
+    // where
+    //     FC: 'static + Fn() -> C,
+    //     FS: 'static + FnMut() -> C::State,
+    //     C: Component + 'static,
+    //     // Bounds from impl:
+    //     G: GlobalEvents,
+
+    // fn get_prototypes<FC, FS, S>(
+    //     &self,
+    // ) -> Vec<(
+    //     impl Into<String>,
+    //     impl ToSourceKind,
+    //     Box<dyn Fn() -> Box<dyn Component<State = S, Message = String>>>,
+    //     Box<dyn FnMut() -> Box<dyn Component<State = S, Message = String>>>,
+    // )>
+    // where
+    //     S: State,
+    // {
+    //     vec![
+    //         (
+    //             "textinput",
+    //             TEXTINPUT_TEMPLATE,
+    //             Box::new(|| Box::new(TextInput {})),
+    //             Box::new(|| Box::new(InputState::new())),
+    //         ),
+    //         // (
+    //         //     "textarea",
+    //         //     TEXTAREA_TEMPLATE,
+    //         //     Box::new(|| TextArea),
+    //         //     Box::new(TextAreaInputState::new),
+    //         // ),
+    //     ]
+    // }
+
+    fn register_prototypes(
+        &self,
+        builder: &mut RuntimeBuilder<TuiBackend, ()>,
+    ) -> anyhow::Result<()> {
+        builder.register_prototype(
             "url_input",
             "./src/components/templates/url_input.aml",
             || FocusableSection,
             FocusableSectionState::new,
-        );
+        )?;
 
-        let _ = builder.register_prototype(
+        builder.register_prototype(
             "textinput",
             TEXTINPUT_TEMPLATE,
             || TextInput,
             InputState::new,
-        );
+        )?;
 
-        let _ = builder.register_prototype(
+        builder.register_prototype(
             "textarea",
             TEXTAREA_TEMPLATE,
             || TextArea,
             TextAreaInputState::new,
-        );
+        )?;
 
-        let _ = builder.register_prototype(
+        builder.register_prototype(
             "method_selector",
             METHOD_SELECTOR_TEMPLATE,
             || MethodSelector,
             MethodSelectorState::new,
-        );
+        )?;
 
-        let _ = builder.register_prototype(
+        builder.register_prototype(
             "menu_item",
             MENU_ITEM_TEMPLATE,
             || MenuItem,
             MenuItemState::new,
-        );
+        )?;
 
-        let _ = builder.register_prototype(
+        builder.register_prototype(
             "request_headers_editor",
             REQUEST_HEADERS_EDITOR_TEMPLATE,
             || RequestHeadersEditor,
             RequestHeadersEditorState::new,
-        );
+        )?;
 
-        let _ = builder.register_prototype(
+        builder.register_prototype(
             "app_section",
             APP_SECTION_TEMPLATE,
             || AppSection,
             AppSectionState::new,
-        );
+        )?;
 
-        let _ = builder.register_prototype(
+        builder.register_prototype(
             "request_body_section",
             REQUEST_BODY_SECTION_TEMPLATE,
             || FocusableSection,
             FocusableSectionState::new,
-        );
+        )?;
 
-        let _ = builder.register_prototype(
+        builder.register_prototype(
             "add_header_window",
             ADD_HEADER_WINDOW_TEMPLATE,
             || AddHeaderWindow,
             AddHeaderWindowState::new,
-        );
+        )?;
 
-        let _ = builder.register_prototype(
+        builder.register_prototype(
             "edit_header_selector",
             EDIT_HEADER_SELECTOR_TEMPLATE,
             || EditHeaderSelector,
             EditHeaderSelectorState::new,
-        );
+        )?;
 
-        let _ = builder.register_prototype("row", ROW_TEMPLATE, || Row, RowState::new);
+        builder.register_prototype("row", ROW_TEMPLATE, || Row, RowState::new)?;
+
+        Ok(())
     }
 
     fn register_components(
         &mut self,
         builder: &mut RuntimeBuilder<TuiBackend, ()>,
     ) -> anyhow::Result<()> {
-        self.register_prototypes(builder);
+        self.register_prototypes(builder)?;
 
-        let _ = builder.register_component(
-            "app",
-            APP_LAYOUT_TEMPLATE,
-            AppLayoutComponent,
-            AppLayoutState {},
-        );
-
+        AppLayoutComponent::register(&self.component_ids, builder)?;
         EditHeaderWindow::register(&self.component_ids, builder)?;
         HeaderNameTextInput::register(&self.component_ids, builder)?;
         HeaderValueTextInput::register(&self.component_ids, builder)?;
