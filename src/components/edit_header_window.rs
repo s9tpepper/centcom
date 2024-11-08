@@ -83,7 +83,7 @@ impl DashboardMessageHandler for EditHeaderWindow {
                     value: header_value.into(),
                 };
 
-                state.request_headers.push(header);
+                state.endpoint.to_mut().headers.push(header);
                 state.floating_window.set(FloatingWindow::None);
 
                 context.set_focus("id", "app");
@@ -96,7 +96,7 @@ impl DashboardMessageHandler for EditHeaderWindow {
                 let header = state.header_being_edited.to_mut();
                 let header = header.as_ref();
                 if let Some(header) = header {
-                    state.request_headers.push(HeaderState {
+                    state.endpoint.to_mut().headers.push(HeaderState {
                         name: header.to_ref().name.to_ref().clone().into(),
                         value: header.to_ref().value.to_ref().clone().into(),
                     });

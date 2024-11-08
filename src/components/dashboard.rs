@@ -30,7 +30,7 @@ use super::{
 pub const DASHBOARD_TEMPLATE: &str = "./src/components/templates/dashboard.aml";
 
 #[derive(Copy, Clone)]
-enum MainDisplay {
+pub enum MainDisplay {
     RequestBody,
     RequestHeadersEditor,
     ResponseBody,
@@ -49,7 +49,7 @@ impl anathema::state::State for MainDisplay {
 }
 
 #[derive(anathema::state::State)]
-struct MenuItem {
+pub struct MenuItem {
     label: Value<String>,
 }
 
@@ -83,29 +83,53 @@ impl State for FloatingWindow {
 }
 
 #[derive(anathema::state::State)]
+pub struct Endpoint {
+    pub url: Value<String>,
+    pub method: Value<String>,
+    pub headers: Value<List<HeaderState>>,
+    pub body: Value<String>,
+}
+
+impl Endpoint {
+    pub fn new() -> Self {
+        Endpoint {
+            url: String::from("").into(),
+            method: String::from("GET").into(),
+            body: String::from("").into(),
+            headers: List::empty(),
+        }
+    }
+}
+
+#[derive(anathema::state::State)]
 pub struct DashboardState {
     pub main_display: Value<MainDisplay>,
     pub floating_window: Value<FloatingWindow>,
-    pub url: Value<String>,
-    pub method: Value<String>,
-    pub request_headers: Value<List<HeaderState>>,
-    pub request_body: Value<String>,
+
+    pub endpoint: Value<Endpoint>,
     pub response_headers: Value<List<HeaderState>>,
     pub response: Value<String>,
     pub response_body_window_label: Value<String>,
+
     pub error_message: Value<String>,
     pub message: Value<String>,
     pub message_label: Value<String>,
     pub menu_items: Value<List<MenuItem>>,
     pub top_menu_items: Value<List<MenuItem>>,
     pub logs: Value<String>,
+
     pub new_header_name: Value<String>,
     pub new_header_value: Value<String>,
+
     pub edit_header_name: Value<String>,
     pub edit_header_value: Value<String>,
-    pub current_project: Value<String>,
+
     pub header_being_edited: Value<Option<Value<HeaderState>>>,
+
+    pub current_project: Value<String>,
     pub project_count: Value<u8>,
+    pub endpoint_count: Value<u8>,
+
     pub selected_project: Value<Option<ProjectState>>,
 }
 
@@ -113,9 +137,11 @@ impl DashboardState {
     pub fn new() -> Self {
         DashboardState {
             project_count: 0.into(),
+            endpoint_count: 0.into(),
             current_project: "[None]".to_string().into(),
-            url: "".to_string().into(),
-            method: "GET".to_string().into(),
+
+            endpoint: Endpoint::new().into(),
+
             response: "".to_string().into(),
             message: "".to_string().into(),
             message_label: "".to_string().into(),
@@ -139,8 +165,6 @@ impl DashboardState {
             top_menu_items: List::from_iter([MenuItem {
                 label: "(P)rojects".to_string().into(),
             }]),
-            request_headers: List::from_iter(get_default_headers()),
-            request_body: "".to_string().into(),
             response_headers: List::from_iter(vec![]),
             header_being_edited: None.into(),
             selected_project: None.into(),
@@ -240,12 +264,12 @@ impl anathema::component::Component for DashboardComponent {
             // instead of going up two parents via FocusableSection component
             "url_update" => {
                 let value = &*value.to_common_str();
-                state.url.set(value.to_string());
+                state.endpoint.to_mut().url.set(value.to_string());
             }
 
             // FIXME: This event should be a message from the section to the right component
             // instead of going up two parents via FocusableSection component
-            "request_body_update" => state.request_body.set(value.to_string()),
+            "request_body_update" => state.endpoint.to_mut().body.set(value.to_string()),
 
             _ => {}
         }
@@ -379,9 +403,10 @@ fn do_request(
     mut context: anathema::prelude::Context<'_, DashboardState>,
     _elements: anathema::widgets::Elements<'_, '_>,
 ) {
-    let url = state.url.to_ref().clone();
-    let method = state.method.to_ref().clone();
-    let headers = state.request_headers.to_ref();
+    let endpoint = state.endpoint.to_ref();
+    let url = endpoint.url.to_ref().clone();
+    let method = endpoint.method.to_ref().clone();
+    let headers = endpoint.headers.to_ref();
 
     let mut content_type = String::new();
     let mut request_builder = http::Request::builder();
@@ -416,7 +441,7 @@ fn do_request(
     // let request_body = state.in
     let response = match content_type.as_str() {
         "application/json" => {
-            let req_body = state.request_body.to_ref().clone();
+            let req_body = endpoint.body.to_ref().clone();
 
             request.send_string(&req_body)
         }

@@ -46,7 +46,7 @@ impl DashboardMessageHandler for MethodSelector {
             "method_selector__new" => {
                 let value = &*value.to_common_str();
 
-                state.method.set(value.to_string());
+                state.endpoint.to_mut().method.set(value.to_string());
 
                 // Trigger a resize on the text input by setting focus and then resetting it to app
                 context.set_focus("id", "url_input");

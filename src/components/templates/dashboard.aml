@@ -5,11 +5,11 @@ zstack
         hstack
           text " Project: " current_project
           spacer
-          text "[(P)rojects: " project_count "]"
+          text "[(P)rojects: " project_count ", (E)ndpoints: " endpoint_count "]"
     hstack
       @row [border_color: "#666666", top_label: "(M)ethod", expanding: false, minwidth: 13]
         $children
-          text [foreground: #666666, text_align: "right"] method
+          text [foreground: #666666, text_align: "right"] endpoint.method
       expand [axis: "horizontal"]
         @url_input (url_update -> url_update) [id: "url", border_color: "#666666", target: "url_input"]
 

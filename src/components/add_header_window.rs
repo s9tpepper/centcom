@@ -57,7 +57,7 @@ impl DashboardMessageHandler for AddHeaderWindow {
                     name: header_name.into(),
                     value: header_value.into(),
                 };
-                state.request_headers.push(header);
+                state.endpoint.to_mut().headers.push(header);
             }
             "add_header__cancel" => {
                 state.floating_window.set(FloatingWindow::None);

@@ -45,7 +45,7 @@ impl DashboardMessageHandler for EditHeaderSelector {
 
             "edit_header_selector__selection" => {
                 let selection: usize = value.to_string().parse().unwrap();
-                let header = state.request_headers.remove(selection);
+                let header = state.endpoint.to_mut().headers.remove(selection);
                 if let Some(selected_header) = &header {
                     let header = selected_header.to_ref();
                     state.edit_header_name.set(header.name.to_ref().clone());
