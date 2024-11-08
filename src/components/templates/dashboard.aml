@@ -3,7 +3,7 @@ zstack
     container [height: 1, background: "green", foreground: #131313]
       expand
         hstack
-          text " Project: " current_project
+          text " Project: " current_project " Endpoint Name: " endpoint.name
           spacer
           text "[(P)rojects: " project_count ", (E)ndpoints: " endpoint_count "]"
     hstack
@@ -131,3 +131,9 @@ zstack
 
   if floating_window == "ConfirmProject"
     @confirm_action_window
+
+  if floating_window == "ChangeEndpointName"
+    @edit_endpoint_name (
+      edit_endpoint_name__cancel -> edit_endpoint_name__cancel,
+      edit_endpoint_name__submit -> edit_endpoint_name__submit
+    ) [id: "edit_endpoint_name"]

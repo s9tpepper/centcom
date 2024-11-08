@@ -23,8 +23,10 @@ use super::{
     add_header_window::AddHeaderWindow,
     edit_header_selector::EditHeaderSelector,
     edit_header_window::EditHeaderWindow,
+    floating_windows::edit_endpoint_name::{EditEndpointName, EditEndpointNameMessages},
     method_selector::MethodSelector,
     project_window::{Project, ProjectState, ProjectWindow},
+    send_message,
 };
 
 pub const DASHBOARD_TEMPLATE: &str = "./src/components/templates/dashboard.aml";
@@ -64,6 +66,7 @@ pub enum FloatingWindow {
     Project,
     ConfirmProject,
     Message,
+    ChangeEndpointName,
 }
 
 impl State for FloatingWindow {
@@ -78,12 +81,14 @@ impl State for FloatingWindow {
             FloatingWindow::Project => Some(CommonVal::Str("Project")),
             FloatingWindow::ConfirmProject => Some(CommonVal::Str("ConfirmProject")),
             FloatingWindow::Message => Some(CommonVal::Str("Message")),
+            FloatingWindow::ChangeEndpointName => Some(CommonVal::Str("ChangeEndpointName")),
         }
     }
 }
 
 #[derive(anathema::state::State)]
 pub struct Endpoint {
+    pub name: Value<String>,
     pub url: Value<String>,
     pub method: Value<String>,
     pub headers: Value<List<HeaderState>>,
@@ -93,10 +98,11 @@ pub struct Endpoint {
 impl Endpoint {
     pub fn new() -> Self {
         Endpoint {
+            name: String::from("").into(),
             url: String::from("").into(),
             method: String::from("GET").into(),
             body: String::from("").into(),
-            headers: List::empty(),
+            headers: List::from_iter(get_default_headers()),
         }
     }
 }
@@ -247,6 +253,10 @@ impl anathema::component::Component for DashboardComponent {
                     ProjectWindow::handle_message(value, ident, state, context, component_ids);
                 }
 
+                "edit_endpoint_name" => {
+                    EditEndpointName::handle_message(value, ident, state, context, component_ids)
+                }
+
                 _ => {}
             }
         } else {
@@ -264,7 +274,15 @@ impl anathema::component::Component for DashboardComponent {
             // instead of going up two parents via FocusableSection component
             "url_update" => {
                 let value = &*value.to_common_str();
-                state.endpoint.to_mut().url.set(value.to_string());
+
+                let mut endpoint = state.endpoint.to_mut();
+                let name_still_default = *endpoint.url.to_ref() == *endpoint.name.to_ref();
+
+                endpoint.url.set(value.to_string());
+
+                if name_still_default {
+                    endpoint.name.set(value.to_string());
+                }
             }
 
             // FIXME: This event should be a message from the section to the right component
@@ -287,6 +305,27 @@ impl anathema::component::Component for DashboardComponent {
                 let main_display = *state.main_display.to_ref();
 
                 match char {
+                    'n' => {
+                        state
+                            .floating_window
+                            .set(FloatingWindow::ChangeEndpointName);
+
+                        context.set_focus("id", "edit_endpoint_name");
+
+                        if let Ok(ids) = self.component_ids.try_borrow() {
+                            let input_value = state.endpoint.to_ref().name.to_ref().clone();
+                            let message = EditEndpointNameMessages::InputValue(input_value);
+                            let _ = serde_json::to_string(&message).map(|msg| {
+                                let _ = send_message(
+                                    "edit_endpoint_name",
+                                    msg,
+                                    ids,
+                                    context.emitter.clone(),
+                                );
+                            });
+                        }
+                    }
+
                     // Set focus to the request url text input
                     'u' => context.set_focus("id", "url_input"),
 

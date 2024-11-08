@@ -1,0 +1,20 @@
+align [alignment: "center"]
+  border [foreground: border_color, border_style: "╭─╮│╯─╰│", min_width: minwidth, max_width: 80]
+    vstack
+      container [height: 1, background: "yellow", foreground: #131313]
+        expand
+          hstack
+            text " Change Endpoint Name: "
+
+      padding [padding: 1]
+        @edit_endpoint_name_input (
+          text_change -> name_input_update,
+          escape -> name_input_escape
+        ) [id: "endpoint_name_input", label: "(E)ndpoint Name"]
+
+      container [height: 1, background: "red", foreground: #131313]
+        expand
+          hstack
+            spacer
+            text "[(S)ubmit] [(C)ancel]"
+            spacer

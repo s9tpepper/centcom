@@ -18,8 +18,10 @@ use crate::components::{
         EditHeaderSelector, EditHeaderSelectorState, EDIT_HEADER_SELECTOR_TEMPLATE,
     },
     edit_header_window::EditHeaderWindow,
+    edit_input::EditInput,
     edit_name_textinput::EditNameTextInput,
     edit_value_textinput::EditValueTextInput,
+    floating_windows::edit_endpoint_name::EditEndpointName,
     focusable_section::{FocusableSection, FocusableSectionState},
     header_name_textinput::HeaderNameTextInput,
     header_value_textinput::HeaderValueTextInput,
@@ -212,6 +214,8 @@ impl App {
         ProjectWindow::register(&self.component_ids, builder)?;
         ConfirmActionWindow::register(&self.component_ids, builder)?;
         DashboardComponent::register(&self.component_ids, builder)?;
+        EditEndpointName::register(&self.component_ids, builder)?;
+        EditInput::register(&self.component_ids, builder, "edit_endpoint_name_input")?;
 
         Ok(())
     }
