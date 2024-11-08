@@ -145,19 +145,6 @@ impl anathema::component::Component for TextArea {
         _: Elements<'_, '_>,
         mut context: Context<'_, Self::State>,
     ) {
-        // let input = state.input.to_ref();
-        // let Some(cursor_position) = state.cursor_position.to_number() else {
-        //     return;
-        // };
-        // let pos = cursor_position.as_uint();
-        //
-        // let cursor_char = if pos == input.len() {
-        //     ' '
-        // } else {
-        //     input.chars().nth(pos).unwrap_or(' ')
-        // };
-
-        // state.cursor_char.set(cursor_char.to_string());
         state.fg_color.set("black".to_string());
         state.bg_color.set("white".to_string());
         state.focused.set(true);
@@ -187,11 +174,6 @@ impl anathema::component::Component for TextArea {
         elements: anathema::widgets::Elements<'_, '_>,
         mut context: anathema::prelude::Context<'_, Self::State>,
     ) {
-        // let mut input = state.input.to_mut();
-        if !*state.focused.to_ref() {
-            return;
-        }
-
         match event.code {
             // NOTE: Unused for TextInput
             // anathema::component::KeyCode::Home => todo!(),
@@ -308,10 +290,6 @@ struct CursorData {
 }
 
 impl TextArea {
-    pub fn new() -> Self {
-        TextArea {}
-    }
-
     fn add_character(
         &mut self,
         char: char,

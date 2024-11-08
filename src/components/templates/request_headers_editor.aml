@@ -2,5 +2,5 @@ expand
   vstack
     padding [padding: 0]
       vstack
-        for header in headers
+        for header in endpoint.headers
           text header.name ": " header.value

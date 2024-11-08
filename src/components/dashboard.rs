@@ -14,10 +14,7 @@ use anathema::{
 
 use arboard::Clipboard;
 
-use crate::{
-    components::request_headers_editor::HeaderState,
-    messages::confirm_delete_project::ConfirmDeleteProject,
-};
+use crate::components::request_headers_editor::HeaderState;
 
 use super::{
     add_header_window::AddHeaderWindow,
@@ -25,7 +22,7 @@ use super::{
     edit_header_window::EditHeaderWindow,
     floating_windows::edit_endpoint_name::{EditEndpointName, EditEndpointNameMessages},
     method_selector::MethodSelector,
-    project_window::{Project, ProjectState, ProjectWindow},
+    project_window::{ProjectState, ProjectWindow},
     send_message,
 };
 
@@ -350,7 +347,11 @@ impl anathema::component::Component for DashboardComponent {
                     },
 
                     // Show request headers editor window
-                    'd' => state.main_display.set(MainDisplay::RequestHeadersEditor),
+                    'd' => {
+                        if !event.ctrl {
+                            state.main_display.set(MainDisplay::RequestHeadersEditor);
+                        }
+                    }
 
                     'e' => {
                         state
@@ -529,8 +530,6 @@ fn do_request(
         state.error_message.set(error.to_string());
         state.floating_window.set(FloatingWindow::Error);
     }
-
-    context.set_focus("id", "app");
 }
 
 fn get_default_headers() -> Vec<HeaderState> {

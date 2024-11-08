@@ -1,16 +1,14 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use anathema::{
-    component::{Component, ComponentId},
-    prelude::{Document, ToSourceKind, TuiBackend},
+    component::ComponentId,
+    prelude::{Document, TuiBackend},
     runtime::{Runtime, RuntimeBuilder},
-    state::State,
-    widgets::components::AnyComponent,
 };
 
 use crate::components::{
     add_header_window::{AddHeaderWindow, AddHeaderWindowState, ADD_HEADER_WINDOW_TEMPLATE},
-    app_layout::{AppLayoutComponent, AppLayoutState, APP_LAYOUT_TEMPLATE},
+    app_layout::AppLayoutComponent,
     app_section::{AppSection, AppSectionState, APP_SECTION_TEMPLATE},
     confirm_action_window::ConfirmActionWindow,
     dashboard::DashboardComponent,

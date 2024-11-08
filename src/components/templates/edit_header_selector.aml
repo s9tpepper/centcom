@@ -8,5 +8,5 @@ align [alignment: "center"]
   ]
     $children
       vstack
-        for header in headers
+        for header in endpoint.headers
           text loop ". " header.name ": " header.value
