@@ -1,7 +1,11 @@
 use std::{
     cell::{Ref, RefCell},
     collections::HashMap,
+    fs,
+    ops::Deref,
     rc::Rc,
+    thread::sleep,
+    time::Duration,
 };
 
 use anathema::{
@@ -13,8 +17,12 @@ use anathema::{
 };
 
 use arboard::Clipboard;
+use serde::{Deserialize, Serialize};
 
-use crate::components::request_headers_editor::HeaderState;
+use crate::{
+    components::request_headers_editor::HeaderState,
+    fs::{get_app_dir, get_project_directory},
+};
 
 use super::{
     add_header_window::AddHeaderWindow,
@@ -83,6 +91,87 @@ impl State for FloatingWindow {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+struct PersistedProject {
+    name: String,
+    endpoints: Vec<PersistedEndpoint>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct PersistedEndpoint {
+    name: String,
+    url: String,
+    method: String,
+    headers: Vec<Header>,
+    body: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Header {
+    pub name: String,
+    pub value: String,
+}
+
+impl From<&Endpoint> for PersistedEndpoint {
+    fn from(endpoint: &Endpoint) -> Self {
+        let mut headers: Vec<Header> = vec![];
+
+        endpoint.headers.to_ref().iter().for_each(|header_state| {
+            let h_state = header_state.to_ref();
+            headers.push(h_state.deref().into());
+        });
+
+        PersistedEndpoint {
+            name: endpoint.name.to_ref().to_string(),
+            url: endpoint.url.to_ref().to_string(),
+            method: endpoint.method.to_ref().to_string(),
+            body: endpoint.body.to_ref().to_string(),
+            headers,
+        }
+    }
+}
+
+impl From<&Project> for PersistedProject {
+    fn from(project: &Project) -> Self {
+        let mut endpoints: Vec<PersistedEndpoint> = vec![];
+        project
+            .endpoints
+            .to_ref()
+            .iter()
+            .for_each(|endpoint_value| {
+                let endpoint = endpoint_value.to_ref();
+                endpoints.push(endpoint.deref().into());
+            });
+
+        let name = project.name.to_ref().clone();
+        PersistedProject { name, endpoints }
+    }
+}
+
+impl From<&HeaderState> for Header {
+    fn from(header_state: &HeaderState) -> Self {
+        Header {
+            name: header_state.name.to_ref().to_string(),
+            value: header_state.value.to_ref().to_string(),
+        }
+    }
+}
+
+#[derive(anathema::state::State)]
+pub struct Project {
+    name: Value<String>,
+    endpoints: Value<List<Endpoint>>,
+}
+
+impl Project {
+    pub fn new() -> Self {
+        Project {
+            name: "".to_string().into(),
+            endpoints: List::empty(),
+        }
+    }
+}
+
 #[derive(anathema::state::State)]
 pub struct Endpoint {
     pub name: Value<String>,
@@ -129,6 +218,7 @@ pub struct DashboardState {
 
     pub header_being_edited: Value<Option<Value<HeaderState>>>,
 
+    pub project: Value<Project>,
     pub current_project: Value<String>,
     pub project_count: Value<u8>,
     pub endpoint_count: Value<u8>,
@@ -143,6 +233,7 @@ impl DashboardState {
             endpoint_count: 0.into(),
             current_project: "[None]".to_string().into(),
 
+            project: Project::new().into(),
             endpoint: Endpoint::new().into(),
 
             response: "".to_string().into(),
@@ -202,6 +293,100 @@ impl DashboardComponent {
         });
 
         Ok(())
+    }
+
+    fn show_message(&self, title: &str, message: &str, state: &mut DashboardState) {
+        state.message.set(message.to_string());
+        state.message_label.set(title.to_string());
+        state.floating_window.set(FloatingWindow::Message);
+
+        // TODO: Add same auto-close behavior as show_error()
+    }
+
+    fn show_error(&self, message: &str, state: &mut DashboardState) {
+        state.error_message.set(message.to_string());
+        state.floating_window.set(FloatingWindow::Error);
+
+        // NOTE: Can not sleep thread, as it prevents anathema from displaying
+        // the window change. This needs to be in it's own thread if I want to
+        // close the window after a certain amount of time
+        //
+        // let close_delay = Duration::from_secs(5);
+        // sleep(close_delay);
+        // state.floating_window.set(FloatingWindow::None);
+    }
+
+    fn save_project(&self, state: &mut DashboardState) {
+        let persisted_project: PersistedProject = state.project.to_ref().deref().into();
+
+        if persisted_project.name.trim() == "" {
+            self.show_error("Project must have a name", state);
+
+            return;
+        }
+
+        let serialization_result = serde_json::to_string(&persisted_project);
+
+        if serialization_result.is_err() {
+            self.show_error("Unable to serialize project", state);
+
+            return;
+        }
+
+        let dir_result = get_app_dir("projects");
+        if dir_result.is_err() {
+            self.show_error("Unable to access projects directory", state);
+
+            return;
+        }
+
+        let mut project_dir = dir_result.unwrap();
+        let serialized_project = serialization_result.unwrap();
+        project_dir.push(format!("{}.project", persisted_project.name));
+
+        let write_result = fs::write(project_dir, serialized_project);
+        if write_result.is_err() {
+            let write_error = write_result.unwrap_err();
+
+            self.show_error(&write_error.to_string(), state);
+        }
+
+        self.show_message("Project Save", "Saved project successfully", state);
+    }
+
+    fn change_endpoint_name(
+        &self,
+        state: &mut DashboardState,
+        mut context: Context<'_, DashboardState>,
+    ) {
+        state
+            .floating_window
+            .set(FloatingWindow::ChangeEndpointName);
+
+        context.set_focus("id", "edit_endpoint_name");
+
+        if let Ok(ids) = self.component_ids.try_borrow() {
+            let input_value = state.endpoint.to_ref().name.to_ref().clone();
+            let message = EditEndpointNameMessages::InputValue(input_value);
+            let _ = serde_json::to_string(&message).map(|msg| {
+                let _ = send_message("edit_endpoint_name", msg, ids, context.emitter.clone());
+            });
+        }
+    }
+
+    fn yank_response(&self, state: &mut DashboardState) {
+        let Ok(mut clipboard) = Clipboard::new() else {
+            self.show_error("Error accessing your clipboard", state);
+
+            return;
+        };
+
+        let operation_text = state.response.to_ref().clone();
+        let set_operation = clipboard.set();
+        match set_operation.text(operation_text) {
+            Ok(_) => self.show_message("Clipboard", "Response copied to clipboard", state),
+            Err(error) => self.show_error(&error.to_string(), state),
+        }
     }
 }
 
@@ -302,26 +487,8 @@ impl anathema::component::Component for DashboardComponent {
                 let main_display = *state.main_display.to_ref();
 
                 match char {
-                    'n' => {
-                        state
-                            .floating_window
-                            .set(FloatingWindow::ChangeEndpointName);
-
-                        context.set_focus("id", "edit_endpoint_name");
-
-                        if let Ok(ids) = self.component_ids.try_borrow() {
-                            let input_value = state.endpoint.to_ref().name.to_ref().clone();
-                            let message = EditEndpointNameMessages::InputValue(input_value);
-                            let _ = serde_json::to_string(&message).map(|msg| {
-                                let _ = send_message(
-                                    "edit_endpoint_name",
-                                    msg,
-                                    ids,
-                                    context.emitter.clone(),
-                                );
-                            });
-                        }
-                    }
+                    's' => self.save_project(state),
+                    'n' => self.change_endpoint_name(state, context),
 
                     // Set focus to the request url text input
                     'u' => context.set_focus("id", "url_input"),
@@ -388,31 +555,8 @@ impl anathema::component::Component for DashboardComponent {
                     }
 
                     // Copy response body to clipboard
-                    'y' => {
-                        let Ok(mut clipboard) = Clipboard::new() else {
-                            state
-                                .error_message
-                                .set("Error accessing your clipboard".to_string());
-                            state.floating_window.set(FloatingWindow::Error);
-                            return;
-                        };
+                    'y' => self.yank_response(state),
 
-                        let set_operation = clipboard.set();
-                        match set_operation.text(state.response.to_ref().clone()) {
-                            Ok(_) => {
-                                state
-                                    .message
-                                    .set("Response copied to clipboard".to_string());
-                                state.message_label.set("Clipboard".to_string());
-                                state.floating_window.set(FloatingWindow::Message);
-                            }
-
-                            Err(error) => {
-                                state.error_message.set(error.to_string());
-                                state.floating_window.set(FloatingWindow::Error);
-                            }
-                        }
-                    }
                     _ => {}
                 }
             }
