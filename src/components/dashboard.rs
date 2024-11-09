@@ -23,7 +23,10 @@ use super::{
     add_header_window::AddHeaderWindow,
     edit_header_selector::EditHeaderSelector,
     edit_header_window::EditHeaderWindow,
-    floating_windows::edit_endpoint_name::{EditEndpointName, EditEndpointNameMessages},
+    floating_windows::{
+        edit_endpoint_name::{EditEndpointName, EditEndpointNameMessages},
+        edit_project_name::{EditProjectName, EditProjectNameMessages},
+    },
     method_selector::MethodSelector,
     project_window::{ProjectState, ProjectWindow},
     send_message,
@@ -69,6 +72,7 @@ pub enum FloatingWindow {
     ConfirmProject,
     Message,
     ChangeEndpointName,
+    ChangeProjectName,
 }
 
 impl State for FloatingWindow {
@@ -84,6 +88,7 @@ impl State for FloatingWindow {
             FloatingWindow::ConfirmProject => Some(CommonVal::Str("ConfirmProject")),
             FloatingWindow::Message => Some(CommonVal::Str("Message")),
             FloatingWindow::ChangeEndpointName => Some(CommonVal::Str("ChangeEndpointName")),
+            FloatingWindow::ChangeProjectName => Some(CommonVal::Str("ChangeProjectName")),
         }
     }
 }
@@ -156,8 +161,8 @@ impl From<&HeaderState> for Header {
 
 #[derive(anathema::state::State)]
 pub struct Project {
-    name: Value<String>,
-    endpoints: Value<List<Endpoint>>,
+    pub name: Value<String>,
+    pub endpoints: Value<List<Endpoint>>,
 }
 
 impl Project {
@@ -351,6 +356,24 @@ impl DashboardComponent {
         self.show_message("Project Save", "Saved project successfully", state);
     }
 
+    fn change_project_name(
+        &self,
+        state: &mut DashboardState,
+        mut context: Context<'_, DashboardState>,
+    ) {
+        state.floating_window.set(FloatingWindow::ChangeProjectName);
+
+        context.set_focus("id", "edit_project_name");
+
+        if let Ok(ids) = self.component_ids.try_borrow() {
+            let input_value = state.project.to_ref().name.to_ref().clone();
+            let message = EditProjectNameMessages::InputValue(input_value);
+            let _ = serde_json::to_string(&message).map(|msg| {
+                let _ = send_message("edit_project_name", msg, ids, context.emitter.clone());
+            });
+        }
+    }
+
     fn change_endpoint_name(
         &self,
         state: &mut DashboardState,
@@ -359,7 +382,6 @@ impl DashboardComponent {
         state
             .floating_window
             .set(FloatingWindow::ChangeEndpointName);
-
         context.set_focus("id", "edit_endpoint_name");
 
         if let Ok(ids) = self.component_ids.try_borrow() {
@@ -470,7 +492,11 @@ impl anathema::component::Component for DashboardComponent {
                 }
 
                 "edit_endpoint_name" => {
-                    EditEndpointName::handle_message(value, ident, state, context, component_ids)
+                    EditEndpointName::handle_message(value, ident, state, context, component_ids);
+                }
+
+                "edit_project_name" => {
+                    EditProjectName::handle_message(value, ident, state, context, component_ids);
                 }
 
                 _ => {}
@@ -494,6 +520,7 @@ impl anathema::component::Component for DashboardComponent {
                 match char {
                     's' => self.save_project(state),
                     'n' => self.change_endpoint_name(state, context),
+                    'j' => self.change_project_name(state, context),
 
                     // Set focus to the request url text input
                     'u' => context.set_focus("id", "url_input"),

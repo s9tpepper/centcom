@@ -19,7 +19,7 @@ use crate::components::{
     edit_input::EditInput,
     edit_name_textinput::EditNameTextInput,
     edit_value_textinput::EditValueTextInput,
-    floating_windows::edit_endpoint_name::EditEndpointName,
+    floating_windows::{edit_endpoint_name::EditEndpointName, edit_project_name::EditProjectName},
     focusable_section::{FocusableSection, FocusableSectionState},
     header_name_textinput::HeaderNameTextInput,
     header_value_textinput::HeaderValueTextInput,
@@ -223,6 +223,8 @@ impl App {
         DashboardComponent::register(&self.component_ids, builder)?;
         EditEndpointName::register(&self.component_ids, builder)?;
         EditInput::register(&self.component_ids, builder, "edit_endpoint_name_input")?;
+        EditInput::register(&self.component_ids, builder, "edit_project_name_input")?;
+        EditProjectName::register(&self.component_ids, builder)?;
 
         Ok(())
     }
