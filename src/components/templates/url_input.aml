@@ -7,4 +7,4 @@ container [height: 3]
     section_text_id: "url_input"
   ]
     $children
-      @textinput (text_change->url_update, textarea_focus -> input_focus) [id: "url_input"]
+      @textinput (textarea_focus -> input_focus) [id: "url_input"]

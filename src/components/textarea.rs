@@ -1,6 +1,10 @@
+use std::cell::RefCell;
+use std::collections::HashMap;
 use std::iter::Iterator;
+use std::rc::Rc;
 use std::{io::Write, str::Chars};
 
+use anathema::component::{ComponentId, Emitter, KeyCode};
 use anathema::{
     default_widgets::{Overflow, Text},
     geometry::Pos,
@@ -12,11 +16,17 @@ use anathema::{
     },
 };
 use arboard::Clipboard;
+use serde::{Deserialize, Serialize};
+
+use super::dashboard::DashboardMessages;
 
 pub const TEXTAREA_TEMPLATE: &str = "./src/components/templates/textarea.aml";
 
 #[derive(Default)]
-pub struct TextArea;
+pub struct TextArea {
+    pub listeners: Vec<String>,
+    pub component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>,
+}
 
 #[derive(Default, anathema::state::State)]
 pub struct TextAreaInputState {
@@ -204,7 +214,12 @@ impl anathema::component::Component for TextArea {
                     'u' => scroll(state, elements, context, ScrollDirection::Up),
                     _ => {}
                 },
-                false => self.add_character(char, state, context, elements, event),
+
+                false => {
+                    let emitter = context.emitter.clone();
+                    self.add_character(char, state, context, elements, event);
+                    self.send_to_listeners(event.code, state, emitter);
+                }
             },
             anathema::component::KeyCode::Backspace => self.backspace(state, context, elements),
             anathema::component::KeyCode::Delete => self.delete(state, context),
@@ -215,8 +230,10 @@ impl anathema::component::Component for TextArea {
 
             // TODO: This will need to call some callback or something?
             anathema::component::KeyCode::Enter => {
+                let emitter = context.emitter.clone();
                 let char = '\u{000A}';
-                self.add_character(char, state, context, elements, event)
+                self.add_character(char, state, context, elements, event);
+                self.send_to_listeners(event.code, state, emitter);
             }
 
             // TODO: Maybe I'll implement this later
@@ -289,7 +306,31 @@ struct CursorData {
     cursor_prefix: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub enum TextAreaMessages {
+    InputChange(String),
+}
+
 impl TextArea {
+    fn send_to_listeners(&self, code: KeyCode, state: &mut TextAreaInputState, emitter: Emitter) {
+        if let KeyCode::Char(_) = code {
+            if let Ok(ids) = self.component_ids.try_borrow() {
+                let input_value = state.input.to_ref().to_string();
+                let input_change_message =
+                    DashboardMessages::TextArea(TextAreaMessages::InputChange(input_value));
+
+                if let Ok(serialized_message) = serde_json::to_string(&input_change_message) {
+                    for listener in &self.listeners {
+                        let msg = serialized_message.clone();
+
+                        ids.get(listener)
+                            .map(|component_id| emitter.emit(*component_id, msg));
+                    }
+                }
+            }
+        }
+    }
+
     fn add_character(
         &mut self,
         char: char,

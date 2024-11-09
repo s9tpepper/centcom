@@ -1,14 +1,22 @@
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
+
 use anathema::{
-    component::{Component, KeyCode},
+    component::{Component, ComponentId, KeyCode},
     prelude::Context,
     state::{AnyState, Value},
     widgets::Elements,
 };
+use serde::{Deserialize, Serialize};
+
+use super::dashboard::DashboardMessages;
 
 pub const TEXTINPUT_TEMPLATE: &str = "./src/components/templates/textinput.aml";
 
 #[derive(Default)]
-pub struct TextInput;
+pub struct TextInput {
+    pub component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>,
+    pub listeners: Vec<String>,
+}
 
 #[derive(Default, anathema::state::State)]
 pub struct InputState {
@@ -33,6 +41,11 @@ impl InputState {
             focused: false.into(),
         }
     }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum TextInputMessages {
+    InputChange(String),
 }
 
 impl Component for TextInput {
@@ -64,7 +77,26 @@ impl Component for TextInput {
         elements: Elements<'_, '_>,
         context: Context<'_, Self::State>,
     ) {
+        let emitter = context.emitter.clone();
+
         self._on_key(key, state, elements, context);
+
+        if let KeyCode::Char(_) = key.code {
+            if let Ok(ids) = self.component_ids.try_borrow() {
+                let input_value = state.input.to_ref().to_string();
+                let input_change_message =
+                    DashboardMessages::TextInput(TextInputMessages::InputChange(input_value));
+
+                if let Ok(serialized_message) = serde_json::to_string(&input_change_message) {
+                    for listener in &self.listeners {
+                        let msg = serialized_message.clone();
+
+                        ids.get(listener)
+                            .map(|component_id| emitter.emit(*component_id, msg));
+                    }
+                }
+            }
+        }
     }
 
     fn message(

@@ -11,13 +11,13 @@ zstack
         $children
           text [foreground: #666666, text_align: "right"] endpoint.method
       expand [axis: "horizontal"]
-        @url_input (url_update -> url_update) [id: "url", border_color: "#666666", target: "url_input"]
+        @url_input [id: "url", border_color: "#666666", target: "url_input"]
 
     expand [axis: "vertical"]
       zstack
         if main_display == "request_body"
           expand
-            @request_body_section (request_body_update -> request_body_update) [id: "request", border_color: "#666666", target: "textarea"]
+            @request_body_section [id: "request", border_color: "#666666", target: "textarea"]
 
         if main_display == "response_body"
           expand

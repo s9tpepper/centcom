@@ -4,8 +4,6 @@ use std::{
     fs,
     ops::Deref,
     rc::Rc,
-    thread::sleep,
-    time::Duration,
 };
 
 use anathema::{
@@ -19,10 +17,7 @@ use anathema::{
 use arboard::Clipboard;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    components::request_headers_editor::HeaderState,
-    fs::{get_app_dir, get_project_directory},
-};
+use crate::{components::request_headers_editor::HeaderState, fs::get_app_dir};
 
 use super::{
     add_header_window::AddHeaderWindow,
@@ -32,6 +27,8 @@ use super::{
     method_selector::MethodSelector,
     project_window::{ProjectState, ProjectWindow},
     send_message,
+    textarea::TextAreaMessages,
+    textinput::TextInputMessages,
 };
 
 pub const DASHBOARD_TEMPLATE: &str = "./src/components/templates/dashboard.aml";
@@ -400,9 +397,46 @@ pub trait DashboardMessageHandler {
     );
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub enum DashboardMessages {
+    TextInput(TextInputMessages),
+    TextArea(TextAreaMessages),
+}
+
 impl anathema::component::Component for DashboardComponent {
     type State = DashboardState;
     type Message = String;
+
+    fn message(
+        &mut self,
+        message: Self::Message,
+        state: &mut Self::State,
+        _: Elements<'_, '_>,
+        _: Context<'_, Self::State>,
+    ) {
+        if let Ok(dashboard_message) = serde_json::from_str::<DashboardMessages>(&message) {
+            match dashboard_message {
+                DashboardMessages::TextInput(text_input_message) => match text_input_message {
+                    TextInputMessages::InputChange(value) => {
+                        let mut endpoint = state.endpoint.to_mut();
+                        let name_still_default = *endpoint.url.to_ref() == *endpoint.name.to_ref();
+
+                        endpoint.url.set(value.to_string());
+
+                        if name_still_default {
+                            endpoint.name.set(value.to_string());
+                        }
+                    }
+                },
+
+                DashboardMessages::TextArea(text_area_message) => match text_area_message {
+                    TextAreaMessages::InputChange(value) => {
+                        state.endpoint.to_mut().body.set(value);
+                    }
+                },
+            }
+        }
+    }
 
     fn receive(
         &mut self,
@@ -443,35 +477,6 @@ impl anathema::component::Component for DashboardComponent {
             }
         } else {
             println!("Could not find id for {ident}");
-        }
-
-        match ident {
-            // "log_output" => {
-            //     let value = &*value.to_common_str();
-            //     let mut logs = state.logs.to_mut();
-            //     logs.insert_str(0, value);
-            // }
-
-            // FIXME: This event should be a message from the section to the right component
-            // instead of going up two parents via FocusableSection component
-            "url_update" => {
-                let value = &*value.to_common_str();
-
-                let mut endpoint = state.endpoint.to_mut();
-                let name_still_default = *endpoint.url.to_ref() == *endpoint.name.to_ref();
-
-                endpoint.url.set(value.to_string());
-
-                if name_still_default {
-                    endpoint.name.set(value.to_string());
-                }
-            }
-
-            // FIXME: This event should be a message from the section to the right component
-            // instead of going up two parents via FocusableSection component
-            "request_body_update" => state.endpoint.to_mut().body.set(value.to_string()),
-
-            _ => {}
         }
     }
 

@@ -122,6 +122,8 @@ impl App {
         &self,
         builder: &mut RuntimeBuilder<TuiBackend, ()>,
     ) -> anyhow::Result<()> {
+        let mut component_ids = self.component_ids.clone();
+
         builder.register_prototype(
             "url_input",
             "./src/components/templates/url_input.aml",
@@ -132,14 +134,21 @@ impl App {
         builder.register_prototype(
             "textinput",
             TEXTINPUT_TEMPLATE,
-            || TextInput,
+            move || TextInput {
+                component_ids: component_ids.clone(),
+                listeners: vec!["dashboard".to_string()],
+            },
             InputState::new,
         )?;
 
+        component_ids = self.component_ids.clone();
         builder.register_prototype(
             "textarea",
             TEXTAREA_TEMPLATE,
-            || TextArea,
+            move || TextArea {
+                component_ids: component_ids.clone(),
+                listeners: vec!["dashboard".to_string()],
+            },
             TextAreaInputState::new,
         )?;
 
