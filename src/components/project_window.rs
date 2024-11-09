@@ -11,15 +11,13 @@ use anathema::{
     runtime::RuntimeBuilder,
     state::{List, State, Value},
 };
-use serde::{Deserialize, Serialize};
 
-use crate::messages::confirm_delete_project::ConfirmDeleteProject;
-
-use super::{
-    dashboard::{DashboardMessageHandler, FloatingWindow},
-    request_headers_editor::HeaderState,
-    textinput::TEXTINPUT_TEMPLATE,
+use crate::{
+    messages::confirm_delete_project::ConfirmDeleteProject,
+    projects::{get_projects, PersistedProject, Project},
 };
+
+use super::dashboard::{DashboardMessageHandler, FloatingWindow};
 
 pub const PROJECT_WINDOW_TEMPLATE: &str = "./src/components/templates/project_window.aml";
 
@@ -33,7 +31,7 @@ pub struct ProjectWindowState {
     current_first_index: Value<u8>,
     current_last_index: Value<u8>,
     visible_projects: Value<u8>,
-    window_list: Value<List<ProjectState>>,
+    window_list: Value<List<Project>>,
     project_count: Value<u8>,
     selected_project: Value<String>,
 }
@@ -56,7 +54,7 @@ impl ProjectWindowState {
 pub struct ProjectWindow {
     #[allow(dead_code)]
     component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>,
-    project_list: Vec<Project>,
+    project_list: Vec<PersistedProject>,
 }
 
 impl ProjectWindow {
@@ -89,42 +87,11 @@ impl ProjectWindow {
         }
     }
 
-    fn load(&mut self, state: &mut ProjectWindowState) {
-        // println!("self.load()");
-
-        // TODO: Replace this hard coded list of test data with data read from disk
-        self.project_list = vec![
-            Project {
-                name: "Twitch API".into(),
-                requests: vec![],
-            },
-            Project {
-                name: "Twitter API".into(),
-                requests: vec![],
-            },
-            Project {
-                name: "Facebook API".into(),
-                requests: vec![],
-            },
-            Project {
-                name: "OpenAI".into(),
-                requests: vec![],
-            },
-            Project {
-                name: "Claude".into(),
-                requests: vec![],
-            },
-            Project {
-                name: "Spotify API".into(),
-                requests: vec![],
-            },
-            Project {
-                name: "TikTok API".into(),
-                requests: vec![],
-            },
-        ];
-
+    fn load(&mut self, state: &mut ProjectWindowState) -> anyhow::Result<()> {
+        self.project_list = get_projects()?;
         state.project_count.set(self.project_list.len() as u8);
+
+        Ok(())
     }
 
     fn move_cursor_down(&self, state: &mut ProjectWindowState) {
@@ -182,9 +149,9 @@ impl ProjectWindow {
         state: &mut ProjectWindowState,
     ) {
         let display_projects = &self.project_list[first_index..=last_index];
-        let mut new_project_list: Vec<ProjectState> = vec![];
+        let mut new_project_list: Vec<Project> = vec![];
         display_projects.iter().for_each(|display_project| {
-            new_project_list.push(ProjectState::from(display_project.clone()));
+            new_project_list.push(display_project.into());
         });
 
         loop {
@@ -232,12 +199,12 @@ impl DashboardMessageHandler for ProjectWindow {
                 context.set_focus("id", "app");
 
                 let value = &*value.to_common_str();
-                let project = serde_json::from_str::<Project>(value);
+                let project = serde_json::from_str::<PersistedProject>(value);
 
                 match project {
                     Ok(project) => {
                         state.current_project.set(project.name.clone());
-                        state.selected_project.set(Some(project.into()));
+                        state.selected_project.set(Some((&project).into()));
                     }
                     Err(_) => todo!(),
                 }
@@ -247,7 +214,7 @@ impl DashboardMessageHandler for ProjectWindow {
                 state.floating_window.set(FloatingWindow::ConfirmProject);
 
                 let value = &*value.to_common_str();
-                let project = serde_json::from_str::<Project>(value);
+                let project = serde_json::from_str::<PersistedProject>(value);
 
                 match project {
                     Ok(project) => {
@@ -352,22 +319,28 @@ impl Component for ProjectWindow {
         _: anathema::widgets::Elements<'_, '_>,
         _: anathema::prelude::Context<'_, Self::State>,
     ) {
-        // NOTE: Should this stay on focus? Focus is triggered whenever the window is opened
-        // This data should come from disk, eventually from GitHub?
-        self.load(state);
+        match self.load(state) {
+            Ok(_) => {
+                // Reset navigation state
+                let current_last_index = min(
+                    *state.visible_projects.to_ref(),
+                    self.project_list.len() as u8,
+                )
+                .saturating_sub(1);
+                state.cursor.set(0);
+                state.current_first_index.set(0);
+                state.current_last_index.set(current_last_index);
 
-        // Reset navigation state
-        state.cursor.set(0);
-        state.current_first_index.set(0);
-        state
-            .current_last_index
-            .set(state.visible_projects.to_ref().saturating_sub(1));
+                let first_index: usize = *state.current_first_index.to_ref() as usize;
+                let last_index: usize = *state.current_last_index.to_ref() as usize;
+                let selected_index = 0;
 
-        let first_index: usize = *state.current_first_index.to_ref() as usize;
-        let last_index: usize = *state.current_last_index.to_ref() as usize;
-        let selected_index = 0;
+                self.update_project_list(first_index, last_index, selected_index, state)
+            }
 
-        self.update_project_list(first_index, last_index, selected_index, state)
+            // TODO: Figure out what to do if the list of projects can't be loaded
+            Err(_) => todo!(),
+        }
     }
 
     fn message(
@@ -381,103 +354,4 @@ impl Component for ProjectWindow {
         // NOTE: The currently selected project might need to be sent from the dashboard
         // when opening the project window after choosing a project
     }
-}
-
-#[derive(Clone, Default, Debug, Deserialize, Serialize)]
-pub struct Project {
-    pub name: String,
-    pub requests: Vec<Request>,
-}
-
-impl From<Project> for ProjectState {
-    fn from(project: Project) -> Self {
-        let mut requests: Value<List<RequestState>> = List::empty();
-        project.requests.iter().for_each(|request| {
-            let mut headers: Value<List<HeaderState>> = List::empty();
-
-            request.headers.iter().for_each(|header| {
-                headers.push(HeaderState {
-                    name: header.name.clone().into(),
-                    value: header.value.clone().into(),
-                })
-            });
-
-            requests.push(RequestState {
-                name: request.name.clone().into(),
-                url: request.url.clone().into(),
-                method: request.method.clone().into(),
-                headers,
-            });
-        });
-
-        ProjectState {
-            row_color: DEFAULT_PROJECT_ROW_COLOR.to_string().into(),
-            name: project.name.clone().into(),
-            requests,
-        }
-    }
-}
-
-impl From<ProjectState> for Project {
-    fn from(project_state: ProjectState) -> Self {
-        let mut requests: Vec<Request> = vec![];
-
-        let request_states = project_state.requests.to_ref();
-        request_states.iter().for_each(|req| {
-            let request_state = req.to_ref();
-
-            let mut headers: Vec<Header> = vec![];
-            let request_state_headers = request_state.headers.to_ref();
-            request_state_headers
-                .iter()
-                .for_each(|request_state_header| {
-                    let rsh = request_state_header.to_ref();
-                    headers.push(Header {
-                        name: rsh.name.to_ref().to_string(),
-                        value: rsh.value.to_ref().to_string(),
-                    });
-                });
-
-            requests.push(Request {
-                name: request_state.name.to_ref().to_string(),
-                method: request_state.method.to_ref().to_string(),
-                url: request_state.url.to_ref().to_string(),
-                headers,
-            });
-        });
-
-        Project {
-            name: project_state.name.to_ref().to_string(),
-            requests,
-        }
-    }
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Request {
-    pub name: String,
-    pub url: String,
-    pub method: String,
-    pub headers: Vec<Header>,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Header {
-    pub name: String,
-    pub value: String,
-}
-
-#[derive(Debug, Default, State)]
-pub struct ProjectState {
-    row_color: Value<String>,
-    name: Value<String>,
-    requests: Value<List<RequestState>>,
-}
-
-#[derive(Debug, Default, State)]
-struct RequestState {
-    name: Value<String>,
-    url: Value<String>,
-    method: Value<String>,
-    headers: Value<List<HeaderState>>,
 }

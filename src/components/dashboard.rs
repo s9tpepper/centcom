@@ -1,8 +1,7 @@
+use std::ops::Deref;
 use std::{
     cell::{Ref, RefCell},
     collections::HashMap,
-    fs,
-    ops::Deref,
     rc::Rc,
 };
 
@@ -17,7 +16,7 @@ use anathema::{
 use arboard::Clipboard;
 use serde::{Deserialize, Serialize};
 
-use crate::{components::request_headers_editor::HeaderState, fs::get_app_dir};
+use crate::projects::{save_project, Endpoint, HeaderState, PersistedProject, Project};
 
 use super::{
     add_header_window::AddHeaderWindow,
@@ -28,7 +27,7 @@ use super::{
         edit_project_name::{EditProjectName, EditProjectNameMessages},
     },
     method_selector::MethodSelector,
-    project_window::{ProjectState, ProjectWindow},
+    project_window::ProjectWindow,
     send_message,
     textarea::TextAreaMessages,
     textinput::TextInputMessages,
@@ -93,108 +92,6 @@ impl State for FloatingWindow {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct PersistedProject {
-    name: String,
-    endpoints: Vec<PersistedEndpoint>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct PersistedEndpoint {
-    name: String,
-    url: String,
-    method: String,
-    headers: Vec<Header>,
-    body: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Header {
-    pub name: String,
-    pub value: String,
-}
-
-impl From<&Endpoint> for PersistedEndpoint {
-    fn from(endpoint: &Endpoint) -> Self {
-        let mut headers: Vec<Header> = vec![];
-
-        endpoint.headers.to_ref().iter().for_each(|header_state| {
-            let h_state = header_state.to_ref();
-            headers.push(h_state.deref().into());
-        });
-
-        PersistedEndpoint {
-            name: endpoint.name.to_ref().to_string(),
-            url: endpoint.url.to_ref().to_string(),
-            method: endpoint.method.to_ref().to_string(),
-            body: endpoint.body.to_ref().to_string(),
-            headers,
-        }
-    }
-}
-
-impl From<&Project> for PersistedProject {
-    fn from(project: &Project) -> Self {
-        let mut endpoints: Vec<PersistedEndpoint> = vec![];
-        project
-            .endpoints
-            .to_ref()
-            .iter()
-            .for_each(|endpoint_value| {
-                let endpoint = endpoint_value.to_ref();
-                endpoints.push(endpoint.deref().into());
-            });
-
-        let name = project.name.to_ref().clone();
-        PersistedProject { name, endpoints }
-    }
-}
-
-impl From<&HeaderState> for Header {
-    fn from(header_state: &HeaderState) -> Self {
-        Header {
-            name: header_state.name.to_ref().to_string(),
-            value: header_state.value.to_ref().to_string(),
-        }
-    }
-}
-
-#[derive(anathema::state::State)]
-pub struct Project {
-    pub name: Value<String>,
-    pub endpoints: Value<List<Endpoint>>,
-}
-
-impl Project {
-    pub fn new() -> Self {
-        Project {
-            name: "".to_string().into(),
-            endpoints: List::empty(),
-        }
-    }
-}
-
-#[derive(anathema::state::State)]
-pub struct Endpoint {
-    pub name: Value<String>,
-    pub url: Value<String>,
-    pub method: Value<String>,
-    pub headers: Value<List<HeaderState>>,
-    pub body: Value<String>,
-}
-
-impl Endpoint {
-    pub fn new() -> Self {
-        Endpoint {
-            name: String::from("").into(),
-            url: String::from("").into(),
-            method: String::from("GET").into(),
-            body: String::from("").into(),
-            headers: List::from_iter(get_default_headers()),
-        }
-    }
-}
-
 #[derive(anathema::state::State)]
 pub struct DashboardState {
     pub main_display: Value<MainDisplay>,
@@ -225,7 +122,7 @@ pub struct DashboardState {
     pub project_count: Value<u8>,
     pub endpoint_count: Value<u8>,
 
-    pub selected_project: Value<Option<ProjectState>>,
+    pub selected_project: Value<Option<Project>>,
 }
 
 impl DashboardState {
@@ -319,44 +216,15 @@ impl DashboardComponent {
     }
 
     fn save_project(&self, state: &mut DashboardState) {
-        let persisted_project: PersistedProject = state.project.to_ref().deref().into();
+        let project: PersistedProject = state.project.to_ref().deref().into();
 
-        if persisted_project.name.trim() == "" {
-            self.show_error("Project must have a name", state);
-
-            return;
+        match save_project(project) {
+            Ok(_) => self.show_message("Project Save", "Saved project successfully", state),
+            Err(error) => self.show_error(&error.to_string(), state),
         }
-
-        let serialization_result = serde_json::to_string(&persisted_project);
-
-        if serialization_result.is_err() {
-            self.show_error("Unable to serialize project", state);
-
-            return;
-        }
-
-        let dir_result = get_app_dir("projects");
-        if dir_result.is_err() {
-            self.show_error("Unable to access projects directory", state);
-
-            return;
-        }
-
-        let mut project_dir = dir_result.unwrap();
-        let serialized_project = serialization_result.unwrap();
-        project_dir.push(format!("{}.project", persisted_project.name));
-
-        let write_result = fs::write(project_dir, serialized_project);
-        if write_result.is_err() {
-            let write_error = write_result.unwrap_err();
-
-            self.show_error(&write_error.to_string(), state);
-        }
-
-        self.show_message("Project Save", "Saved project successfully", state);
     }
 
-    fn change_project_name(
+    fn open_edit_project_name_window(
         &self,
         state: &mut DashboardState,
         mut context: Context<'_, DashboardState>,
@@ -374,7 +242,7 @@ impl DashboardComponent {
         }
     }
 
-    fn change_endpoint_name(
+    fn open_edit_endpoint_name_window(
         &self,
         state: &mut DashboardState,
         mut context: Context<'_, DashboardState>,
@@ -519,8 +387,8 @@ impl anathema::component::Component for DashboardComponent {
 
                 match char {
                     's' => self.save_project(state),
-                    'n' => self.change_endpoint_name(state, context),
-                    'j' => self.change_project_name(state, context),
+                    'n' => self.open_edit_endpoint_name_window(state, context),
+                    'j' => self.open_edit_project_name_window(state, context),
 
                     // Set focus to the request url text input
                     'u' => context.set_focus("id", "url_input"),
@@ -614,6 +482,7 @@ impl anathema::component::Component for DashboardComponent {
     }
 }
 
+// TODO: Move this to a module so its not in the dashboard component
 fn do_request(
     state: &mut DashboardState,
     mut context: anathema::prelude::Context<'_, DashboardState>,
@@ -706,17 +575,4 @@ fn do_request(
         state.error_message.set(error.to_string());
         state.floating_window.set(FloatingWindow::Error);
     }
-}
-
-fn get_default_headers() -> Vec<HeaderState> {
-    vec![
-        HeaderState {
-            name: "user-agent".to_string().into(),
-            value: "centcom-tui".to_string().into(),
-        },
-        HeaderState {
-            name: "content-type".to_string().into(),
-            value: "application/json".to_string().into(),
-        },
-    ]
 }

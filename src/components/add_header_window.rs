@@ -5,10 +5,9 @@ use anathema::{
     state::{State, Value},
 };
 
-use super::{
-    dashboard::{DashboardMessageHandler, FloatingWindow},
-    request_headers_editor::HeaderState,
-};
+use crate::projects::HeaderState;
+
+use super::dashboard::{DashboardMessageHandler, FloatingWindow};
 
 pub const ADD_HEADER_WINDOW_TEMPLATE: &str = "./src/components/templates/add_header_window.aml";
 

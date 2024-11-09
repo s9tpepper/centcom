@@ -1,10 +1,10 @@
 use serde::{Deserialize, Serialize};
 
-use crate::components::project_window::Project;
+use crate::projects::PersistedProject;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ConfirmDeleteProject {
-    pub project: Project,
+    pub project: PersistedProject,
     pub title: String,
     pub message: String,
 }
