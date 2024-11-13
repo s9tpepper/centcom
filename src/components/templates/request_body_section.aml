@@ -1,6 +1,6 @@
 @app_section [
   border_color: active_border_color,
-  top_label: "Re(q)uest Body",
+  top_label: "Request (B)ody",
   show_top_label: true,
   show_bottom_label: true,
   bottom_label: ["Send (R)equest", "Show Request Hea(d)ers"],

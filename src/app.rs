@@ -56,7 +56,7 @@ impl App {
         let doc = Document::new("@app");
 
         let tui = TuiBackend::builder()
-            // .enable_alt_screen()
+            .enable_alt_screen()
             .enable_raw_mode()
             .hide_cursor()
             .finish();

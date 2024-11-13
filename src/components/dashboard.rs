@@ -1,5 +1,6 @@
 use std::fs;
 use std::ops::Deref;
+use std::process::exit;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use std::{
     cell::{Ref, RefCell},
@@ -426,20 +427,26 @@ impl anathema::component::Component for DashboardComponent {
                     's' => self.save_project(state),
                     'n' => self.open_edit_endpoint_name_window(state, context),
                     'j' => self.open_edit_project_name_window(state, context),
-                    'v' => self.save_response_body(state, context),
+
+                    'v' => match main_display {
+                        MainDisplay::RequestBody => {}
+                        MainDisplay::RequestHeadersEditor => {}
+                        MainDisplay::ResponseBody => self.save_response_body(state, context),
+                        MainDisplay::ResponseHeaders => {}
+                    },
 
                     // Set focus to the request url text input
                     'u' => context.set_focus("id", "url_input"),
 
-                    // Set focus to the request body textarea
-                    'q' => context.set_focus("id", "textarea"),
+                    // Quit app
+                    'q' => quit::with_code(0),
 
                     // Make the request
                     'r' => do_request(state, context, elements),
 
                     // Show request body editor window
                     'b' => match main_display {
-                        MainDisplay::RequestBody => {}
+                        MainDisplay::RequestBody => context.set_focus("id", "textarea"),
                         MainDisplay::RequestHeadersEditor => {
                             state.main_display.set(MainDisplay::RequestBody);
                         }

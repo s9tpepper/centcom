@@ -59,7 +59,7 @@ pub struct PersistedProject {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-struct PersistedEndpoint {
+pub struct PersistedEndpoint {
     name: String,
     url: String,
     method: String,
