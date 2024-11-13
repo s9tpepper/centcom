@@ -12,12 +12,6 @@ pub struct RequestBodySection;
 #[derive(Default, State)]
 pub struct RequestBodySectionState {}
 
-impl RequestBodySectionState {
-    pub fn new() -> Self {
-        RequestBodySectionState {}
-    }
-}
-
 impl Component for RequestBodySection {
     type State = RequestBodySectionState;
     type Message = ();

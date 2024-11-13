@@ -143,11 +143,22 @@ impl App {
 
         component_ids = self.component_ids.clone();
         builder.register_prototype(
-            "textarea",
+            "request_body_input",
             TEXTAREA_TEMPLATE,
             move || TextArea {
                 component_ids: component_ids.clone(),
                 listeners: vec!["dashboard".to_string()],
+            },
+            TextAreaInputState::new,
+        )?;
+
+        component_ids = self.component_ids.clone();
+        builder.register_prototype(
+            "textarea",
+            TEXTAREA_TEMPLATE,
+            move || TextArea {
+                component_ids: component_ids.clone(),
+                listeners: vec![],
             },
             TextAreaInputState::new,
         )?;
