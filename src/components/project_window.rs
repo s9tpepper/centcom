@@ -203,8 +203,8 @@ impl DashboardMessageHandler for ProjectWindow {
 
                 match project {
                     Ok(project) => {
-                        state.current_project.set(project.name.clone());
-                        state.selected_project.set(Some((&project).into()));
+                        state.project.set((&project).into());
+                        state.endpoint_count.set(project.endpoints.len() as u8);
                     }
                     Err(_) => todo!(),
                 }

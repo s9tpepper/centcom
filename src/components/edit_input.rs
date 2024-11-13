@@ -4,7 +4,6 @@ use anathema::{
     component::{Component, ComponentId},
     prelude::{Context, TuiBackend},
     runtime::RuntimeBuilder,
-    state::CommonVal,
     widgets::Elements,
 };
 

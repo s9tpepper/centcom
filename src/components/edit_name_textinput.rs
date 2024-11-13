@@ -6,10 +6,7 @@ use anathema::{
 };
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
-use super::{
-    header_value_textinput::HeaderValueTextInput,
-    textinput::{InputReceiver, InputState, TEXTINPUT_TEMPLATE},
-};
+use super::textinput::{InputReceiver, InputState, TEXTINPUT_TEMPLATE};
 
 #[derive(Default)]
 pub struct EditNameTextInput {

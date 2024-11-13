@@ -121,21 +121,18 @@ pub struct DashboardState {
     pub header_being_edited: Value<Option<Value<HeaderState>>>,
 
     pub project: Value<Project>,
-    pub current_project: Value<String>,
-    pub project_count: Value<u8>,
+    // pub project_count: Value<u8>,
     pub endpoint_count: Value<u8>,
-
-    pub selected_project: Value<Option<Project>>,
 }
 
 impl DashboardState {
     pub fn new() -> Self {
-        DashboardState {
-            project_count: 0.into(),
-            endpoint_count: 0.into(),
-            current_project: "[None]".to_string().into(),
+        let project = Project::new();
 
-            project: Project::new().into(),
+        DashboardState {
+            // project_count: 0.into(),
+            project: project.into(),
+            endpoint_count: 0.into(),
             endpoint: Endpoint::new().into(),
 
             response: "".to_string().into(),
@@ -163,7 +160,6 @@ impl DashboardState {
             }]),
             response_headers: List::from_iter(vec![]),
             header_being_edited: None.into(),
-            selected_project: None.into(),
         }
     }
 }

@@ -1,9 +1,6 @@
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+use std::{fs, path::PathBuf};
 
-use directories::{BaseDirs, ProjectDirs, UserDirs};
+use directories::{ProjectDirs, UserDirs};
 
 pub fn get_project_directory<'a>(app: &'a str, path: &'a str) -> anyhow::Result<PathBuf> {
     let requested_path = ProjectDirs::from("com", "s9tpepper", app)

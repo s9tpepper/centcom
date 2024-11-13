@@ -18,7 +18,7 @@ pub struct Project {
 impl Project {
     pub fn new() -> Self {
         Project {
-            name: "".to_string().into(),
+            name: "Unnamed".to_string().into(),
             row_color: DEFAULT_PROJECT_ROW_COLOR.to_string().into(),
             endpoints: List::empty(),
         }
@@ -37,7 +37,7 @@ pub struct Endpoint {
 impl Endpoint {
     pub fn new() -> Self {
         Endpoint {
-            name: String::from("").into(),
+            name: String::from("Unnamed").into(),
             url: String::from("").into(),
             method: String::from("GET").into(),
             body: String::from("").into(),
