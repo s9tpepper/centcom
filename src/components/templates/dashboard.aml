@@ -36,7 +36,7 @@ zstack
             @app_section [
               border_color: "#ffffff",
               top_label: "Request Headers",
-              bottom_label: ["Send (R)equest", "(A)dd Header", "(E)dit Header", "(B)ack to Request"],
+              bottom_label: ["Send (R)equest", "(A)dd Header", "Edit (H)eader", "(B)ack to Request"],
               show_top_label: true,
               show_bottom_label: true
             ]

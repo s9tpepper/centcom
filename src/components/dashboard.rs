@@ -460,12 +460,8 @@ impl anathema::component::Component for DashboardComponent {
                         }
                     }
 
-                    'e' => {
-                        state
-                            .floating_window
-                            .set(FloatingWindow::EditHeaderSelector);
-                        context.set_focus("id", "edit_header_selector");
-                    }
+                    // Open Endpoints selector
+                    // 'e' => {}
 
                     // Show projects window
                     'p' => {
@@ -480,7 +476,19 @@ impl anathema::component::Component for DashboardComponent {
                     }
 
                     // Show response headers display
-                    'h' => state.main_display.set(MainDisplay::ResponseHeaders),
+                    'h' => match main_display {
+                        MainDisplay::RequestBody => {}
+                        MainDisplay::RequestHeadersEditor => {
+                            state
+                                .floating_window
+                                .set(FloatingWindow::EditHeaderSelector);
+                            context.set_focus("id", "edit_header_selector");
+                        }
+                        MainDisplay::ResponseBody => {
+                            state.main_display.set(MainDisplay::ResponseHeaders)
+                        }
+                        MainDisplay::ResponseHeaders => {}
+                    },
 
                     // Open Request Method selection window
                     'm' => {
@@ -488,14 +496,26 @@ impl anathema::component::Component for DashboardComponent {
                         context.set_focus("id", "method_selector");
                     }
 
-                    // Open header window
-                    'a' => {
-                        state.floating_window.set(FloatingWindow::AddHeader);
-                        context.set_focus("id", "add_header_window");
-                    }
+                    'a' => match main_display {
+                        MainDisplay::RequestBody => {}
+                        MainDisplay::RequestHeadersEditor => {
+                            // Open header window
+                            state.floating_window.set(FloatingWindow::AddHeader);
+                            context.set_focus("id", "add_header_window");
+                        }
+                        MainDisplay::ResponseBody => {}
+                        MainDisplay::ResponseHeaders => {}
+                    },
 
-                    // Copy response body to clipboard
-                    'y' => self.yank_response(state),
+                    'y' => match main_display {
+                        MainDisplay::RequestBody => {}
+                        MainDisplay::RequestHeadersEditor => {}
+                        MainDisplay::ResponseBody => {
+                            // Copy response body to clipboard
+                            self.yank_response(state)
+                        }
+                        MainDisplay::ResponseHeaders => {}
+                    },
 
                     _ => {}
                 }
