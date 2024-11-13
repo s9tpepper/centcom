@@ -29,7 +29,7 @@ zstack
               show_bottom_label: true
             ]
               $children
-                @textarea [id: "response", output: response, color: "#989898"]
+                @textarea [id: "response", output: response, color: "#989898", editable: false]
 
         if main_display == "request_headers_editor"
           expand

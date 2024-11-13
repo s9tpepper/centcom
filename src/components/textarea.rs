@@ -345,6 +345,13 @@ impl TextArea {
             .by_attribute("id", "contents")
             .each(|el, _attributes| {
                 let text = el.to::<Text>();
+                let editable = context.get_external("editable");
+                if let Some(editable) = editable {
+                    let is_editable = editable.load_bool();
+                    if !is_editable {
+                        return;
+                    }
+                }
 
                 if event.ctrl && char == 'c' {
                     // TODO: Add support for pasting at cursor position, replaces for now
