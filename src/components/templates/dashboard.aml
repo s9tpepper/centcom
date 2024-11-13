@@ -24,7 +24,7 @@ zstack
             @app_section [
               border_color: "#ffffff",
               top_label: response_body_window_label,
-              bottom_label: ["(B)ack to Request", "Show Response (H)eaders", "Cop(y) Response"],
+              bottom_label: ["(B)ack to Request", "Show Response (H)eaders", "Cop(y) Response", "Sa(v)e Response"],
               show_top_label: true,
               show_bottom_label: true
             ]

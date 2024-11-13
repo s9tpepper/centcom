@@ -1,4 +1,6 @@
+use std::fs;
 use std::ops::Deref;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use std::{
     cell::{Ref, RefCell},
     collections::HashMap,
@@ -16,6 +18,7 @@ use anathema::{
 use arboard::Clipboard;
 use serde::{Deserialize, Serialize};
 
+use crate::fs::get_documents_dir;
 use crate::projects::{save_project, Endpoint, HeaderState, PersistedProject, Project};
 
 use super::{
@@ -224,6 +227,40 @@ impl DashboardComponent {
         }
     }
 
+    fn save_response_body(&self, state: &mut DashboardState, _: Context<'_, DashboardState>) {
+        let dir = get_documents_dir();
+
+        match dir {
+            Ok(mut docs_dir) => {
+                let response = state.response.to_ref().to_string();
+
+                let endpoint_name = state.endpoint.to_ref().name.to_ref().to_string();
+                let endpoint_name = endpoint_name.replace("/", "_");
+
+                let timestamp = SystemTime::now();
+                let duration = timestamp
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap_or(Duration::from_secs(1));
+                let name = format!("{endpoint_name}_{}.txt", duration.as_secs());
+
+                docs_dir.push(name);
+                let save_path = docs_dir.clone();
+
+                match fs::write(docs_dir, response) {
+                    Ok(_) => {
+                        self.show_message(
+                            "Response Saved",
+                            format!("Saved to {save_path:?}").as_str(),
+                            state,
+                        );
+                    }
+                    Err(err) => self.show_error(&err.to_string(), state),
+                }
+            }
+            Err(error) => self.show_error(&error.to_string(), state),
+        }
+    }
+
     fn open_edit_project_name_window(
         &self,
         state: &mut DashboardState,
@@ -389,6 +426,7 @@ impl anathema::component::Component for DashboardComponent {
                     's' => self.save_project(state),
                     'n' => self.open_edit_endpoint_name_window(state, context),
                     'j' => self.open_edit_project_name_window(state, context),
+                    'v' => self.save_response_body(state, context),
 
                     // Set focus to the request url text input
                     'u' => context.set_focus("id", "url_input"),

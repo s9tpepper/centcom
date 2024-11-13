@@ -1,6 +1,9 @@
-use std::{fs, path::PathBuf};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
-use directories::ProjectDirs;
+use directories::{BaseDirs, ProjectDirs, UserDirs};
 
 pub fn get_project_directory<'a>(app: &'a str, path: &'a str) -> anyhow::Result<PathBuf> {
     let requested_path = ProjectDirs::from("com", "s9tpepper", app)
@@ -17,4 +20,21 @@ pub fn get_project_directory<'a>(app: &'a str, path: &'a str) -> anyhow::Result<
 pub fn get_app_dir(path: &str) -> anyhow::Result<PathBuf> {
     // FIXME: Update application name here
     get_project_directory("Centcom", path)
+}
+
+pub fn get_documents_dir() -> anyhow::Result<PathBuf> {
+    let user_dirs = UserDirs::new();
+    let dirs = user_dirs.ok_or(Err(anyhow::Error::msg("Could not get user directories")));
+
+    match dirs {
+        Ok(dirs) => {
+            let docs_dir = dirs
+                .document_dir()
+                .ok_or(anyhow::Error::msg("Could not get user directories"))?;
+
+            Ok(docs_dir.to_owned())
+        }
+
+        Err(error) => Err(error?),
+    }
 }
