@@ -15,10 +15,10 @@
 [ ] Themes for UI colors
 
 ### UI
-[ ] Pass on cleaning up keybindings
+[x] Pass on cleaning up keybindings
 [x] (MVP) Reserve Q for quitting app
 [ ] Pass on UI colors for readability
-[ ] (MVP) Fix bindings so they are contextual to the screen that you are on
+[x] (MVP) Fix bindings so they are contextual to the screen that you are on
 
 ### Request Body
 [x] (MVP) Save request body
