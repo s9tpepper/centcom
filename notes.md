@@ -1,5 +1,12 @@
 # Features
 
+## Name Ideas
+- Term-man
+- Terminator // lots on GitHub :(
+- Console Courier
+- Courier
+
+
 ## TODO
 
 ### Options

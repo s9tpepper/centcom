@@ -1,6 +1,5 @@
 use std::fs;
 use std::ops::Deref;
-use std::process::exit;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use std::{
     cell::{Ref, RefCell},
@@ -531,7 +530,7 @@ impl anathema::component::Component for DashboardComponent {
 fn do_request(
     state: &mut DashboardState,
     mut context: anathema::prelude::Context<'_, DashboardState>,
-    _elements: anathema::widgets::Elements<'_, '_>,
+    _: anathema::widgets::Elements<'_, '_>,
 ) {
     let endpoint = state.endpoint.to_ref();
     let url = endpoint.url.to_ref().clone();
@@ -582,42 +581,59 @@ fn do_request(
         _ => request.send_string(""),
     };
 
-    if let Ok(response) = response {
-        let status = response.status();
+    match response {
+        Ok(response) => {
+            let status = response.status();
 
-        loop {
-            if state.response_headers.len() > 0 {
-                state.response_headers.pop_back();
-            } else {
-                break;
+            loop {
+                if state.response_headers.len() > 0 {
+                    state.response_headers.pop_back();
+                } else {
+                    break;
+                }
             }
+
+            for name in response.headers_names() {
+                let Some(value) = response.header(&name) else {
+                    continue;
+                };
+
+                state.response_headers.push(HeaderState {
+                    name: name.into(),
+                    value: value.to_string().into(),
+                });
+            }
+
+            let body = response
+                .into_string()
+                .unwrap_or("Could not read response body".to_string());
+
+            let window_label = format!("Response Body (Status Code: {status})");
+            state.response.set(body);
+            state.response_body_window_label.set(window_label);
+            state.main_display.set(MainDisplay::ResponseBody);
+
+            context.set_focus("id", "response");
         }
 
-        for name in response.headers_names() {
-            let Some(value) = response.header(&name) else {
-                continue;
-            };
+        Err(error) => match error {
+            ureq::Error::Status(code, response) => {
+                let body = response
+                    .into_string()
+                    .unwrap_or("Could not read error response body".to_string());
+                let window_label = format!("Response Body (Status Code: {code})");
 
-            state.response_headers.push(HeaderState {
-                name: name.into(),
-                value: value.to_string().into(),
-            });
-        }
+                state.response.set(body);
+                state.response_body_window_label.set(window_label);
+                state.main_display.set(MainDisplay::ResponseBody);
+                context.set_focus("id", "response");
+            }
 
-        let body = response
-            .into_string()
-            .unwrap_or("Could not read response body".to_string());
-
-        let window_label = format!("Response Body (Status Code: {status})");
-        state.response.set(body);
-        state.response_body_window_label.set(window_label);
-        state.main_display.set(MainDisplay::ResponseBody);
-
-        context.set_focus("id", "response");
-    } else {
-        let error = response.unwrap_err();
-
-        state.error_message.set(error.to_string());
-        state.floating_window.set(FloatingWindow::Error);
+            ureq::Error::Transport(transport_error) => {
+                let error = transport_error.message().unwrap_or("Network error");
+                state.error_message.set(error.to_string());
+                state.floating_window.set(FloatingWindow::Error);
+            }
+        },
     }
 }
