@@ -19,6 +19,7 @@
 [x] (MVP) Reserve Q for quitting app
 [ ] Pass on UI colors for readability
 [x] (MVP) Fix bindings so they are contextual to the screen that you are on
+[ ] Clear project/endpoint name dialog inputs if the name is still default
 
 ### Request Body
 [x] (MVP) Save request body
@@ -26,7 +27,7 @@
 [ ] (MVP) Syntax Highlighting
 
 ### Projects
-[ ] (MVP) Switch projects
+[x] (MVP) Switch projects
 [ ] (MVP) Switch endpoints
 [ ] Export to Postman format
 [ ] (MVP) Update projects count in top right corner

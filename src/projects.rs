@@ -7,6 +7,8 @@ use crate::fs::get_app_dir;
 // TODO: Fix the default project row color to the correct gray
 const DEFAULT_PROJECT_ROW_COLOR: &str = "#333333";
 const SELECTED_PROJECT_ROW_COLOR: &str = "#FFFFFF";
+pub const DEFAULT_PROJECT_NAME: &str = "Unnamed";
+pub const DEFAULT_ENDPOINT_NAME: &str = "Unnamed";
 
 #[derive(anathema::state::State)]
 pub struct Project {
@@ -18,7 +20,7 @@ pub struct Project {
 impl Project {
     pub fn new() -> Self {
         Project {
-            name: "Unnamed".to_string().into(),
+            name: String::from(DEFAULT_PROJECT_NAME).into(),
             row_color: DEFAULT_PROJECT_ROW_COLOR.to_string().into(),
             endpoints: List::empty(),
         }
@@ -37,11 +39,27 @@ pub struct Endpoint {
 impl Endpoint {
     pub fn new() -> Self {
         Endpoint {
-            name: String::from("Unnamed").into(),
+            name: String::from(DEFAULT_ENDPOINT_NAME).into(),
             url: String::from("").into(),
             method: String::from("GET").into(),
             body: String::from("").into(),
             headers: List::from_iter(get_default_headers()),
+        }
+    }
+
+    pub fn clone(&self) -> Self {
+        let headers_list = self.headers.to_ref();
+        let headers = headers_list.iter().map(|header| {
+            let h = header.to_ref();
+            h.clone()
+        });
+
+        Endpoint {
+            name: self.name.to_ref().to_string().into(),
+            url: self.url.to_ref().to_string().into(),
+            method: self.method.to_ref().to_string().into(),
+            body: self.body.to_ref().to_string().into(),
+            headers: List::from_iter(headers),
         }
     }
 }
@@ -52,6 +70,15 @@ pub struct HeaderState {
     pub value: Value<String>,
 }
 
+impl HeaderState {
+    pub fn clone(&self) -> Self {
+        HeaderState {
+            name: self.name.to_ref().to_string().into(),
+            value: self.value.to_ref().to_string().into(),
+        }
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PersistedProject {
     pub name: String,
@@ -60,11 +87,11 @@ pub struct PersistedProject {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PersistedEndpoint {
-    name: String,
-    url: String,
-    method: String,
-    headers: Vec<Header>,
-    body: String,
+    pub name: String,
+    pub url: String,
+    pub method: String,
+    pub headers: Vec<Header>,
+    pub body: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

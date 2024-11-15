@@ -19,7 +19,10 @@ use arboard::Clipboard;
 use serde::{Deserialize, Serialize};
 
 use crate::fs::get_documents_dir;
-use crate::projects::{save_project, Endpoint, HeaderState, PersistedProject, Project};
+use crate::projects::{
+    save_project, Endpoint, HeaderState, PersistedProject, Project, DEFAULT_ENDPOINT_NAME,
+    DEFAULT_PROJECT_NAME,
+};
 
 use super::{
     add_header_window::AddHeaderWindow,
@@ -149,7 +152,16 @@ impl DashboardState {
             logs: "".to_string().into(),
             menu_items: List::from_iter([
                 MenuItem {
-                    label: "(S)ave".to_string().into(),
+                    label: "(S)ave Project".to_string().into(),
+                },
+                MenuItem {
+                    label: "Save Endpo(i)nt".to_string().into(),
+                },
+                MenuItem {
+                    label: "New Project".to_string().into(),
+                },
+                MenuItem {
+                    label: "New Endpoint".to_string().into(),
                 },
                 MenuItem {
                     label: "(O)ptions".to_string().into(),
@@ -219,6 +231,44 @@ impl DashboardComponent {
 
         match save_project(project) {
             Ok(_) => self.show_message("Project Save", "Saved project successfully", state),
+            Err(error) => self.show_error(&error.to_string(), state),
+        }
+    }
+
+    fn save_endpoint(&self, state: &mut DashboardState, _: Context<'_, DashboardState>) {
+        let project_name = state.project.to_ref().name.to_ref().to_string();
+        let endpoint_name = state.endpoint.to_ref().name.to_ref().to_string();
+
+        if endpoint_name == DEFAULT_ENDPOINT_NAME {
+            self.show_error("Please give your endpoint a name to save", state);
+            return;
+        }
+
+        if project_name == DEFAULT_PROJECT_NAME {
+            self.show_error("Please give your project a name to save", state);
+            return;
+        }
+
+        let mut project: PersistedProject = state.project.to_ref().deref().into();
+        let existing_endpoint = project
+            .endpoints
+            .iter()
+            .enumerate()
+            .find(|(_, endpoint)| endpoint.name == endpoint_name);
+
+        if let Some((index, _)) = existing_endpoint {
+            project.endpoints.remove(index);
+        }
+
+        project
+            .endpoints
+            .push((&state.endpoint.to_ref().clone()).into());
+
+        match save_project(project.clone()) {
+            Ok(_) => {
+                self.show_message("Endoint Save", "Saved endpoint successfully", state);
+                state.project.set((&project).into());
+            }
             Err(error) => self.show_error(&error.to_string(), state),
         }
     }
@@ -422,6 +472,7 @@ impl anathema::component::Component for DashboardComponent {
                     's' => self.save_project(state),
                     'n' => self.open_edit_endpoint_name_window(state, context),
                     'j' => self.open_edit_project_name_window(state, context),
+                    'i' => self.save_endpoint(state, context),
 
                     'v' => match main_display {
                         MainDisplay::RequestBody => {}

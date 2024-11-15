@@ -59,7 +59,7 @@ zstack
     container [height: 1, background: "blue", foreground: #131313]
       expand
         hstack
-          text " [Unnamed]"
+          text " App messages here?"
           spacer
           for item in menu_items
             @menu_item
