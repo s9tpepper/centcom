@@ -317,7 +317,11 @@ impl DashboardComponent {
         context.set_focus("id", "edit_project_name");
 
         if let Ok(ids) = self.component_ids.try_borrow() {
-            let input_value = state.project.to_ref().name.to_ref().clone();
+            let mut input_value = state.project.to_ref().name.to_ref().clone();
+            if input_value == DEFAULT_PROJECT_NAME {
+                input_value = String::new();
+            }
+
             let message = EditProjectNameMessages::InputValue(input_value);
             let _ = serde_json::to_string(&message).map(|msg| {
                 let _ = send_message("edit_project_name", msg, ids, context.emitter.clone());
@@ -336,7 +340,11 @@ impl DashboardComponent {
         context.set_focus("id", "edit_endpoint_name");
 
         if let Ok(ids) = self.component_ids.try_borrow() {
-            let input_value = state.endpoint.to_ref().name.to_ref().clone();
+            let mut input_value = state.endpoint.to_ref().name.to_ref().clone();
+            if input_value == DEFAULT_ENDPOINT_NAME {
+                input_value = String::new();
+            }
+
             let message = EditEndpointNameMessages::InputValue(input_value);
             let _ = serde_json::to_string(&message).map(|msg| {
                 let _ = send_message("edit_endpoint_name", msg, ids, context.emitter.clone());
