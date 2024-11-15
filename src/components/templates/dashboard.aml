@@ -143,3 +143,10 @@ zstack
       edit_project_name__cancel -> edit_project_name__cancel,
       edit_project_name__submit -> edit_project_name__submit
     ) [id: "edit_project_name"]
+
+  if floating_window == "EndpointsSelector"
+    @endpoints_selector (
+      endpoints_selector__cancel -> endpoints_selector__cancel,
+      endpoints_selector__selection -> endpoints_selector__selection,
+      endpoints_selector__delete -> endpoints_selector__delete
+    ) [id: "endpoints_selector"]

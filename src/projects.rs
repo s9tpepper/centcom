@@ -5,8 +5,8 @@ use std::{fs, ops::Deref};
 use crate::fs::get_app_dir;
 
 // TODO: Fix the default project row color to the correct gray
-const DEFAULT_PROJECT_ROW_COLOR: &str = "#333333";
-const SELECTED_PROJECT_ROW_COLOR: &str = "#FFFFFF";
+const DEFAULT_ROW_COLOR: &str = "#333333";
+const SELECTED_ROW_COLOR: &str = "#FFFFFF";
 pub const DEFAULT_PROJECT_NAME: &str = "Unnamed";
 pub const DEFAULT_ENDPOINT_NAME: &str = "Unnamed";
 
@@ -21,7 +21,7 @@ impl Project {
     pub fn new() -> Self {
         Project {
             name: String::from(DEFAULT_PROJECT_NAME).into(),
-            row_color: DEFAULT_PROJECT_ROW_COLOR.to_string().into(),
+            row_color: DEFAULT_ROW_COLOR.to_string().into(),
             endpoints: List::empty(),
         }
     }
@@ -34,6 +34,7 @@ pub struct Endpoint {
     pub method: Value<String>,
     pub headers: Value<List<HeaderState>>,
     pub body: Value<String>,
+    pub row_color: Value<String>,
 }
 
 impl Endpoint {
@@ -44,6 +45,7 @@ impl Endpoint {
             method: String::from("GET").into(),
             body: String::from("").into(),
             headers: List::from_iter(get_default_headers()),
+            row_color: DEFAULT_ROW_COLOR.to_string().into(),
         }
     }
 
@@ -59,6 +61,7 @@ impl Endpoint {
             url: self.url.to_ref().to_string().into(),
             method: self.method.to_ref().to_string().into(),
             body: self.body.to_ref().to_string().into(),
+            row_color: DEFAULT_ROW_COLOR.to_string().into(),
             headers: List::from_iter(headers),
         }
     }
@@ -225,7 +228,7 @@ impl From<&PersistedProject> for Project {
 
         Project {
             name: persisted_project.name.clone().into(),
-            row_color: DEFAULT_PROJECT_ROW_COLOR.to_string().into(),
+            row_color: DEFAULT_ROW_COLOR.to_string().into(),
             endpoints,
         }
     }
@@ -245,6 +248,7 @@ impl From<&PersistedEndpoint> for Endpoint {
             body: persisted_endpoint.body.clone().into(),
             url: persisted_endpoint.url.clone().into(),
             method: persisted_endpoint.method.clone().into(),
+            row_color: DEFAULT_ROW_COLOR.to_string().into(),
             headers,
         }
     }

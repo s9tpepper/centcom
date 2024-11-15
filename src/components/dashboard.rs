@@ -20,10 +20,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::fs::get_documents_dir;
 use crate::projects::{
-    save_project, Endpoint, HeaderState, PersistedProject, Project, DEFAULT_ENDPOINT_NAME,
-    DEFAULT_PROJECT_NAME,
+    save_project, Endpoint, HeaderState, PersistedEndpoint, PersistedProject, Project,
+    DEFAULT_ENDPOINT_NAME, DEFAULT_PROJECT_NAME,
 };
 
+use super::floating_windows::endpoints_selector::EndpointsSelectorMessages;
 use super::{
     add_header_window::AddHeaderWindow,
     edit_header_selector::EditHeaderSelector,
@@ -78,6 +79,7 @@ pub enum FloatingWindow {
     Message,
     ChangeEndpointName,
     ChangeProjectName,
+    EndpointsSelector,
 }
 
 impl State for FloatingWindow {
@@ -94,6 +96,7 @@ impl State for FloatingWindow {
             FloatingWindow::Message => Some(CommonVal::Str("Message")),
             FloatingWindow::ChangeEndpointName => Some(CommonVal::Str("ChangeEndpointName")),
             FloatingWindow::ChangeProjectName => Some(CommonVal::Str("ChangeProjectName")),
+            FloatingWindow::EndpointsSelector => Some(CommonVal::Str("EndpointsSelector")),
         }
     }
 }
@@ -329,6 +332,40 @@ impl DashboardComponent {
         }
     }
 
+    fn open_endpoints_selector(
+        &self,
+        state: &mut DashboardState,
+        context: Context<'_, DashboardState>,
+    ) {
+        state.floating_window.set(FloatingWindow::EndpointsSelector);
+
+        let persisted_endpoints: Vec<PersistedEndpoint> = state
+            .project
+            .to_ref()
+            .endpoints
+            .to_ref()
+            .iter()
+            .map(|endpoint| {
+                let e = endpoint.to_ref();
+
+                (&*e).into()
+            })
+            .collect();
+
+        let msg = EndpointsSelectorMessages::EndpointsList(persisted_endpoints);
+        #[allow(clippy::single_match)]
+        match self.component_ids.try_borrow() {
+            #[allow(clippy::single_match)]
+            Ok(ids) => match ids.get("endpoints_selector") {
+                Some(id) => {
+                    let _ = serde_json::to_string(&msg).map(|payload| context.emit(*id, payload));
+                }
+                None => self.show_error("Unable to find endpoints window id", state),
+            },
+            Err(_) => self.show_error("Unable to find components id map", state),
+        };
+    }
+
     fn open_edit_endpoint_name_window(
         &self,
         state: &mut DashboardState,
@@ -520,7 +557,7 @@ impl anathema::component::Component for DashboardComponent {
                     }
 
                     // Open Endpoints selector
-                    // 'e' => {}
+                    'e' => self.open_endpoints_selector(state, context),
 
                     // Show projects window
                     'p' => {

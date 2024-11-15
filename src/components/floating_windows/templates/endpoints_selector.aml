@@ -1,0 +1,19 @@
+align [alignment: "center"]
+  border [foreground: border_color, border_style: "╭─╮│╯─╰│", min_width: minwidth, max_width: 80]
+    vstack [min_height: 3]
+      container [height: 1, background: "yellow", foreground: #131313]
+        expand
+          hstack
+            text " Endpoints"
+
+      container [min_height: 1]
+        for endpoint in window_list
+          hstack [fill: "‧", foreground: endpoint.row_color]
+            text endpoint.name
+
+      container [height: 1, background: "red", foreground: #131313]
+        expand
+          hstack
+            text " hjkl"
+            spacer
+            text "[(R)ename] [(D)elete]"
