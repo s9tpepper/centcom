@@ -19,15 +19,26 @@ zstack
 
         if main_display == "response_body"
           expand
-            @app_section [
-              border_color: "#ffffff",
-              top_label: response_body_window_label,
-              bottom_label: ["(B)ack to Request", "Show Response (H)eaders", "Cop(y) Response", "Sa(v)e Response"],
-              show_top_label: true,
-              show_bottom_label: true
-            ]
-              $children
-                @textarea [id: "response", output: response, color: "#989898", editable: false]
+            zstack
+              @app_section [
+                border_color: "#ffffff",
+                top_label: response_body_window_label,
+                bottom_label: ["(B)ack to Request", "Show Response (H)eaders", "Cop(y) Response", "Sa(v)e Response"],
+                show_top_label: true,
+                show_bottom_label: true
+              ]
+                $children
+                  @response_body_area [id: "response", output: response, color: "#989898", editable: false]
+              hstack
+                spacer
+                text "(F)ilter:["
+                @response_filter_input (
+                  text_change -> response_filter__input_update,
+                  escape -> response_filter__input_escape
+                ) [id: "response_body_input"]
+                text "]:"
+                text filter_total
+                container [width: 2]
 
         if main_display == "request_headers_editor"
           expand

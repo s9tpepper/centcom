@@ -22,11 +22,14 @@ impl EditInput {
         ids: &Rc<RefCell<HashMap<String, ComponentId<String>>>>,
         builder: &mut RuntimeBuilder<TuiBackend, ()>,
         ident: impl Into<String>,
+        template: Option<&str>,
     ) -> anyhow::Result<()> {
         let name: String = ident.into();
+        let input_template = template.unwrap_or(TEMPLATE);
+
         let app_id = builder.register_component(
             name.clone(),
-            TEMPLATE,
+            input_template,
             EditInput {
                 component_ids: ids.clone(),
             },

@@ -25,6 +25,7 @@ use crate::projects::{
 };
 
 use super::floating_windows::endpoints_selector::{EndpointsSelector, EndpointsSelectorMessages};
+use super::textarea::{TextAreaInputState, TextFilter};
 use super::{
     add_header_window::AddHeaderWindow,
     edit_header_selector::EditHeaderSelector,
@@ -129,6 +130,10 @@ pub struct DashboardState {
     pub project: Value<Project>,
     // pub project_count: Value<u8>,
     pub endpoint_count: Value<u8>,
+
+    pub filter_indexes: Value<List<usize>>,
+    pub filter_total: Value<usize>,
+    pub filter_nav_index: Value<usize>,
 }
 
 impl DashboardState {
@@ -175,6 +180,9 @@ impl DashboardState {
             }]),
             response_headers: List::from_iter(vec![]),
             header_being_edited: None.into(),
+            filter_indexes: List::empty(),
+            filter_total: 0.into(),
+            filter_nav_index: 0.into(),
         }
     }
 }
@@ -404,6 +412,69 @@ impl DashboardComponent {
             Err(error) => self.show_error(&error.to_string(), state),
         }
     }
+
+    fn get_text_filter(&self, state: &mut DashboardState) -> TextFilter {
+        let mut indexes: Vec<usize> = vec![];
+
+        let i = state.filter_indexes.to_ref();
+        i.iter().for_each(|e| {
+            let val = *e.to_ref();
+            indexes.push(val);
+        });
+
+        TextFilter {
+            indexes,
+            total: *state.filter_total.to_ref(),
+            nav_index: *state.filter_nav_index.to_ref(),
+        }
+    }
+
+    fn sync_text_filter(&self, state: &mut DashboardState, context: Context<'_, DashboardState>) {
+        let text_filter = self.get_text_filter(state);
+
+        if let Ok(message) = serde_json::to_string(&TextAreaMessages::FilterUpdate(text_filter)) {
+            let emitter = context.emitter.clone();
+            if let Ok(component_ids) = self.component_ids.try_borrow() {
+                let _ = send_message("response_body_area", message, component_ids, emitter);
+            }
+        };
+    }
+
+    fn apply_response_filter(
+        &self,
+        value: CommonVal<'_>,
+        state: &mut DashboardState,
+        context: Context<'_, DashboardState>,
+    ) {
+        loop {
+            if state.filter_indexes.len() == 0 {
+                break;
+            }
+
+            state.filter_indexes.remove(0);
+        }
+        state.filter_total.set(0);
+        state.filter_nav_index.set(0);
+
+        let filter = value.to_string();
+        if filter.is_empty() {
+            self.sync_text_filter(state, context);
+
+            return;
+        }
+
+        let response = state.response.to_ref().to_string();
+        response.lines().enumerate().for_each(|(idx, line)| {
+            if line.contains(&filter) {
+                state.filter_indexes.push(idx);
+            }
+        });
+        state.filter_total.set(state.filter_indexes.len());
+
+        if state.filter_indexes.len() > 0 {
+            self.sync_text_filter(state, context);
+        }
+    }
 }
 
 pub trait DashboardMessageHandler {
@@ -452,6 +523,9 @@ impl anathema::component::Component for DashboardComponent {
                     TextAreaMessages::InputChange(value) => {
                         state.endpoint.to_mut().body.set(value);
                     }
+
+                    // NOTE: This message goes to TextArea only
+                    TextAreaMessages::FilterUpdate(_) => {}
                 },
             }
         }
@@ -463,11 +537,19 @@ impl anathema::component::Component for DashboardComponent {
         value: CommonVal<'_>,
         state: &mut Self::State,
         _elements: Elements<'_, '_>,
-        context: Context<'_, Self::State>,
+        mut context: Context<'_, Self::State>,
     ) {
-        let (component, _) = ident.split_once("__").unwrap_or(("", ""));
+        let (component, event) = ident.split_once("__").unwrap_or(("", ""));
         if let Ok(component_ids) = self.component_ids.try_borrow() {
             match component {
+                "response_filter" => match event {
+                    "input_update" => self.apply_response_filter(value, state, context),
+
+                    "input_escape" => context.set_focus("id", "response"),
+
+                    _ => {}
+                },
+
                 "add_header" => {
                     AddHeaderWindow::handle_message(value, ident, state, context, component_ids);
                 }
@@ -523,6 +605,7 @@ impl anathema::component::Component for DashboardComponent {
                     'n' => self.open_edit_endpoint_name_window(state, context),
                     'j' => self.open_edit_project_name_window(state, context),
                     'i' => self.save_endpoint(state, context),
+                    'f' => context.set_focus("id", "response_body_input"),
 
                     'v' => match main_display {
                         MainDisplay::RequestBody => {}

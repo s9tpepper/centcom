@@ -5,6 +5,8 @@ use std::rc::Rc;
 use std::{io::Write, str::Chars};
 
 use anathema::component::{ComponentId, Emitter, KeyCode};
+use anathema::prelude::TuiBackend;
+use anathema::runtime::RuntimeBuilder;
 use anathema::{
     default_widgets::{Overflow, Text},
     geometry::Pos,
@@ -26,6 +28,7 @@ pub const TEXTAREA_TEMPLATE: &str = "./src/components/templates/textarea.aml";
 pub struct TextArea {
     pub listeners: Vec<String>,
     pub component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>,
+    pub text_filter: TextFilter,
 }
 
 #[derive(Default, anathema::state::State)]
@@ -85,6 +88,28 @@ enum ScrollDirection {
     Down,
 }
 
+fn scroll_to_line(
+    state: &mut TextAreaInputState,
+    mut elements: Elements<'_, '_>,
+    _: Context<'_, TextAreaInputState>,
+    line: usize,
+) {
+    elements
+        .by_attribute("id", "container")
+        .each(|el, _attributes| {
+            let overflow = el.to::<Overflow>();
+
+            state.scroll_position.set(line);
+
+            let pos = Pos {
+                x: 0,
+                y: line as i32,
+            };
+
+            overflow.scroll_to(pos);
+        });
+}
+
 fn scroll(
     state: &mut TextAreaInputState,
     mut elements: Elements<'_, '_>,
@@ -116,10 +141,32 @@ fn scroll(
 
 impl anathema::component::Component for TextArea {
     type State = TextAreaInputState;
-    type Message = ();
+    type Message = String;
 
     fn accept_focus(&self) -> bool {
         true
+    }
+
+    fn message(
+        &mut self,
+        message: Self::Message,
+        state: &mut Self::State,
+        elements: Elements<'_, '_>,
+        context: Context<'_, Self::State>,
+    ) {
+        if let Ok(deserialized_msg) = serde_json::from_str::<TextAreaMessages>(&message) {
+            match deserialized_msg {
+                TextAreaMessages::InputChange(_) => todo!(),
+                TextAreaMessages::FilterUpdate(filter) => {
+                    self.text_filter = filter;
+
+                    // Go to the first search match
+                    let default_index = 0;
+                    let first_index = self.text_filter.indexes.first().unwrap_or(&default_index);
+                    scroll_to_line(state, elements, context, *first_index);
+                }
+            }
+        }
     }
 
     fn resize(
@@ -208,19 +255,54 @@ impl anathema::component::Component for TextArea {
                 self.add_character(char, state, context, elements, event);
             }
 
-            anathema::component::KeyCode::Char(char) => match event.ctrl {
-                true => match char {
-                    'd' => scroll(state, elements, context, ScrollDirection::Down),
-                    'u' => scroll(state, elements, context, ScrollDirection::Up),
-                    _ => {}
-                },
+            anathema::component::KeyCode::Char(char) => {
+                match event.ctrl {
+                    true => {
+                        match char {
+                            'd' => scroll(state, elements, context, ScrollDirection::Down),
+                            'u' => scroll(state, elements, context, ScrollDirection::Up),
+                            'p' => {
+                                // move to previous find
+                                let current_index = self.text_filter.nav_index;
+                                let line = if current_index == 0 {
+                                    self.text_filter.indexes.len().saturating_sub(1)
+                                } else {
+                                    current_index.saturating_sub(1)
+                                };
 
-                false => {
-                    let emitter = context.emitter.clone();
-                    self.add_character(char, state, context, elements, event);
-                    self.send_to_listeners(event.code, state, emitter);
+                                self.text_filter.nav_index = line;
+                                let line = self.text_filter.indexes.get(line).unwrap_or(&0);
+
+                                scroll_to_line(state, elements, context, *line);
+                            }
+
+                            'n' => {
+                                // move to previous find
+                                let current_index = self.text_filter.nav_index;
+                                let last_index = self.text_filter.indexes.len().saturating_sub(1);
+                                let line = if current_index == last_index {
+                                    self.text_filter.indexes.first()
+                                } else {
+                                    self.text_filter.indexes.get(current_index + 1)
+                                };
+
+                                let line = line.unwrap_or(&0);
+
+                                self.text_filter.nav_index = *line;
+
+                                scroll_to_line(state, elements, context, *line);
+                            }
+                            _ => {}
+                        }
+                    }
+
+                    false => {
+                        let emitter = context.emitter.clone();
+                        self.add_character(char, state, context, elements, event);
+                        self.send_to_listeners(event.code, state, emitter);
+                    }
                 }
-            },
+            }
             anathema::component::KeyCode::Backspace => self.backspace(state, context, elements),
             anathema::component::KeyCode::Delete => self.delete(state, context),
             anathema::component::KeyCode::Left => self.move_cursor_left(state, elements),
@@ -306,12 +388,53 @@ struct CursorData {
     cursor_prefix: String,
 }
 
+#[derive(Default, Debug, Serialize, Deserialize)]
+pub struct TextFilter {
+    pub indexes: Vec<usize>,
+    pub total: usize,
+    pub nav_index: usize,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub enum TextAreaMessages {
     InputChange(String),
+    FilterUpdate(TextFilter),
 }
 
 impl TextArea {
+    pub fn register(
+        ids: &Rc<RefCell<HashMap<String, ComponentId<String>>>>,
+        builder: &mut RuntimeBuilder<TuiBackend, ()>,
+        ident: impl Into<String>,
+        template: Option<&str>,
+    ) -> anyhow::Result<()> {
+        let name: String = ident.into();
+        let input_template = template.unwrap_or(TEXTAREA_TEMPLATE);
+
+        let app_id = builder.register_component(
+            name.clone(),
+            input_template,
+            TextArea {
+                component_ids: ids.clone(),
+                listeners: vec![],
+                text_filter: TextFilter {
+                    ..Default::default()
+                },
+            },
+            TextAreaInputState::new(),
+        )?;
+
+        let ids_ref = ids.clone();
+        ids_ref.replace_with(|old| {
+            let mut new_map = old.clone();
+            new_map.insert(name, app_id);
+
+            new_map
+        });
+
+        Ok(())
+    }
+
     fn send_to_listeners(&self, code: KeyCode, state: &mut TextAreaInputState, emitter: Emitter) {
         if let KeyCode::Char(_) = code {
             if let Ok(ids) = self.component_ids.try_borrow() {

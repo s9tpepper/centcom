@@ -34,9 +34,11 @@ use crate::components::{
         RequestHeadersEditor, RequestHeadersEditorState, REQUEST_HEADERS_EDITOR_TEMPLATE,
     },
     row::{Row, RowState, ROW_TEMPLATE},
-    textarea::{TextArea, TextAreaInputState, TEXTAREA_TEMPLATE},
+    textarea::{TextArea, TextAreaInputState, TextFilter, TEXTAREA_TEMPLATE},
     textinput::{InputState, TextInput, TEXTINPUT_TEMPLATE},
 };
+
+const RESPONSE_FILTER_INPUT: &str = "./src/components/templates/response_filter_input.aml";
 
 pub fn app() -> anyhow::Result<()> {
     App::new().run()?;
@@ -151,6 +153,23 @@ impl App {
             move || TextArea {
                 component_ids: component_ids.clone(),
                 listeners: vec!["dashboard".to_string()],
+                text_filter: TextFilter {
+                    ..Default::default()
+                },
+            },
+            TextAreaInputState::new,
+        )?;
+
+        component_ids = self.component_ids.clone();
+        builder.register_prototype(
+            "response_body_area",
+            TEXTAREA_TEMPLATE,
+            move || TextArea {
+                component_ids: component_ids.clone(),
+                listeners: vec![],
+                text_filter: TextFilter {
+                    ..Default::default()
+                },
             },
             TextAreaInputState::new,
         )?;
@@ -162,6 +181,9 @@ impl App {
             move || TextArea {
                 component_ids: component_ids.clone(),
                 listeners: vec![],
+                text_filter: TextFilter {
+                    ..Default::default()
+                },
             },
             TextAreaInputState::new,
         )?;
@@ -226,8 +248,25 @@ impl App {
     ) -> anyhow::Result<()> {
         self.register_prototypes(builder)?;
 
-        EditInput::register(&self.component_ids, builder, "edit_endpoint_name_input")?;
-        EditInput::register(&self.component_ids, builder, "edit_project_name_input")?;
+        EditInput::register(
+            &self.component_ids,
+            builder,
+            "edit_endpoint_name_input",
+            None,
+        )?;
+        EditInput::register(
+            &self.component_ids,
+            builder,
+            "edit_project_name_input",
+            None,
+        )?;
+
+        EditInput::register(
+            &self.component_ids,
+            builder,
+            "response_filter_input",
+            Some(RESPONSE_FILTER_INPUT),
+        )?;
         AppLayoutComponent::register(&self.component_ids, builder)?;
         EditHeaderWindow::register(&self.component_ids, builder)?;
         HeaderNameTextInput::register(&self.component_ids, builder)?;
@@ -240,6 +279,7 @@ impl App {
         EditEndpointName::register(&self.component_ids, builder)?;
         EditProjectName::register(&self.component_ids, builder)?;
         EndpointsSelector::register(&self.component_ids, builder)?;
+        TextArea::register(&self.component_ids, builder, "response_body_area", None)?;
 
         Ok(())
     }
