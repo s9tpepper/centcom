@@ -30,8 +30,6 @@
 [x] (MVP) Switch projects
 [x] (MVP) Switch endpoints
 [ ] Export to Postman format
-[ ] (MVP) Update projects count in top right corner
-[ ] (MVP) Update endpoints count in top right corner
 
 ### Requests
 [ ] Request dependencies/piping results from dependency

@@ -4,8 +4,6 @@ zstack
       expand
         hstack
           text " Pro(j)ect: " project.name " | Endpoint (N)ame: " endpoint.name
-          spacer
-          text "[(P)rojects: , (E)ndpoints: " endpoint_count "]"
     hstack
       @row [border_color: "#666666", top_label: "(M)ethod", expanding: false, minwidth: 13]
         $children
