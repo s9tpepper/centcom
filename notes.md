@@ -28,7 +28,7 @@
 
 ### Projects
 [x] (MVP) Switch projects
-[ ] (MVP) Switch endpoints
+[x] (MVP) Switch endpoints
 [ ] Export to Postman format
 [ ] (MVP) Update projects count in top right corner
 [ ] (MVP) Update endpoints count in top right corner

@@ -14,7 +14,7 @@ use anathema::{
 
 use crate::{
     messages::confirm_delete_project::ConfirmDeleteProject,
-    projects::{get_projects, PersistedProject, Project},
+    projects::{get_projects, Endpoint, PersistedProject, Project, DEFAULT_ENDPOINT_NAME},
 };
 
 use super::dashboard::{DashboardMessageHandler, FloatingWindow};
@@ -205,6 +205,14 @@ impl DashboardMessageHandler for ProjectWindow {
                     Ok(project) => {
                         state.project.set((&project).into());
                         state.endpoint_count.set(project.endpoints.len() as u8);
+
+                        let default_endpoint: &Value<Endpoint> = &(Endpoint::new().into());
+
+                        let project = state.project.to_ref();
+                        let endpoints = project.endpoints.to_ref();
+                        let endpoint = endpoints.get(0).unwrap_or(default_endpoint);
+
+                        *state.endpoint.to_mut() = endpoint.to_ref().clone();
                     }
                     Err(_) => todo!(),
                 }

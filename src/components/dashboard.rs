@@ -24,7 +24,7 @@ use crate::projects::{
     DEFAULT_ENDPOINT_NAME, DEFAULT_PROJECT_NAME,
 };
 
-use super::floating_windows::endpoints_selector::EndpointsSelectorMessages;
+use super::floating_windows::endpoints_selector::{EndpointsSelector, EndpointsSelectorMessages};
 use super::{
     add_header_window::AddHeaderWindow,
     edit_header_selector::EditHeaderSelector,
@@ -335,9 +335,10 @@ impl DashboardComponent {
     fn open_endpoints_selector(
         &self,
         state: &mut DashboardState,
-        context: Context<'_, DashboardState>,
+        mut context: Context<'_, DashboardState>,
     ) {
         state.floating_window.set(FloatingWindow::EndpointsSelector);
+        context.set_focus("id", "endpoints_selector");
 
         let persisted_endpoints: Vec<PersistedEndpoint> = state
             .project
@@ -493,6 +494,10 @@ impl anathema::component::Component for DashboardComponent {
 
                 "edit_project_name" => {
                     EditProjectName::handle_message(value, ident, state, context, component_ids);
+                }
+
+                "endpoints_selector" => {
+                    EndpointsSelector::handle_message(value, ident, state, context, component_ids);
                 }
 
                 _ => {}
