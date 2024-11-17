@@ -25,7 +25,7 @@ use crate::projects::{
 };
 
 use super::floating_windows::endpoints_selector::{EndpointsSelector, EndpointsSelectorMessages};
-use super::textarea::{TextAreaInputState, TextFilter};
+use super::textarea::TextFilter;
 use super::{
     add_header_window::AddHeaderWindow,
     edit_header_selector::EditHeaderSelector,

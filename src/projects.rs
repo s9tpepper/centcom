@@ -6,7 +6,11 @@ use crate::fs::get_app_dir;
 
 // TODO: Fix the default project row color to the correct gray
 const DEFAULT_ROW_COLOR: &str = "#333333";
+
+// TODO: Implement using this constant for selected rows
+#[allow(unused)]
 const SELECTED_ROW_COLOR: &str = "#FFFFFF";
+
 pub const DEFAULT_PROJECT_NAME: &str = "Unnamed";
 pub const DEFAULT_ENDPOINT_NAME: &str = "Unnamed";
 
@@ -163,6 +167,7 @@ pub fn get_projects() -> anyhow::Result<Vec<PersistedProject>> {
         .collect::<Vec<PersistedProject>>())
 }
 
+#[allow(unused)]
 pub fn get_project_list() -> anyhow::Result<Value<List<Project>>> {
     match get_projects() {
         Ok(projects) => Ok(List::<Project>::from_iter(

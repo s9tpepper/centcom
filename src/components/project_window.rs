@@ -14,7 +14,7 @@ use anathema::{
 
 use crate::{
     messages::confirm_delete_project::ConfirmDeleteProject,
-    projects::{get_projects, Endpoint, PersistedProject, Project, DEFAULT_ENDPOINT_NAME},
+    projects::{get_projects, Endpoint, PersistedProject, Project},
 };
 
 use super::dashboard::{DashboardMessageHandler, FloatingWindow};

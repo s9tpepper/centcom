@@ -16,5 +16,6 @@ impl ComponentMessage for ConfirmDeleteEndpoint {
 }
 
 pub trait ComponentMessage {
+    #[allow(unused)]
     fn get_message_type(&self) -> String;
 }
