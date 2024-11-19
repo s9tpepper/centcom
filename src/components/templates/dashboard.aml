@@ -28,7 +28,9 @@ zstack
                 show_bottom_label: true
               ]
                 $children
-                  @response_body_area [id: "response", output: response, color: "#989898", editable: false]
+                  @response_renderer [id: "response_renderer"]
+                  //@response_body_area [id: "response_renderer", output: response, editable: false]
+
               hstack
                 spacer
                 text "(F)ilter:["

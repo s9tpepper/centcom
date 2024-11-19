@@ -22,7 +22,9 @@ pub mod method_selector;
 pub mod project_window;
 pub mod request_body_section;
 pub mod request_headers_editor;
+pub mod response_renderer;
 pub mod row;
+pub mod syntax_highlighter;
 pub mod textarea;
 pub mod textinput;
 

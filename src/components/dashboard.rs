@@ -1,3 +1,10 @@
+use anathema::{
+    component::{ComponentId, KeyCode, KeyEvent},
+    prelude::{Context, TuiBackend},
+    runtime::RuntimeBuilder,
+    state::{CommonVal, List, State, Value},
+    widgets::Elements,
+};
 use std::fs;
 use std::ops::Deref;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -5,14 +12,6 @@ use std::{
     cell::{Ref, RefCell},
     collections::HashMap,
     rc::Rc,
-};
-
-use anathema::{
-    component::{ComponentId, KeyCode, KeyEvent},
-    prelude::{Context, TuiBackend},
-    runtime::RuntimeBuilder,
-    state::{CommonVal, List, State, Value},
-    widgets::Elements,
 };
 
 use arboard::Clipboard;
@@ -23,6 +22,7 @@ use crate::projects::{
     save_project, Endpoint, HeaderState, PersistedEndpoint, PersistedProject, Project,
     DEFAULT_ENDPOINT_NAME, DEFAULT_PROJECT_NAME,
 };
+use crate::requests::do_request;
 
 use super::floating_windows::endpoints_selector::{EndpointsSelector, EndpointsSelectorMessages};
 use super::textarea::TextFilter;
@@ -545,7 +545,7 @@ impl anathema::component::Component for DashboardComponent {
                 "response_filter" => match event {
                     "input_update" => self.apply_response_filter(value, state, context),
 
-                    "input_escape" => context.set_focus("id", "response"),
+                    "input_escape" => context.set_focus("id", "response_renderer"),
 
                     _ => {}
                 },
@@ -615,13 +615,17 @@ impl anathema::component::Component for DashboardComponent {
                     },
 
                     // Set focus to the request url text input
-                    'u' => context.set_focus("id", "url_input"),
+                    'u' => {
+                        if !event.ctrl {
+                            context.set_focus("id", "url_input");
+                        }
+                    }
 
                     // Quit app
                     'q' => quit::with_code(0),
 
                     // Make the request
-                    'r' => do_request(state, context, elements),
+                    'r' => do_request(state, context, elements, self),
 
                     // Show request body editor window
                     'b' => match main_display {
@@ -723,117 +727,5 @@ impl anathema::component::Component for DashboardComponent {
 
     fn accept_focus(&self) -> bool {
         true
-    }
-}
-
-// TODO: Move this to a module so its not in the dashboard component
-fn do_request(
-    state: &mut DashboardState,
-    mut context: anathema::prelude::Context<'_, DashboardState>,
-    _: anathema::widgets::Elements<'_, '_>,
-) {
-    let endpoint = state.endpoint.to_ref();
-    let url = endpoint.url.to_ref().clone();
-    let method = endpoint.method.to_ref().clone();
-    let headers = endpoint.headers.to_ref();
-
-    let mut content_type = String::new();
-    let mut request_builder = http::Request::builder();
-    for header_value in headers.iter() {
-        let header = header_value.to_ref();
-        let header_name = header.name.to_ref().to_string();
-        let header_value = header.value.to_ref().to_string();
-
-        if header_name.to_lowercase() == "content-type" {
-            content_type.push_str(header_value.as_str());
-        }
-
-        request_builder = request_builder.header(header_name, header_value);
-    }
-
-    let http_request_result = request_builder
-        .method(method.as_str())
-        .uri(url.as_str())
-        .body(vec![0u8]);
-
-    if http_request_result.is_err() {
-        let error = http_request_result.unwrap_err();
-        state.error_message.set(error.to_string());
-        state.floating_window.set(FloatingWindow::Error);
-        return;
-    }
-
-    let http_request = http_request_result.unwrap();
-    let (http_parts, _body) = http_request.into_parts();
-    let request: ureq::Request = http_parts.into();
-    // let response = request.send_bytes(&body);
-    // let request_body = state.in
-    let response = match content_type.as_str() {
-        "application/json" => {
-            let req_body = endpoint.body.to_ref().clone();
-
-            request.send_string(&req_body)
-        }
-
-        // TODO: Figure out how to support form k/v pairs in the request body builder interface
-        // "multipart/form" => request.send_form("")
-        //
-        _ => request.send_string(""),
-    };
-
-    match response {
-        Ok(response) => {
-            let status = response.status();
-
-            loop {
-                if state.response_headers.len() > 0 {
-                    state.response_headers.pop_back();
-                } else {
-                    break;
-                }
-            }
-
-            for name in response.headers_names() {
-                let Some(value) = response.header(&name) else {
-                    continue;
-                };
-
-                state.response_headers.push(HeaderState {
-                    name: name.into(),
-                    value: value.to_string().into(),
-                });
-            }
-
-            let body = response
-                .into_string()
-                .unwrap_or("Could not read response body".to_string());
-
-            let window_label = format!("Response Body (Status Code: {status})");
-            state.response.set(body);
-            state.response_body_window_label.set(window_label);
-            state.main_display.set(MainDisplay::ResponseBody);
-
-            context.set_focus("id", "response");
-        }
-
-        Err(error) => match error {
-            ureq::Error::Status(code, response) => {
-                let body = response
-                    .into_string()
-                    .unwrap_or("Could not read error response body".to_string());
-                let window_label = format!("Response Body (Status Code: {code})");
-
-                state.response.set(body);
-                state.response_body_window_label.set(window_label);
-                state.main_display.set(MainDisplay::ResponseBody);
-                context.set_focus("id", "response");
-            }
-
-            ureq::Error::Transport(transport_error) => {
-                let error = transport_error.message().unwrap_or("Network error");
-                state.error_message.set(error.to_string());
-                state.floating_window.set(FloatingWindow::Error);
-            }
-        },
     }
 }

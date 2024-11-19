@@ -7,6 +7,7 @@ mod components;
 mod fs;
 mod messages;
 mod projects;
+mod requests;
 
 use crate::app::app;
 

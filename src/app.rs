@@ -33,6 +33,7 @@ use crate::components::{
     request_headers_editor::{
         RequestHeadersEditor, RequestHeadersEditorState, REQUEST_HEADERS_EDITOR_TEMPLATE,
     },
+    response_renderer::ResponseRenderer,
     row::{Row, RowState, ROW_TEMPLATE},
     textarea::{TextArea, TextAreaInputState, TextFilter, TEXTAREA_TEMPLATE},
     textinput::{InputState, TextInput, TEXTINPUT_TEMPLATE},
@@ -61,7 +62,7 @@ impl App {
         let doc = Document::new("@app");
 
         let tui = TuiBackend::builder()
-            .enable_alt_screen()
+            // .enable_alt_screen()
             .enable_raw_mode()
             .hide_cursor()
             .finish();
@@ -279,6 +280,7 @@ impl App {
         EditEndpointName::register(&self.component_ids, builder)?;
         EditProjectName::register(&self.component_ids, builder)?;
         EndpointsSelector::register(&self.component_ids, builder)?;
+        ResponseRenderer::register(&self.component_ids, builder)?;
         TextArea::register(&self.component_ids, builder, "response_body_area", None)?;
 
         Ok(())

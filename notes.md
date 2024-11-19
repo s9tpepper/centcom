@@ -23,7 +23,7 @@
 
 ### Request Body
 [x] (MVP) Save request body
-[ ] (MVP?) Filter/Search request body
+[\] (MVP?) Filter/Search request body
 [ ] (MVP) Syntax Highlighting
 
 ### Projects
