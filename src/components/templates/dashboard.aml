@@ -151,7 +151,7 @@ zstack
     @edit_project_name (
       edit_project_name__cancel -> edit_project_name__cancel,
       edit_project_name__submit -> edit_project_name__submit
-    ) [id: "edit_project_name"]
+    ) [id: "edit_project_name", border_color: "#ffffff"]
 
   if floating_window == "EndpointsSelector"
     @endpoints_selector (

@@ -1,5 +1,5 @@
 align [alignment: "center"]
-  border [foreground: border_color, border_style: "╭─╮│╯─╰│", min_width: minwidth, max_width: 80]
+  border [foreground: border_color, border_style: "╭─╮│╯─╰│", min_width: minwidth, max_width: 80, fill: " "]
     vstack
       container [height: 1, background: "yellow", foreground: #131313]
         expand
