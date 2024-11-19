@@ -24,7 +24,9 @@
 ### Request Body
 [x] (MVP) Save request body
 [\] (MVP?) Filter/Search request body
-[ ] (MVP) Syntax Highlighting
+[ ] (MVP) Highlight search results so you can see them as you navigate the search result list
+[x] (MVP) Syntax Highlighting
+[ ] (MVP) Syntax Highlighting themes
 
 ### Projects
 [x] (MVP) Switch projects
