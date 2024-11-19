@@ -48,14 +48,10 @@ fn scroll(
 
             state.scroll_position.set(new_scroll_position);
 
-            let pos = Pos {
-                x: 0,
-                y: new_scroll_position as i32,
-            };
-
-            // println!("scroll_amount: {scroll_amount}, scroll_position: {scroll_position}, new_scroll_position: {new_scroll_position}, pos: {pos:?}");
-
-            overflow.scroll_to(pos);
+            match direction {
+                ScrollDirection::Up => overflow.scroll_up_by(scroll_amount as i32),
+                ScrollDirection::Down => overflow.scroll_down_by(scroll_amount as i32),
+            }
         });
 }
 
