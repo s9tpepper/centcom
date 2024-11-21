@@ -26,6 +26,7 @@ pub struct ResponseRenderer {
     cursor: Pos,
     foreground: Hex,
     instructions: Vec<Instruction>,
+    text_filter: TextFilter,
 }
 
 fn scroll(
@@ -84,6 +85,9 @@ impl ResponseRenderer {
             cursor: Pos::ZERO,
             foreground: Hex::from((255, 255, 255)),
             instructions: vec![],
+            text_filter: TextFilter {
+                ..Default::default()
+            },
         }
     }
 
@@ -271,47 +275,52 @@ impl Component for ResponseRenderer {
         event: anathema::component::KeyEvent,
         state: &mut Self::State,
         elements: anathema::widgets::Elements<'_, '_>,
-        context: anathema::prelude::Context<'_, Self::State>,
+        mut context: anathema::prelude::Context<'_, Self::State>,
     ) {
         #[allow(clippy::single_match)]
         match event.code {
+            anathema::component::KeyCode::Esc => {
+                context.set_focus("id", "app");
+            }
+
             anathema::component::KeyCode::Char(char) => {
                 match event.ctrl {
                     true => {
                         match char {
                             'd' => scroll(state, elements, context, ScrollDirection::Down),
                             'u' => scroll(state, elements, context, ScrollDirection::Up),
-                            // 'p' => {
-                            //     // move to previous find
-                            //     let current_index = self.text_filter.nav_index;
-                            //     let line = if current_index == 0 {
-                            //         self.text_filter.indexes.len().saturating_sub(1)
-                            //     } else {
-                            //         current_index.saturating_sub(1)
-                            //     };
-                            //
-                            //     self.text_filter.nav_index = line;
-                            //     let line = self.text_filter.indexes.get(line).unwrap_or(&0);
-                            //
-                            //     scroll_to_line(state, elements, context, *line);
-                            // }
-                            //
-                            // 'n' => {
-                            //     // move to previous find
-                            //     let current_index = self.text_filter.nav_index;
-                            //     let last_index = self.text_filter.indexes.len().saturating_sub(1);
-                            //     let line = if current_index == last_index {
-                            //         self.text_filter.indexes.first()
-                            //     } else {
-                            //         self.text_filter.indexes.get(current_index + 1)
-                            //     };
-                            //
-                            //     let line = line.unwrap_or(&0);
-                            //
-                            //     self.text_filter.nav_index = *line;
-                            //
-                            //     scroll_to_line(state, elements, context, *line);
-                            // }
+
+                            'p' => {
+                                // move to previous find
+                                let current_index = self.text_filter.nav_index;
+                                let line = if current_index == 0 {
+                                    self.text_filter.indexes.len().saturating_sub(1)
+                                } else {
+                                    current_index.saturating_sub(1)
+                                };
+
+                                self.text_filter.nav_index = line;
+                                let line = self.text_filter.indexes.get(line).unwrap_or(&0);
+
+                                scroll_to_line(state, elements, context, *line);
+                            }
+
+                            'n' => {
+                                // move to previous find
+                                let current_index = self.text_filter.nav_index;
+                                let last_index = self.text_filter.indexes.len().saturating_sub(1);
+                                let line = if current_index == last_index {
+                                    self.text_filter.indexes.first()
+                                } else {
+                                    self.text_filter.indexes.get(current_index + 1)
+                                };
+
+                                let line = line.unwrap_or(&0);
+
+                                self.text_filter.nav_index = *line;
+
+                                scroll_to_line(state, elements, context, *line);
+                            }
                             _ => {}
                         }
                     }
@@ -329,7 +338,7 @@ impl Component for ResponseRenderer {
         message: Self::Message,
         state: &mut Self::State,
         mut elements: anathema::widgets::Elements<'_, '_>,
-        _: anathema::prelude::Context<'_, Self::State>,
+        context: anathema::prelude::Context<'_, Self::State>,
     ) {
         let response_renderer_message = serde_json::from_str::<ResponseRendererMessages>(&message);
 
@@ -354,13 +363,56 @@ impl Component for ResponseRenderer {
 
                     state.response.set(response);
                 }
+
+                ResponseRendererMessages::FilterUpdate(filter) => {
+                    self.text_filter = filter;
+
+                    // Go to the first search match
+                    let default_index = 0;
+                    let first_index = self.text_filter.indexes.first().unwrap_or(&default_index);
+                    scroll_to_line(state, elements, context, *first_index);
+                }
             },
             Err(_) => {}
         }
     }
 }
 
+fn scroll_to_line(
+    state: &mut ResponseRendererState,
+    mut elements: Elements<'_, '_>,
+    _: Context<'_, ResponseRendererState>,
+    line: usize,
+) {
+    elements
+        .by_attribute("id", "container")
+        .each(|el, _attributes| {
+            let overflow = el.to::<Overflow>();
+
+            state.scroll_position.set(line);
+
+            let pos = Pos {
+                x: 0,
+                y: line as i32,
+            };
+
+            overflow.scroll_to(pos);
+
+            // NOTE: This call to scroll_up_by(0) is to paint the Overflow widget as dirty and
+            // scroll to the exact line that I want to scroll to
+            overflow.scroll_up_by(0);
+        });
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub enum ResponseRendererMessages {
     ResponseUpdate((String, String)),
+    FilterUpdate(TextFilter),
+}
+
+#[derive(Default, Debug, Serialize, Deserialize)]
+pub struct TextFilter {
+    pub indexes: Vec<usize>,
+    pub total: usize,
+    pub nav_index: usize,
 }

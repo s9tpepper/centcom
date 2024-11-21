@@ -92,9 +92,12 @@ pub fn do_request(
                 });
             }
 
-            let body = response
-                .into_string()
-                .unwrap_or("Could not read response body".to_string());
+            let body = response.into_string();
+            if body.is_err() {
+                println!("Cant read body: {body:?}");
+            }
+
+            let body = body.unwrap_or("Could not read response body".to_string());
 
             let window_label = format!("Response Body (Status Code: {status})");
 

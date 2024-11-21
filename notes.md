@@ -21,6 +21,7 @@
 [x] (MVP) Fix bindings so they are contextual to the screen that you are on
 [x] Clear project/endpoint name dialog inputs if the name is still default
 [ ] (MVP) Options screen to choose themes, background for responses/request bodies, etc
+[ ] (MVP) Buffer view for very big responses
 
 ### Request Body
 [x] (MVP) Save request body

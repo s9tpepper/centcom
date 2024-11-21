@@ -24,8 +24,6 @@ use crate::projects::{
 };
 use crate::requests::do_request;
 
-use super::floating_windows::endpoints_selector::{EndpointsSelector, EndpointsSelectorMessages};
-use super::textarea::TextFilter;
 use super::{
     add_header_window::AddHeaderWindow,
     edit_header_selector::EditHeaderSelector,
@@ -36,9 +34,14 @@ use super::{
     },
     method_selector::MethodSelector,
     project_window::ProjectWindow,
+    response_renderer::TextFilter,
     send_message,
     textarea::TextAreaMessages,
     textinput::TextInputMessages,
+};
+use super::{
+    floating_windows::endpoints_selector::{EndpointsSelector, EndpointsSelectorMessages},
+    response_renderer::ResponseRendererMessages,
 };
 
 pub const DASHBOARD_TEMPLATE: &str = "./src/components/templates/dashboard.aml";
@@ -432,10 +435,12 @@ impl DashboardComponent {
     fn sync_text_filter(&self, state: &mut DashboardState, context: Context<'_, DashboardState>) {
         let text_filter = self.get_text_filter(state);
 
-        if let Ok(message) = serde_json::to_string(&TextAreaMessages::FilterUpdate(text_filter)) {
+        if let Ok(message) =
+            serde_json::to_string(&ResponseRendererMessages::FilterUpdate(text_filter))
+        {
             let emitter = context.emitter.clone();
             if let Ok(component_ids) = self.component_ids.try_borrow() {
-                let _ = send_message("response_body_area", message, component_ids, emitter);
+                let _ = send_message("response_renderer", message, component_ids, emitter);
             }
         };
     }
@@ -523,9 +528,6 @@ impl anathema::component::Component for DashboardComponent {
                     TextAreaMessages::InputChange(value) => {
                         state.endpoint.to_mut().body.set(value);
                     }
-
-                    // NOTE: This message goes to TextArea only
-                    TextAreaMessages::FilterUpdate(_) => {}
                 },
             }
         }
@@ -539,6 +541,15 @@ impl anathema::component::Component for DashboardComponent {
         _elements: Elements<'_, '_>,
         mut context: Context<'_, Self::State>,
     ) {
+        #[allow(clippy::single_match)]
+        match ident {
+            "url_input_focus" => {
+                context.set_focus("id", "app");
+            }
+
+            _ => {}
+        }
+
         let (component, event) = ident.split_once("__").unwrap_or(("", ""));
         if let Ok(component_ids) = self.component_ids.try_borrow() {
             match component {

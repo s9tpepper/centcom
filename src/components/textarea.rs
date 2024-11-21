@@ -28,7 +28,6 @@ pub const TEXTAREA_TEMPLATE: &str = "./src/components/templates/textarea.aml";
 pub struct TextArea {
     pub listeners: Vec<String>,
     pub component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>,
-    pub text_filter: TextFilter,
 }
 
 #[derive(Default, anathema::state::State)]
@@ -150,21 +149,13 @@ impl anathema::component::Component for TextArea {
     fn message(
         &mut self,
         message: Self::Message,
-        state: &mut Self::State,
-        elements: Elements<'_, '_>,
-        context: Context<'_, Self::State>,
+        _: &mut Self::State,
+        _: Elements<'_, '_>,
+        _: Context<'_, Self::State>,
     ) {
         if let Ok(deserialized_msg) = serde_json::from_str::<TextAreaMessages>(&message) {
             match deserialized_msg {
                 TextAreaMessages::InputChange(_) => todo!(),
-                TextAreaMessages::FilterUpdate(filter) => {
-                    self.text_filter = filter;
-
-                    // Go to the first search match
-                    let default_index = 0;
-                    let first_index = self.text_filter.indexes.first().unwrap_or(&default_index);
-                    scroll_to_line(state, elements, context, *first_index);
-                }
             }
         }
     }
@@ -255,54 +246,19 @@ impl anathema::component::Component for TextArea {
                 self.add_character(char, state, context, elements, event);
             }
 
-            anathema::component::KeyCode::Char(char) => {
-                match event.ctrl {
-                    true => {
-                        match char {
-                            'd' => scroll(state, elements, context, ScrollDirection::Down),
-                            'u' => scroll(state, elements, context, ScrollDirection::Up),
-                            'p' => {
-                                // move to previous find
-                                let current_index = self.text_filter.nav_index;
-                                let line = if current_index == 0 {
-                                    self.text_filter.indexes.len().saturating_sub(1)
-                                } else {
-                                    current_index.saturating_sub(1)
-                                };
+            anathema::component::KeyCode::Char(char) => match event.ctrl {
+                true => match char {
+                    'd' => scroll(state, elements, context, ScrollDirection::Down),
+                    'u' => scroll(state, elements, context, ScrollDirection::Up),
+                    _ => {}
+                },
 
-                                self.text_filter.nav_index = line;
-                                let line = self.text_filter.indexes.get(line).unwrap_or(&0);
-
-                                scroll_to_line(state, elements, context, *line);
-                            }
-
-                            'n' => {
-                                // move to previous find
-                                let current_index = self.text_filter.nav_index;
-                                let last_index = self.text_filter.indexes.len().saturating_sub(1);
-                                let line = if current_index == last_index {
-                                    self.text_filter.indexes.first()
-                                } else {
-                                    self.text_filter.indexes.get(current_index + 1)
-                                };
-
-                                let line = line.unwrap_or(&0);
-
-                                self.text_filter.nav_index = *line;
-
-                                scroll_to_line(state, elements, context, *line);
-                            }
-                            _ => {}
-                        }
-                    }
-
-                    false => {
-                        let emitter = context.emitter.clone();
-                        self.add_character(char, state, context, elements, event);
-                        self.send_to_listeners(event.code, state, emitter);
-                    }
+                false => {
+                    let emitter = context.emitter.clone();
+                    self.add_character(char, state, context, elements, event);
+                    self.send_to_listeners(event.code, state, emitter);
                 }
-            }
+            },
             anathema::component::KeyCode::Backspace => self.backspace(state, context, elements),
             anathema::component::KeyCode::Delete => self.delete(state, context),
             anathema::component::KeyCode::Left => self.move_cursor_left(state, elements),
@@ -388,17 +344,9 @@ struct CursorData {
     cursor_prefix: String,
 }
 
-#[derive(Default, Debug, Serialize, Deserialize)]
-pub struct TextFilter {
-    pub indexes: Vec<usize>,
-    pub total: usize,
-    pub nav_index: usize,
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 pub enum TextAreaMessages {
     InputChange(String),
-    FilterUpdate(TextFilter),
 }
 
 impl TextArea {
@@ -417,9 +365,6 @@ impl TextArea {
             TextArea {
                 component_ids: ids.clone(),
                 listeners: vec![],
-                text_filter: TextFilter {
-                    ..Default::default()
-                },
             },
             TextAreaInputState::new(),
         )?;

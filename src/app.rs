@@ -35,7 +35,7 @@ use crate::components::{
     },
     response_renderer::ResponseRenderer,
     row::{Row, RowState, ROW_TEMPLATE},
-    textarea::{TextArea, TextAreaInputState, TextFilter, TEXTAREA_TEMPLATE},
+    textarea::{TextArea, TextAreaInputState, TEXTAREA_TEMPLATE},
     textinput::{InputState, TextInput, TEXTINPUT_TEMPLATE},
 };
 
@@ -154,9 +154,6 @@ impl App {
             move || TextArea {
                 component_ids: component_ids.clone(),
                 listeners: vec!["dashboard".to_string()],
-                text_filter: TextFilter {
-                    ..Default::default()
-                },
             },
             TextAreaInputState::new,
         )?;
@@ -168,9 +165,6 @@ impl App {
             move || TextArea {
                 component_ids: component_ids.clone(),
                 listeners: vec![],
-                text_filter: TextFilter {
-                    ..Default::default()
-                },
             },
             TextAreaInputState::new,
         )?;
@@ -182,9 +176,6 @@ impl App {
             move || TextArea {
                 component_ids: component_ids.clone(),
                 listeners: vec![],
-                text_filter: TextFilter {
-                    ..Default::default()
-                },
             },
             TextAreaInputState::new,
         )?;
