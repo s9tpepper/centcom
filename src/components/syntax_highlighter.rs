@@ -1,5 +1,3 @@
-use core::panic;
-
 use anathema::state::Hex;
 use syntect::easy::HighlightLines;
 use syntect::highlighting::{FontStyle, Style, ThemeSet};
@@ -53,20 +51,32 @@ pub struct Line<'a> {
 pub fn highlight<'a>(src: &'a str, ext: &str) -> Box<[Line<'a>]> {
     let ps = SyntaxSet::load_defaults_newlines();
     let ts = ThemeSet::load_defaults();
-    let theme = ThemeSet::get_theme("themes/custom.stTheme").unwrap();
 
-    // let ts = ThemeSet::load_defaults();
+    let _ = std::fs::write("./themes.txt", format!("{:?}", ts.themes));
+
+    // "GitHub"
+    // "Solarized (dark)"
+    // "Solarized (light)"
+    // "Base16 Eighties Dark"
+    // "Base16 Mocha Dark"
+    // "Base16 Ocean Dark"
+    // "Base16 Ocean Light"
+
+    // let theme = ThemeSet::get_theme("themes/custom.stTheme").unwrap();
+    let theme = ThemeSet::get_theme("themes/monokai.tmTheme").unwrap();
+
     // let theme = &ts.themes["base16-eighties.dark"];
-
     // let syntax = ps.find_syntax_by_extension(ext).unwrap();
+
+    // TODO: Fix the hard coded extension
     // NOTE: Hardcoded for testing, html content-type has encoding type after a ;
     let syntax = ps.find_syntax_by_extension("html").unwrap();
 
     let mut h = HighlightLines::new(syntax, &theme);
+    // let mut h = HighlightLines::new(syntax, &ts.themes["Solarized (light)"]);
 
     let mut output = vec![];
 
-    let mut n = 0;
     for line in LinesWithEndings::from(src) {
         let mut head = h
             .highlight_line(line, &ps)
