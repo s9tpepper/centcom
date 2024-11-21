@@ -4,13 +4,36 @@ use anathema::{
     component::ComponentId,
     prelude::{Context, TuiBackend},
     runtime::RuntimeBuilder,
+    state::{CommonVal, State, Value},
     widgets::Elements,
 };
+use serde::{Deserialize, Serialize};
 
 pub const APP_LAYOUT_TEMPLATE: &str = "./src/components/templates/app_layout.aml";
 
+#[derive(Debug, Deserialize, Serialize)]
+pub enum AppLayoutMessages {
+    OpenOptions,
+}
+
+enum AppDisplay {
+    Dashboard,
+    Options,
+}
+
+impl State for AppDisplay {
+    fn to_common(&self) -> Option<anathema::state::CommonVal<'_>> {
+        match self {
+            AppDisplay::Dashboard => Some(CommonVal::Str("Dashboard")),
+            AppDisplay::Options => Some(CommonVal::Str("Options")),
+        }
+    }
+}
+
 #[derive(anathema::state::State)]
-pub struct AppLayoutState {}
+pub struct AppLayoutState {
+    display: Value<AppDisplay>,
+}
 
 pub struct AppLayoutComponent {
     #[allow(dead_code)]
@@ -28,7 +51,9 @@ impl AppLayoutComponent {
             AppLayoutComponent {
                 component_ids: ids.clone(),
             },
-            AppLayoutState {},
+            AppLayoutState {
+                display: AppDisplay::Dashboard.into(),
+            },
         )?;
 
         let ids_ref = ids.clone();
@@ -54,5 +79,23 @@ impl anathema::component::Component for AppLayoutComponent {
         mut context: Context<'_, Self::State>,
     ) {
         context.set_focus("id", "app");
+    }
+
+    fn message(
+        &mut self,
+        message: Self::Message,
+        state: &mut Self::State,
+        _: Elements<'_, '_>,
+        _: Context<'_, Self::State>,
+    ) {
+        let Ok(app_layout_message) = serde_json::from_str::<AppLayoutMessages>(&message) else {
+            return;
+        };
+
+        match app_layout_message {
+            AppLayoutMessages::OpenOptions => {
+                state.display.set(AppDisplay::Options);
+            }
+        }
     }
 }

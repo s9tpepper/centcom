@@ -19,6 +19,7 @@ pub mod header_value_textinput;
 pub mod inputs;
 pub mod menu_item;
 pub mod method_selector;
+pub mod options;
 pub mod project_window;
 pub mod request_body_section;
 pub mod request_headers_editor;

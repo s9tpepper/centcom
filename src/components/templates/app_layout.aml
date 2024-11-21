@@ -1,1 +1,5 @@
-@dashboard [id: "app"]
+if display == "Dashboard"
+  @dashboard [id: "app"]
+
+if display == "Options"
+  @options [id: "options"]

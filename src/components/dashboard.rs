@@ -26,6 +26,7 @@ use crate::requests::do_request;
 
 use super::{
     add_header_window::AddHeaderWindow,
+    app_layout::AppLayoutMessages,
     edit_header_selector::EditHeaderSelector,
     edit_header_window::EditHeaderWindow,
     floating_windows::{
@@ -47,20 +48,22 @@ use super::{
 pub const DASHBOARD_TEMPLATE: &str = "./src/components/templates/dashboard.aml";
 
 #[derive(Copy, Clone)]
-pub enum MainDisplay {
+pub enum DashboardDisplay {
     RequestBody,
     RequestHeadersEditor,
     ResponseBody,
     ResponseHeaders,
 }
 
-impl anathema::state::State for MainDisplay {
+impl anathema::state::State for DashboardDisplay {
     fn to_common(&self) -> Option<CommonVal<'_>> {
         match self {
-            MainDisplay::RequestBody => Some(CommonVal::Str("request_body")),
-            MainDisplay::RequestHeadersEditor => Some(CommonVal::Str("request_headers_editor")),
-            MainDisplay::ResponseBody => Some(CommonVal::Str("response_body")),
-            MainDisplay::ResponseHeaders => Some(CommonVal::Str("response_headers")),
+            DashboardDisplay::RequestBody => Some(CommonVal::Str("request_body")),
+            DashboardDisplay::RequestHeadersEditor => {
+                Some(CommonVal::Str("request_headers_editor"))
+            }
+            DashboardDisplay::ResponseBody => Some(CommonVal::Str("response_body")),
+            DashboardDisplay::ResponseHeaders => Some(CommonVal::Str("response_headers")),
         }
     }
 }
@@ -107,7 +110,7 @@ impl State for FloatingWindow {
 
 #[derive(anathema::state::State)]
 pub struct DashboardState {
-    pub main_display: Value<MainDisplay>,
+    pub main_display: Value<DashboardDisplay>,
     pub floating_window: Value<FloatingWindow>,
 
     pub endpoint: Value<Endpoint>,
@@ -159,7 +162,7 @@ impl DashboardState {
             edit_header_name: "".to_string().into(),
             edit_header_value: "".to_string().into(),
             floating_window: FloatingWindow::None.into(),
-            main_display: Value::<MainDisplay>::new(MainDisplay::RequestBody),
+            main_display: Value::<DashboardDisplay>::new(DashboardDisplay::RequestBody),
             logs: "".to_string().into(),
             menu_items: List::from_iter([
                 MenuItem {
@@ -247,6 +250,24 @@ impl DashboardComponent {
             Ok(_) => self.show_message("Project Save", "Saved project successfully", state),
             Err(error) => self.show_error(&error.to_string(), state),
         }
+    }
+
+    fn send_options_open(&self, _: &mut DashboardState, context: Context<'_, DashboardState>) {
+        let component_ids = self.component_ids.try_borrow();
+        if component_ids.is_err() {
+            return;
+        }
+
+        let component_ids = component_ids.unwrap();
+        let Some(app_id) = component_ids.get("app") else {
+            return;
+        };
+
+        let Ok(msg) = serde_json::to_string(&AppLayoutMessages::OpenOptions) else {
+            return;
+        };
+
+        context.emit(*app_id, msg);
     }
 
     fn save_endpoint(&self, state: &mut DashboardState, _: Context<'_, DashboardState>) {
@@ -617,12 +638,13 @@ impl anathema::component::Component for DashboardComponent {
                     'j' => self.open_edit_project_name_window(state, context),
                     'i' => self.save_endpoint(state, context),
                     'f' => context.set_focus("id", "response_body_input"),
+                    'o' => self.send_options_open(state, context),
 
                     'v' => match main_display {
-                        MainDisplay::RequestBody => {}
-                        MainDisplay::RequestHeadersEditor => {}
-                        MainDisplay::ResponseBody => self.save_response_body(state, context),
-                        MainDisplay::ResponseHeaders => {}
+                        DashboardDisplay::RequestBody => {}
+                        DashboardDisplay::RequestHeadersEditor => {}
+                        DashboardDisplay::ResponseBody => self.save_response_body(state, context),
+                        DashboardDisplay::ResponseHeaders => {}
                     },
 
                     // Set focus to the request url text input
@@ -640,22 +662,24 @@ impl anathema::component::Component for DashboardComponent {
 
                     // Show request body editor window
                     'b' => match main_display {
-                        MainDisplay::RequestBody => context.set_focus("id", "textarea"),
-                        MainDisplay::RequestHeadersEditor => {
-                            state.main_display.set(MainDisplay::RequestBody);
+                        DashboardDisplay::RequestBody => context.set_focus("id", "textarea"),
+                        DashboardDisplay::RequestHeadersEditor => {
+                            state.main_display.set(DashboardDisplay::RequestBody);
                         }
-                        MainDisplay::ResponseBody => {
-                            state.main_display.set(MainDisplay::RequestBody);
+                        DashboardDisplay::ResponseBody => {
+                            state.main_display.set(DashboardDisplay::RequestBody);
                         }
-                        MainDisplay::ResponseHeaders => {
-                            state.main_display.set(MainDisplay::ResponseBody)
+                        DashboardDisplay::ResponseHeaders => {
+                            state.main_display.set(DashboardDisplay::ResponseBody)
                         }
                     },
 
                     // Show request headers editor window
                     'd' => {
                         if !event.ctrl {
-                            state.main_display.set(MainDisplay::RequestHeadersEditor);
+                            state
+                                .main_display
+                                .set(DashboardDisplay::RequestHeadersEditor);
                         }
                     }
 
@@ -676,17 +700,17 @@ impl anathema::component::Component for DashboardComponent {
 
                     // Show response headers display
                     'h' => match main_display {
-                        MainDisplay::RequestBody => {}
-                        MainDisplay::RequestHeadersEditor => {
+                        DashboardDisplay::RequestBody => {}
+                        DashboardDisplay::RequestHeadersEditor => {
                             state
                                 .floating_window
                                 .set(FloatingWindow::EditHeaderSelector);
                             context.set_focus("id", "edit_header_selector");
                         }
-                        MainDisplay::ResponseBody => {
-                            state.main_display.set(MainDisplay::ResponseHeaders)
+                        DashboardDisplay::ResponseBody => {
+                            state.main_display.set(DashboardDisplay::ResponseHeaders)
                         }
-                        MainDisplay::ResponseHeaders => {}
+                        DashboardDisplay::ResponseHeaders => {}
                     },
 
                     // Open Request Method selection window
@@ -696,24 +720,24 @@ impl anathema::component::Component for DashboardComponent {
                     }
 
                     'a' => match main_display {
-                        MainDisplay::RequestBody => {}
-                        MainDisplay::RequestHeadersEditor => {
+                        DashboardDisplay::RequestBody => {}
+                        DashboardDisplay::RequestHeadersEditor => {
                             // Open header window
                             state.floating_window.set(FloatingWindow::AddHeader);
                             context.set_focus("id", "add_header_window");
                         }
-                        MainDisplay::ResponseBody => {}
-                        MainDisplay::ResponseHeaders => {}
+                        DashboardDisplay::ResponseBody => {}
+                        DashboardDisplay::ResponseHeaders => {}
                     },
 
                     'y' => match main_display {
-                        MainDisplay::RequestBody => {}
-                        MainDisplay::RequestHeadersEditor => {}
-                        MainDisplay::ResponseBody => {
+                        DashboardDisplay::RequestBody => {}
+                        DashboardDisplay::RequestHeadersEditor => {}
+                        DashboardDisplay::ResponseBody => {
                             // Copy response body to clipboard
                             self.yank_response(state)
                         }
-                        MainDisplay::ResponseHeaders => {}
+                        DashboardDisplay::ResponseHeaders => {}
                     },
 
                     _ => {}

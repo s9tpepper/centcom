@@ -1,6 +1,6 @@
 use crate::{
     components::{
-        dashboard::{DashboardComponent, DashboardState, FloatingWindow, MainDisplay},
+        dashboard::{DashboardComponent, DashboardDisplay, DashboardState, FloatingWindow},
         response_renderer::ResponseRendererMessages,
         send_message,
     },
@@ -103,7 +103,7 @@ pub fn do_request(
 
             state.response.set(body.to_string());
             state.response_body_window_label.set(window_label);
-            state.main_display.set(MainDisplay::ResponseBody);
+            state.main_display.set(DashboardDisplay::ResponseBody);
 
             context.set_focus("id", "response_renderer");
 
@@ -128,7 +128,7 @@ pub fn do_request(
 
                 state.response.set(body.clone());
                 state.response_body_window_label.set(window_label);
-                state.main_display.set(MainDisplay::ResponseBody);
+                state.main_display.set(DashboardDisplay::ResponseBody);
                 context.set_focus("id", "response_renderer");
 
                 // TODO: Once the response headers are being extracted, figure out the correct
