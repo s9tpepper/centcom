@@ -21,4 +21,7 @@ zstack
             span [foreground: border_color, background: "reset"] "]"
 
 if options_window == "SyntaxThemeSelector"
-  @syntax_theme_selector [id: "syntax_theme_selector"]
+  @syntax_theme_selector (
+    syntax_theme_selector__selection -> syntax_theme_selector__selection,
+    syntax_theme_selector__cancel -> syntax_theme_selector__cancel
+  ) [id: "syntax_theme_selector"]

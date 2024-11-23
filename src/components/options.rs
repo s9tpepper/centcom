@@ -153,4 +153,25 @@ impl Component for OptionsView {
             _ => {}
         }
     }
+
+    fn receive(
+        &mut self,
+        ident: &str,
+        _value: CommonVal<'_>,
+        state: &mut Self::State,
+        _: anathema::widgets::Elements<'_, '_>,
+        mut context: anathema::prelude::Context<'_, Self::State>,
+    ) {
+        match ident {
+            "syntax_theme_selector__selection" => {
+                // TODO: Grab new selection and save it to the options
+            }
+            "syntax_theme_selector__cancel" => {
+                state.options_window.set(OptionsWindows::None);
+                context.set_focus("id", "options");
+            }
+
+            _ => {}
+        }
+    }
 }

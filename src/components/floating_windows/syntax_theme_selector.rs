@@ -350,28 +350,6 @@ impl Component for SyntaxThemeSelector {
             anathema::component::KeyCode::Char(char) => match char {
                 'j' => self.move_cursor_down(state, &mut context),
                 'k' => self.move_cursor_up(state, &mut context),
-                'd' => {
-                    let selected_index = *state.cursor.to_ref() as usize;
-                    let endpoint = self.items_list.get(selected_index);
-
-                    match endpoint {
-                        Some(endpoint) => match serde_json::to_string(endpoint) {
-                            Ok(endpoint_json) => {
-                                state.selected_item.set(endpoint_json);
-                                context.publish("endpoints_selector__delete", |state| {
-                                    &state.selected_item
-                                })
-                            }
-
-                            Err(_) => {
-                                context.publish("endpoints_selector__cancel", |state| &state.cursor)
-                            }
-                        },
-                        None => {
-                            context.publish("endpoints_selector__cancel", |state| &state.cursor)
-                        }
-                    }
-                }
                 _ => {}
             },
 
@@ -380,26 +358,21 @@ impl Component for SyntaxThemeSelector {
 
             anathema::component::KeyCode::Esc => {
                 // NOTE: This sends cursor to satisfy publish() but is not used
-                context.publish("endpoints_selector__cancel", |state| &state.cursor)
+                context.publish("syntax_theme_selector__cancel", |state| &state.cursor)
             }
 
             anathema::component::KeyCode::Enter => {
                 let selected_index = *state.cursor.to_ref() as usize;
-                let endpoint = self.items_list.get(selected_index);
+                let theme = self.items_list.get(selected_index);
 
-                match endpoint {
-                    Some(endpoint) => match serde_json::to_string(endpoint) {
-                        Ok(endpoint_json) => {
-                            state.selected_item.set(endpoint_json);
-                            context.publish("endpoints_selector__selection", |state| {
-                                &state.selected_item
-                            });
-                        }
-                        Err(_) => {
-                            context.publish("endpoints_selector__cancel", |state| &state.cursor)
-                        }
-                    },
-                    None => context.publish("endpoints_selector__cancel", |state| &state.cursor),
+                match theme {
+                    Some(theme) => {
+                        state.selected_item.set(theme.to_string());
+                        context.publish("syntax_theme_selector__selection", |state| {
+                            &state.selected_item
+                        });
+                    }
+                    None => context.publish("syntax_theme_selector__cancel", |state| &state.cursor),
                 }
             }
 
