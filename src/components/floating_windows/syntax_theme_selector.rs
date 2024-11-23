@@ -202,7 +202,6 @@ impl SyntaxThemeSelector {
                 new_list_state.push(syntax_theme);
             });
 
-        // TODO: send this name to the highlighter
         self.update_code_sample(context, &theme_name);
 
         state.window_list = new_list_state;
@@ -335,8 +334,6 @@ impl Component for SyntaxThemeSelector {
         let selected_index = 0;
 
         self.update_list(first_index, last_index, selected_index, state, &mut context);
-
-        self.update_code_sample(&mut context, &get_syntax_theme());
     }
 
     fn on_key(
