@@ -1,1 +1,21 @@
-text "Options go here"
+zstack
+  border [id: "options", foreground: #ffffff, border_style: "╭─╮│╯─╰│"]
+    expand
+      padding [padding: 1]
+        hstack
+          text [foreground: "blue"] "Synta(x) Highlight Theme: "
+          text options.syntax_theme
+
+  vstack
+    text "╭─Options:"
+
+    if show_bottom_label
+      //spacer
+      vstack
+        spacer
+        text [min_height: 1] "╰"
+          for val in bottom_label
+            span [foreground: border_color, background: "reset"] "─"
+            span [foreground: border_color, background: "reset"] "["
+            span [foreground: border_color, background: "black"] val
+            span [foreground: border_color, background: "reset"] "]"

@@ -4,6 +4,8 @@ use syntect::highlighting::{FontStyle, Style, ThemeSet};
 use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
 
+use crate::options::get_syntax_theme;
+
 // use std::cmp::Ordering;
 
 #[derive(Debug)]
@@ -48,7 +50,7 @@ pub struct Line<'a> {
 //     }
 // }
 
-pub fn highlight<'a>(src: &'a str, ext: &str) -> Box<[Line<'a>]> {
+pub fn highlight<'a>(src: &'a str, _ext: &str) -> Box<[Line<'a>]> {
     let ps = SyntaxSet::load_defaults_newlines();
     let ts = ThemeSet::load_defaults();
 
@@ -63,7 +65,9 @@ pub fn highlight<'a>(src: &'a str, ext: &str) -> Box<[Line<'a>]> {
     // "Base16 Ocean Light"
 
     // let theme = ThemeSet::get_theme("themes/custom.stTheme").unwrap();
-    let theme = ThemeSet::get_theme("themes/monokai.tmTheme").unwrap();
+
+    let syntax_theme = get_syntax_theme();
+    let theme = ThemeSet::get_theme(syntax_theme).unwrap();
 
     // let theme = &ts.themes["base16-eighties.dark"];
     // let syntax = ps.find_syntax_by_extension(ext).unwrap();

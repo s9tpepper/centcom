@@ -6,6 +6,7 @@ mod app;
 mod components;
 mod fs;
 mod messages;
+mod options;
 mod projects;
 mod requests;
 

@@ -14,6 +14,7 @@ pub const APP_LAYOUT_TEMPLATE: &str = "./src/components/templates/app_layout.aml
 #[derive(Debug, Deserialize, Serialize)]
 pub enum AppLayoutMessages {
     OpenOptions,
+    OpenDashboard,
 }
 
 enum AppDisplay {
@@ -86,7 +87,7 @@ impl anathema::component::Component for AppLayoutComponent {
         message: Self::Message,
         state: &mut Self::State,
         _: Elements<'_, '_>,
-        _: Context<'_, Self::State>,
+        mut context: Context<'_, Self::State>,
     ) {
         let Ok(app_layout_message) = serde_json::from_str::<AppLayoutMessages>(&message) else {
             return;
@@ -95,6 +96,12 @@ impl anathema::component::Component for AppLayoutComponent {
         match app_layout_message {
             AppLayoutMessages::OpenOptions => {
                 state.display.set(AppDisplay::Options);
+                context.set_focus("id", "options");
+            }
+
+            AppLayoutMessages::OpenDashboard => {
+                state.display.set(AppDisplay::Dashboard);
+                context.set_focus("id", "app");
             }
         }
     }

@@ -28,7 +28,7 @@ use crate::components::{
     header_value_textinput::HeaderValueTextInput,
     menu_item::{MenuItem, MenuItemState, MENU_ITEM_TEMPLATE},
     method_selector::{MethodSelector, MethodSelectorState, METHOD_SELECTOR_TEMPLATE},
-    options::Options,
+    options::OptionsView,
     project_window::ProjectWindow,
     request_body_section::REQUEST_BODY_SECTION_TEMPLATE,
     request_headers_editor::{
@@ -273,7 +273,7 @@ impl App {
         EditProjectName::register(&self.component_ids, builder)?;
         EndpointsSelector::register(&self.component_ids, builder)?;
         ResponseRenderer::register(&self.component_ids, builder)?;
-        Options::register(&self.component_ids, builder)?;
+        OptionsView::register(&self.component_ids, builder)?;
         TextArea::register(&self.component_ids, builder, "response_body_area", None)?;
 
         Ok(())
