@@ -20,16 +20,19 @@
 [ ] Pass on UI colors for readability
 [x] (MVP) Fix bindings so they are contextual to the screen that you are on
 [x] Clear project/endpoint name dialog inputs if the name is still default
-[ ] (MVP) Options screen to choose themes, background for responses/request bodies, etc
+[x] (MVP) Options screen to choose themes, background for responses/request bodies, etc
+[ ] (MVP) Flesh out the options for the app
 [ ] (MVP) Buffer view for very big responses
 
 ### Response
 Body
 [x] (MVP) Save response body
 [\] (MVP) Filter/Search response body
-[ ] (MVP) Highlight search results so you can see them as you navigate the search result list
+[x] (MVP) Highlight search results so you can see them as you navigate the search result list
 [x] (MVP) Syntax Highlighting
-[ ] (MVP) Syntax Highlighting themes (tmTheme files)
+[x] (MVP) Syntax Highlighting themes (tmTheme files)
+[ ] (MVP) Save new syntax themes to options
+[ ] (MVP) Update code sample and make window resize dynamically based on available space
 [ ] (MVP) Virtualized Response body view
 
 ### Projects
