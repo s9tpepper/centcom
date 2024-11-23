@@ -315,7 +315,6 @@ impl Component for SyntaxThemeSelector {
         mut context: anathema::prelude::Context<'_, Self::State>,
     ) {
         let current_syntax_theme = get_syntax_theme();
-        println!("current syntax theme: {current_syntax_theme}");
 
         state.selected_item.set(
             current_syntax_theme

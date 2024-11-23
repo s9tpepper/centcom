@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::fs::get_app_dir;
 
-const DEFAULT_SYNTAX_THEME: &str = "themes/monokai.tmTheme";
+const DEFAULT_SYNTAX_THEME: &str = "monokai";
 const SYNTAX_THEMES_LIST: &str = include_str!("../themes/themes.txt");
 
 #[derive(Debug, Deserialize, Serialize)]
