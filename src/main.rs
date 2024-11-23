@@ -9,6 +9,7 @@ mod messages;
 mod options;
 mod projects;
 mod requests;
+mod themes;
 
 use crate::app::app;
 

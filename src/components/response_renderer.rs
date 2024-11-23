@@ -60,9 +60,10 @@ impl ResponseRenderer {
     pub fn register(
         ids: &Rc<RefCell<HashMap<String, ComponentId<String>>>>,
         builder: &mut RuntimeBuilder<TuiBackend, ()>,
+        ident: String,
     ) -> anyhow::Result<()> {
         let id = builder.register_component(
-            "response_renderer",
+            ident.clone(),
             TEMPLATE,
             ResponseRenderer::new(ids.clone()),
             ResponseRendererState::new(),
@@ -71,7 +72,7 @@ impl ResponseRenderer {
         let ids_ref = ids.clone();
         ids_ref.replace_with(|old| {
             let mut new_map = old.clone();
-            new_map.insert(String::from("response_renderer"), id);
+            new_map.insert(ident, id);
 
             new_map
         });
@@ -345,7 +346,7 @@ impl Component for ResponseRenderer {
         #[allow(clippy::single_match)]
         match response_renderer_message {
             Ok(message) => match message {
-                ResponseRendererMessages::ResponseUpdate((response, extension)) => {
+                ResponseRendererMessages::ResponseUpdate((response, extension, theme)) => {
                     loop {
                         if state.lines.len() == 0 {
                             break;
@@ -354,7 +355,7 @@ impl Component for ResponseRenderer {
                         state.lines.remove(0);
                     }
 
-                    let highlighted_lines = highlight(&response, &extension);
+                    let highlighted_lines = highlight(&response, &extension, theme);
                     self.instructions = Parser::new(highlighted_lines).instructions();
 
                     for instruction in self.instructions.clone() {
@@ -406,7 +407,7 @@ fn scroll_to_line(
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum ResponseRendererMessages {
-    ResponseUpdate((String, String)),
+    ResponseUpdate((String, String, Option<String>)),
     FilterUpdate(TextFilter),
 }
 

@@ -1,0 +1,25 @@
+align [alignment: "center"]
+  border [foreground: border_color, border_style: "╭─╮│╯─╰│", max_width: 80]
+    hstack
+      container [max_width: 30]
+        vstack
+          container [height: 1, background: "yellow", foreground: #131313]
+            expand
+              hstack
+                text " Theme: " selected_item
+
+          for theme in window_list
+            hstack [fill: "‧", foreground: theme.row_color]
+              text theme.name
+
+          container [height: 1, background: "red", foreground: #131313]
+            expand
+              hstack
+                text " hjkl"
+                spacer
+                text "Enter [choose] Esc [cancel]"
+      vstack
+        border [sides: "left"]
+          container [height: 9]
+            vstack
+              @code_sample_renderer

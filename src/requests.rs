@@ -107,7 +107,8 @@ pub fn do_request(
 
             context.set_focus("id", "response_renderer");
 
-            let response_msg = ResponseRendererMessages::ResponseUpdate((body.to_string(), ext));
+            let response_msg =
+                ResponseRendererMessages::ResponseUpdate((body.to_string(), ext, None));
             if let Ok(msg) = serde_json::to_string(&response_msg) {
                 if let Ok(component_ids) = dashboard.component_ids.try_borrow() {
                     let emitter = context.emitter.clone();
@@ -133,9 +134,11 @@ pub fn do_request(
 
                 // TODO: Once the response headers are being extracted, figure out the correct
                 // extension type to use to syntax highlight the response
-
-                let response_msg =
-                    ResponseRendererMessages::ResponseUpdate((body.to_string(), "txt".to_string()));
+                let response_msg = ResponseRendererMessages::ResponseUpdate((
+                    body.to_string(),
+                    "txt".to_string(),
+                    None,
+                ));
                 if let Ok(msg) = serde_json::to_string(&response_msg) {
                     if let Ok(component_ids) = dashboard.component_ids.try_borrow() {
                         let emitter = context.emitter.clone();

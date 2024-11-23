@@ -5,11 +5,11 @@ use std::{fs, ops::Deref};
 use crate::fs::get_app_dir;
 
 // TODO: Fix the default project row color to the correct gray
-const DEFAULT_ROW_COLOR: &str = "#333333";
+pub const DEFAULT_ROW_COLOR: &str = "#333333";
 
 // TODO: Implement using this constant for selected rows
 #[allow(unused)]
-const SELECTED_ROW_COLOR: &str = "#FFFFFF";
+pub const SELECTED_ROW_COLOR: &str = "#FFFFFF";
 
 pub const DEFAULT_PROJECT_NAME: &str = "Unnamed";
 pub const DEFAULT_ENDPOINT_NAME: &str = "Unnamed";

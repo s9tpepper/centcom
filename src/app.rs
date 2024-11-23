@@ -21,7 +21,7 @@ use crate::components::{
     edit_value_textinput::EditValueTextInput,
     floating_windows::{
         edit_endpoint_name::EditEndpointName, edit_project_name::EditProjectName,
-        endpoints_selector::EndpointsSelector,
+        endpoints_selector::EndpointsSelector, syntax_theme_selector::SyntaxThemeSelector,
     },
     focusable_section::{FocusableSection, FocusableSectionState},
     header_name_textinput::HeaderNameTextInput,
@@ -260,6 +260,17 @@ impl App {
             "response_filter_input",
             Some(RESPONSE_FILTER_INPUT),
         )?;
+
+        ResponseRenderer::register(
+            &self.component_ids,
+            builder,
+            "response_renderer".to_string(),
+        )?;
+        ResponseRenderer::register(
+            &self.component_ids,
+            builder,
+            "code_sample_renderer".to_string(),
+        )?;
         AppLayoutComponent::register(&self.component_ids, builder)?;
         EditHeaderWindow::register(&self.component_ids, builder)?;
         HeaderNameTextInput::register(&self.component_ids, builder)?;
@@ -272,8 +283,8 @@ impl App {
         EditEndpointName::register(&self.component_ids, builder)?;
         EditProjectName::register(&self.component_ids, builder)?;
         EndpointsSelector::register(&self.component_ids, builder)?;
-        ResponseRenderer::register(&self.component_ids, builder)?;
         OptionsView::register(&self.component_ids, builder)?;
+        SyntaxThemeSelector::register(&self.component_ids, builder)?;
         TextArea::register(&self.component_ids, builder, "response_body_area", None)?;
 
         Ok(())

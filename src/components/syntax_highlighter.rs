@@ -1,3 +1,5 @@
+use std::io::Cursor;
+
 use anathema::state::Hex;
 use syntect::easy::HighlightLines;
 use syntect::highlighting::{FontStyle, Style, ThemeSet};
@@ -5,8 +7,7 @@ use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
 
 use crate::options::get_syntax_theme;
-
-// use std::cmp::Ordering;
+use crate::themes::{PLUM_DUMB, THEME_MAP};
 
 #[derive(Debug)]
 pub struct Span<'a> {
@@ -42,43 +43,48 @@ pub struct Line<'a> {
     pub tail: Box<[Span<'a>]>,
 }
 
-// impl Line {
-//     pub fn empty() -> Self {
-//         Self {
-//             spans: List::empty(),
-//         }
-//     }
-// }
+pub fn get_constant_from_name(name: &str) -> String {
+    name.to_uppercase()
+        .replace("'", "")
+        .replace("[", "")
+        .replace("]", "")
+        .replace("(", "")
+        .replace(")", "")
+        .replace("&", "")
+        .replace("-", "")
+        .trim()
+        .replace(" ", "_")
+        .replace("__", "_")
+}
 
-pub fn highlight<'a>(src: &'a str, _ext: &str) -> Box<[Line<'a>]> {
+pub fn highlight<'a>(src: &'a str, ext: &str, name: Option<String>) -> Box<[Line<'a>]> {
     let ps = SyntaxSet::load_defaults_newlines();
-    let ts = ThemeSet::load_defaults();
-
-    let _ = std::fs::write("./themes.txt", format!("{:?}", ts.themes));
-
-    // "GitHub"
-    // "Solarized (dark)"
-    // "Solarized (light)"
-    // "Base16 Eighties Dark"
-    // "Base16 Mocha Dark"
-    // "Base16 Ocean Dark"
-    // "Base16 Ocean Light"
-
-    // let theme = ThemeSet::get_theme("themes/custom.stTheme").unwrap();
-
     let syntax_theme = get_syntax_theme();
-    let theme = ThemeSet::get_theme(syntax_theme).unwrap();
 
-    // let theme = &ts.themes["base16-eighties.dark"];
-    // let syntax = ps.find_syntax_by_extension(ext).unwrap();
+    let theme_name = name.unwrap_or(syntax_theme);
+    let const_name = get_constant_from_name(&theme_name);
 
-    // TODO: Fix the hard coded extension
-    // NOTE: Hardcoded for testing, html content-type has encoding type after a ;
-    let syntax = ps.find_syntax_by_extension("html").unwrap();
+    let theme_arr = THEME_MAP.get_key_value(&const_name.as_ref());
+    let default_theme = &PLUM_DUMB.as_ref();
+    let (_, theme_bytes) = theme_arr.unwrap_or((&"PLUM_DUMB", default_theme));
 
+    let mut cursor = Cursor::new(*theme_bytes);
+    let theme = ThemeSet::load_from_reader(&mut cursor);
+    if theme.is_err() {
+        let err = theme.unwrap_err();
+        panic!("{err}");
+    }
+    let theme = theme.unwrap();
+
+    let mut extension = ext;
+    if ext.contains(";") {
+        if let Some((ex, _)) = ext.split_once(';') {
+            extension = ex;
+        }
+    }
+
+    let syntax = ps.find_syntax_by_extension(extension).unwrap();
     let mut h = HighlightLines::new(syntax, &theme);
-    // let mut h = HighlightLines::new(syntax, &ts.themes["Solarized (light)"]);
-
     let mut output = vec![];
 
     for line in LinesWithEndings::from(src) {

@@ -19,3 +19,6 @@ zstack
             span [foreground: border_color, background: "reset"] "["
             span [foreground: border_color, background: "black"] val
             span [foreground: border_color, background: "reset"] "]"
+
+if options_window == "SyntaxThemeSelector"
+  @syntax_theme_selector [id: "syntax_theme_selector"]

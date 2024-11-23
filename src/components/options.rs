@@ -6,7 +6,7 @@ use anathema::{
     component::{Component, ComponentId},
     prelude::TuiBackend,
     runtime::RuntimeBuilder,
-    state::{State, Value},
+    state::{CommonVal, State, Value},
 };
 
 use crate::options::get_options;
@@ -24,6 +24,7 @@ pub struct OptionsView {
 #[derive(Default, State)]
 pub struct OptionsViewState {
     options: Value<OptionsState>,
+    options_window: Value<OptionsWindows>,
 }
 
 #[derive(Default, State)]
@@ -44,6 +45,23 @@ impl OptionsViewState {
         let options_state: OptionsState = options.into();
         OptionsViewState {
             options: options_state.into(),
+            options_window: OptionsWindows::None.into(),
+        }
+    }
+}
+
+#[derive(Default)]
+enum OptionsWindows {
+    #[default]
+    None,
+    SyntaxThemeSelector,
+}
+
+impl State for OptionsWindows {
+    fn to_common(&self) -> Option<CommonVal<'_>> {
+        match self {
+            OptionsWindows::SyntaxThemeSelector => Some(CommonVal::Str("SyntaxThemeSelector")),
+            OptionsWindows::None => Some(CommonVal::Str("None")),
         }
     }
 }
@@ -93,6 +111,18 @@ impl OptionsView {
 
         context.emit(*app_id, msg);
     }
+
+    fn open_theme_selector(
+        &self,
+        state: &mut OptionsViewState,
+        mut context: anathema::prelude::Context<'_, OptionsViewState>,
+    ) {
+        state
+            .options_window
+            .set(OptionsWindows::SyntaxThemeSelector);
+
+        context.set_focus("id", "syntax_theme_selector");
+    }
 }
 
 impl Component for OptionsView {
@@ -106,7 +136,7 @@ impl Component for OptionsView {
     fn on_key(
         &mut self,
         key: anathema::component::KeyEvent,
-        _: &mut Self::State,
+        state: &mut Self::State,
         _: anathema::widgets::Elements<'_, '_>,
         context: anathema::prelude::Context<'_, Self::State>,
     ) {
@@ -114,7 +144,7 @@ impl Component for OptionsView {
             #[allow(clippy::single_match)]
             anathema::component::KeyCode::Char(char) => match char {
                 'b' => self.go_back(context),
-                'x' => println!("open theme selector"),
+                'x' => self.open_theme_selector(state, context),
 
                 _ => {}
             },
