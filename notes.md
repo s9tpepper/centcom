@@ -32,7 +32,7 @@ Body
 [x] (MVP) Syntax Highlighting
 [x] (MVP) Syntax Highlighting themes (tmTheme files)
 [ ] (MVP) Save new syntax themes to options
-[ ] (MVP) Update code sample and make window resize dynamically based on available space
+[x] (MVP) Update code sample and make window resize dynamically based on available space
 [ ] (MVP) Virtualized Response body view
 
 ### Projects
