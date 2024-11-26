@@ -270,9 +270,9 @@ impl Component for SyntaxThemeSelector {
 
     fn resize(
         &mut self,
-        state: &mut Self::State,
+        _state: &mut Self::State,
         _: anathema::widgets::Elements<'_, '_>,
-        mut context: anathema::prelude::Context<'_, Self::State>,
+        _context: anathema::prelude::Context<'_, Self::State>,
     ) {
         // NOTE: Causes a panic in anathema, revisit after updating anathema fork
         //

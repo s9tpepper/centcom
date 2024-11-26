@@ -437,7 +437,7 @@ impl DashboardComponent {
         }
     }
 
-    fn get_text_filter(&self, state: &mut DashboardState) -> TextFilter {
+    fn get_text_filter(&self, state: &mut DashboardState, filter: &str) -> TextFilter {
         let mut indexes: Vec<usize> = vec![];
 
         let i = state.filter_indexes.to_ref();
@@ -450,11 +450,17 @@ impl DashboardComponent {
             indexes,
             total: *state.filter_total.to_ref(),
             nav_index: *state.filter_nav_index.to_ref(),
+            filter: String::from(filter),
         }
     }
 
-    fn sync_text_filter(&self, state: &mut DashboardState, context: Context<'_, DashboardState>) {
-        let text_filter = self.get_text_filter(state);
+    fn sync_text_filter(
+        &self,
+        state: &mut DashboardState,
+        context: Context<'_, DashboardState>,
+        filter: &str,
+    ) {
+        let text_filter = self.get_text_filter(state, filter);
 
         if let Ok(message) =
             serde_json::to_string(&ResponseRendererMessages::FilterUpdate(text_filter))
@@ -484,7 +490,7 @@ impl DashboardComponent {
 
         let filter = value.to_string();
         if filter.is_empty() {
-            self.sync_text_filter(state, context);
+            self.sync_text_filter(state, context, &filter);
 
             return;
         }
@@ -498,7 +504,7 @@ impl DashboardComponent {
         state.filter_total.set(state.filter_indexes.len());
 
         if state.filter_indexes.len() > 0 {
-            self.sync_text_filter(state, context);
+            self.sync_text_filter(state, context, &filter);
         }
     }
 }

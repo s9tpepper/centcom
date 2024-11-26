@@ -27,12 +27,13 @@
 ### Response
 Body
 [x] (MVP) Save response body
-[\] (MVP) Filter/Search response body
+[x] (MVP) Filter/Search response body
 [x] (MVP) Highlight search results so you can see them as you navigate the search result list
 [x] (MVP) Syntax Highlighting
 [x] (MVP) Syntax Highlighting themes (tmTheme files)
 [x] (MVP) Save new syntax themes to options
 [x] (MVP) Update code sample and make window resize dynamically based on available space
+[ ] (MVP) Fix the entire response area background to be the intended bg color of the chosen theme
 [ ] (MVP) Virtualized Response body view
 
 ### Projects

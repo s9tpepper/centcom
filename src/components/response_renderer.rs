@@ -25,6 +25,7 @@ pub struct ResponseRenderer {
     component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>,
     cursor: Pos,
     foreground: Hex,
+    background: Hex,
     instructions: Vec<Instruction>,
     text_filter: TextFilter,
 }
@@ -85,6 +86,7 @@ impl ResponseRenderer {
             component_ids,
             cursor: Pos::ZERO,
             foreground: Hex::from((255, 255, 255)),
+            background: Hex::BLACK,
             instructions: vec![],
             text_filter: TextFilter {
                 ..Default::default()
@@ -163,7 +165,7 @@ impl ResponseRenderer {
                         // let spans = line.spans.len();
                         line.spans.insert(
                             self.cursor.x as usize,
-                            Span::new(*c, self.foreground, *bold),
+                            Span::new(*c, self.foreground, self.background, *bold),
                         );
                         self.cursor.x += 1;
                     }
@@ -171,6 +173,7 @@ impl ResponseRenderer {
                     self.update_cursor(state, vp, size);
                 }
                 Instruction::SetForeground(hex) => self.foreground = *hex,
+                Instruction::SetBackground(hex) => self.background = *hex,
                 Instruction::Newline { x } => {
                     self.cursor.x = *x;
                     self.cursor.y += 1;
@@ -208,13 +211,17 @@ struct Span {
     text: Value<char>,
     bold: Value<bool>,
     foreground: Value<Hex>,
+    background: Value<Hex>,
+    original_background: Value<Option<Hex>>,
 }
 
 impl Span {
-    pub fn new(c: char, foreground: Hex, bold: bool) -> Self {
+    pub fn new(c: char, foreground: Hex, background: Hex, bold: bool) -> Self {
         Self {
             text: c.into(),
             foreground: foreground.into(),
+            background: background.into(),
+            original_background: None.into(),
             bold: bold.into(),
         }
     }
@@ -223,6 +230,8 @@ impl Span {
         Self {
             text: ' '.into(),
             foreground: Hex::from((255, 255, 255)).into(),
+            background: Hex::from((0, 0, 0)).into(),
+            original_background: None.into(),
             bold: false.into(),
         }
     }
@@ -275,7 +284,7 @@ impl Component for ResponseRenderer {
         &mut self,
         event: anathema::component::KeyEvent,
         state: &mut Self::State,
-        elements: anathema::widgets::Elements<'_, '_>,
+        mut elements: anathema::widgets::Elements<'_, '_>,
         mut context: anathema::prelude::Context<'_, Self::State>,
     ) {
         #[allow(clippy::single_match)]
@@ -303,7 +312,7 @@ impl Component for ResponseRenderer {
                                 self.text_filter.nav_index = line;
                                 let line = self.text_filter.indexes.get(line).unwrap_or(&0);
 
-                                scroll_to_line(state, elements, context, *line);
+                                scroll_to_line(state, &mut elements, context, *line);
                             }
 
                             'n' => {
@@ -320,7 +329,7 @@ impl Component for ResponseRenderer {
 
                                 self.text_filter.nav_index = *line;
 
-                                scroll_to_line(state, elements, context, *line);
+                                scroll_to_line(state, &mut elements, context, *line);
                             }
                             _ => {}
                         }
@@ -371,7 +380,12 @@ impl Component for ResponseRenderer {
                     // Go to the first search match
                     let default_index = 0;
                     let first_index = self.text_filter.indexes.first().unwrap_or(&default_index);
-                    scroll_to_line(state, elements, context, *first_index);
+                    scroll_to_line(state, &mut elements, context, *first_index);
+                    highlight_matches(
+                        state,
+                        &mut self.text_filter.indexes,
+                        &self.text_filter.filter,
+                    );
                 }
             },
             Err(_) => {}
@@ -379,9 +393,48 @@ impl Component for ResponseRenderer {
     }
 }
 
+fn highlight_matches(state: &mut ResponseRendererState, matches: &mut [usize], filter: &str) {
+    let response = state.response.to_ref();
+    let response_lines = response.lines().collect::<Vec<&str>>();
+    let mut lines = state.lines.to_mut();
+
+    matches.iter_mut().for_each(|match_index| {
+        if let Some(matching_line) = response_lines.get(*match_index) {
+            let mut matched_display_line = lines.get_mut(*match_index);
+
+            if let Some(ref mut display_line_value) = matched_display_line {
+                let mut display_line = (*display_line_value).to_mut();
+                let mut spans = display_line.spans.to_mut();
+
+                // Reset backgrounds before applying new highlights
+                spans.iter_mut().for_each(|span| {
+                    let og_bg = *span.to_ref().original_background.to_ref();
+                    if let Some(bg) = og_bg {
+                        let mut s = span.to_mut();
+                        s.original_background.set(None);
+                        s.background.set(bg);
+                    }
+                });
+
+                matching_line.match_indices(filter).for_each(|(index, _)| {
+                    let last_ndx = index + filter.len();
+                    for span_ndx in index..last_ndx {
+                        if let Some(span) = spans.get_mut(span_ndx) {
+                            let mut s = span.to_mut();
+                            let og_bg = Some(*s.background.to_ref());
+                            s.original_background.set(og_bg);
+                            s.background.set(Hex::from((255, 255, 0)));
+                        }
+                    }
+                })
+            };
+        };
+    });
+}
+
 fn scroll_to_line(
     state: &mut ResponseRendererState,
-    mut elements: Elements<'_, '_>,
+    elements: &mut Elements<'_, '_>,
     _: Context<'_, ResponseRendererState>,
     line: usize,
 ) {
@@ -416,4 +469,5 @@ pub struct TextFilter {
     pub indexes: Vec<usize>,
     pub total: usize,
     pub nav_index: usize,
+    pub filter: String,
 }

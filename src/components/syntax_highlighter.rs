@@ -13,6 +13,7 @@ use crate::themes::{PLUM_DUMB, THEME_MAP};
 pub struct Span<'a> {
     pub src: &'a str,
     pub fg: Hex,
+    pub bg: Hex,
     pub bold: bool,
 }
 
@@ -33,7 +34,8 @@ impl<'a> From<(Style, &'a str)> for Span<'a> {
     fn from((style, src): (Style, &'a str)) -> Self {
         let bold = style.font_style.contains(FontStyle::BOLD);
         let fg = (style.foreground.r, style.foreground.g, style.foreground.b).into();
-        Self { src, fg, bold }
+        let bg = (style.background.r, style.background.g, style.background.b).into();
+        Self { src, fg, bg, bold }
     }
 }
 
@@ -111,6 +113,7 @@ pub struct Parser<'a> {
     lines: Box<[Line<'a>]>,
     instructions: Vec<Instruction>,
     foreground: Hex,
+    background: Hex,
 }
 
 #[derive(Debug, Clone)]
@@ -118,6 +121,7 @@ pub enum Instruction {
     MoveCursor(u16, u16),
     Type(char, bool),
     SetForeground(Hex),
+    SetBackground(Hex),
     Newline { x: i32 },
     SetX(i32),
     Pause(u64),
@@ -130,7 +134,8 @@ impl<'a> Parser<'a> {
         Self {
             lines,
             instructions: vec![],
-            foreground: Hex::BLACK,
+            foreground: Hex::WHITE,
+            background: Hex::BLACK,
         }
     }
 
@@ -149,10 +154,12 @@ impl<'a> Parser<'a> {
             }
 
             self.set_foreground(&line.head);
+            self.set_background(&line.head);
             self.push_chars(src, bold, line_start);
 
             for span in &*line.tail {
                 self.set_foreground(span);
+                self.set_background(span);
                 self.push_chars(span.src, span.bold, line_start);
             }
         }
@@ -164,6 +171,13 @@ impl<'a> Parser<'a> {
         if span.fg != self.foreground {
             self.instructions.push(Instruction::SetForeground(span.fg));
             self.foreground = span.fg;
+        }
+    }
+
+    fn set_background(&mut self, span: &Span) {
+        if span.bg != self.background {
+            self.instructions.push(Instruction::SetBackground(span.bg));
+            self.background = span.bg;
         }
     }
 
