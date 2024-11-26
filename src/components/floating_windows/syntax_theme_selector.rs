@@ -349,7 +349,10 @@ impl Component for SyntaxThemeSelector {
 
                 match theme {
                     Some(theme) => {
-                        state.selected_item.set(theme.to_string());
+                        // NOTE: Clean up the .tmTheme string replace here
+                        state
+                            .selected_item
+                            .set(theme.to_string().replace(".tmTheme", ""));
                         context.publish("syntax_theme_selector__selection", |state| {
                             &state.selected_item
                         });

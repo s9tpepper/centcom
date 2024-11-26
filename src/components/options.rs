@@ -1,4 +1,4 @@
-use crate::options::Options;
+use crate::options::{save_options, Options};
 
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
@@ -157,14 +157,26 @@ impl Component for OptionsView {
     fn receive(
         &mut self,
         ident: &str,
-        _value: CommonVal<'_>,
+        value: CommonVal<'_>,
         state: &mut Self::State,
         _: anathema::widgets::Elements<'_, '_>,
         mut context: anathema::prelude::Context<'_, Self::State>,
     ) {
         match ident {
             "syntax_theme_selector__selection" => {
-                // TODO: Grab new selection and save it to the options
+                let mut options = get_options();
+
+                let new_theme = value.to_string().replace(".tmTheme", "");
+                options.syntax_theme = new_theme.clone();
+
+                // TODO: add message alerts
+                #[allow(clippy::single_match)]
+                match save_options(options) {
+                    Ok(_) => {
+                        state.options.to_mut().syntax_theme.set(new_theme);
+                    }
+                    Err(_) => {}
+                }
             }
             "syntax_theme_selector__cancel" => {
                 state.options_window.set(OptionsWindows::None);

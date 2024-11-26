@@ -1,4 +1,7 @@
-use std::{fs::File, io::BufReader};
+use std::{
+    fs::{self, File},
+    io::BufReader,
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -35,21 +38,38 @@ pub fn get_default_options() -> Options {
 }
 
 pub fn get_options() -> Options {
-    match get_app_dir("options.json") {
-        Ok(options_dir) => match File::open(options_dir) {
-            Ok(file) => {
-                let reader = BufReader::new(file);
+    match get_app_dir("options") {
+        Ok(mut options_dir) => {
+            options_dir.push("options.json");
 
-                let options = serde_json::from_reader(reader);
+            match File::open(options_dir) {
+                Ok(file) => {
+                    let reader = BufReader::new(file);
 
-                match options {
-                    Ok(opts) => opts,
-                    Err(_) => get_default_options(),
+                    let options = serde_json::from_reader(reader);
+
+                    match options {
+                        Ok(opts) => opts,
+                        Err(_) => get_default_options(),
+                    }
                 }
+                Err(_) => get_default_options(),
             }
-            Err(_) => get_default_options(),
-        },
+        }
 
         Err(_) => get_default_options(),
+    }
+}
+
+pub fn save_options(options: Options) -> anyhow::Result<()> {
+    match get_app_dir("options") {
+        Ok(mut directory) => {
+            directory.push("options.json");
+
+            let contents = serde_json::to_string(&options)?;
+
+            Ok(fs::write(directory, contents)?)
+        }
+        Err(_) => Err(anyhow::Error::msg("Could not save options")),
     }
 }
