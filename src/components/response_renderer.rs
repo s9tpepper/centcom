@@ -10,6 +10,7 @@ use anathema::{
     widgets::Elements,
 };
 use serde::{Deserialize, Serialize};
+use syntect::highlighting::Theme;
 
 use super::syntax_highlighter::{highlight, Instruction, Parser};
 
@@ -28,6 +29,7 @@ pub struct ResponseRenderer {
     background: Hex,
     instructions: Vec<Instruction>,
     text_filter: TextFilter,
+    theme: Option<Theme>,
 }
 
 fn scroll(
@@ -91,6 +93,7 @@ impl ResponseRenderer {
             text_filter: TextFilter {
                 ..Default::default()
             },
+            theme: None,
         }
     }
 
@@ -251,6 +254,7 @@ pub struct ResponseRendererState {
     pub waiting: Value<String>,
     pub show_cursor: Value<bool>,
     pub response: Value<String>,
+    pub response_background: Value<String>,
 }
 
 impl ResponseRendererState {
@@ -268,6 +272,7 @@ impl ResponseRendererState {
             title: "".to_string().into(),
             waiting: false.to_string().into(),
             show_cursor: true.into(),
+            response_background: "#000000".to_string().into(),
         }
     }
 }
@@ -364,7 +369,16 @@ impl Component for ResponseRenderer {
                         state.lines.remove(0);
                     }
 
-                    let highlighted_lines = highlight(&response, &extension, theme);
+                    let (highlighted_lines, parsed_theme) = highlight(&response, &extension, theme);
+
+                    // NOTE: Maybe remove this if its not useful
+                    self.theme = Some(parsed_theme.clone());
+
+                    if let Some(color) = parsed_theme.settings.background {
+                        let hex_color = format!("#{:02X}{:02X}{:02X}", color.r, color.g, color.b);
+                        state.response_background.set(hex_color);
+                    }
+
                     self.instructions = Parser::new(highlighted_lines).instructions();
 
                     for instruction in self.instructions.clone() {

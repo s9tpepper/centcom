@@ -2,7 +2,7 @@ use std::io::Cursor;
 
 use anathema::state::Hex;
 use syntect::easy::HighlightLines;
-use syntect::highlighting::{FontStyle, Style, ThemeSet};
+use syntect::highlighting::{FontStyle, Style, Theme, ThemeSet};
 use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
 
@@ -59,7 +59,7 @@ pub fn get_constant_from_name(name: &str) -> String {
         .replace("__", "_")
 }
 
-pub fn highlight<'a>(src: &'a str, ext: &str, name: Option<String>) -> Box<[Line<'a>]> {
+pub fn highlight<'a>(src: &'a str, ext: &str, name: Option<String>) -> (Box<[Line<'a>]>, Theme) {
     let ps = SyntaxSet::load_defaults_newlines();
     let syntax_theme = get_syntax_theme();
 
@@ -106,7 +106,7 @@ pub fn highlight<'a>(src: &'a str, ext: &str, name: Option<String>) -> Box<[Line
         });
     }
 
-    output.into_boxed_slice()
+    (output.into_boxed_slice(), theme)
 }
 
 pub struct Parser<'a> {

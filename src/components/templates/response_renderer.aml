@@ -1,5 +1,5 @@
-overflow [id: "container"]
+overflow [id: "container", background: response_background]
   for line in lines
-    text
+    text [background: response_background]
       for span in line.spans
         span [foreground: span.foreground, background: span.background, bold: span.bold] span.text
