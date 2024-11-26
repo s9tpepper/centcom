@@ -22,7 +22,7 @@ use anathema::{
 // project window
 
 pub const TEMPLATE: &str = "./src/components/floating_windows/templates/syntax_theme_selector.aml";
-const CODE_SAMPLE: &str = include_str!("../../../src/options.rs");
+const CODE_SAMPLE: &str = include_str!("../../../themes/code_sample.rs");
 
 // TODO: Fix the default project row color to the correct gray
 const DEFAULT_ROW_COLOR: &str = "#333333";

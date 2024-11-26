@@ -1,5 +1,5 @@
 overflow [id: "container"]
-  text
-    for line in lines
+  for line in lines
+    text
       for span in line.spans
         span [foreground: span.foreground, bold: span.bold] span.text
