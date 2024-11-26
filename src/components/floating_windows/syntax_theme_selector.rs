@@ -1,3 +1,4 @@
+use core::f32;
 use std::{
     cell::RefCell,
     cmp::{max, min},
@@ -37,6 +38,8 @@ pub struct SyntaxThemeSelectorState {
     count: Value<u8>,
     selected_item: Value<String>,
     code_sample: Value<String>,
+    width: Value<f32>,
+    height: Value<f32>,
 }
 
 impl SyntaxThemeSelectorState {
@@ -50,6 +53,8 @@ impl SyntaxThemeSelectorState {
             window_list: List::empty(),
             selected_item: "".to_string().into(),
             code_sample: String::from(CODE_SAMPLE).into(),
+            width: 0f32.into(),
+            height: 0f32.into(),
         }
     }
 }
@@ -235,69 +240,25 @@ impl SyntaxThemeSelector {
             context.emit(*code_sample_id, msg);
         }
     }
-}
 
-// impl DashboardMessageHandler for SyntaxThemeSelector {
-//     fn handle_message(
-//         value: anathema::state::CommonVal<'_>,
-//         ident: impl Into<String>,
-//         state: &mut DashboardState,
-//         mut context: anathema::prelude::Context<'_, DashboardState>,
-//         component_ids: std::cell::Ref<'_, HashMap<String, ComponentId<String>>>,
-//     ) {
-//         let event: String = ident.into();
-//
-//         match event.as_str() {
-//             "endpoints_selector__cancel" => {
-//                 state.floating_window.set(FloatingWindow::None);
-//                 context.set_focus("id", "app");
-//             }
-//
-//             "endpoints_selector__selection" => {
-//                 state.floating_window.set(FloatingWindow::None);
-//                 context.set_focus("id", "app");
-//
-//                 let value = &*value.to_common_str();
-//                 let endpoint = serde_json::from_str::<PersistedEndpoint>(value);
-//
-//                 match endpoint {
-//                     Ok(endpoint) => {
-//                         state.endpoint.set((&endpoint).into());
-//                     }
-//                     Err(_) => todo!(),
-//                 }
-//             }
-//
-//             "endpoints_selector__delete" => {
-//                 state.floating_window.set(FloatingWindow::ConfirmProject);
-//
-//                 let value = &*value.to_common_str();
-//                 let endpoint = serde_json::from_str::<PersistedEndpoint>(value);
-//
-//                 match endpoint {
-//                     Ok(endpoint) => {
-//                         let confirm_message = ConfirmDeleteEndpoint {
-//                             title: format!("Delete {}", endpoint.name),
-//                             message: "Are you sure you want to delete?".into(),
-//                             endpoint,
-//                         };
-//
-//                         if let Ok(message) = serde_json::to_string(&confirm_message) {
-//                             let confirm_action_window_id =
-//                                 component_ids.get("confirm_action_window");
-//                             if let Some(id) = confirm_action_window_id {
-//                                 context.emit(*id, message);
-//                             }
-//                         }
-//                     }
-//                     Err(_) => todo!(),
-//                 }
-//             }
-//
-//             _ => {}
-//         }
-//     }
-// }
+    fn resize_window(
+        &self,
+        state: &mut SyntaxThemeSelectorState,
+        context: &mut anathema::prelude::Context<'_, SyntaxThemeSelectorState>,
+    ) {
+        let viewport_size = context.viewport.size();
+        let vp_width = viewport_size.width as f32;
+        let vp_height = viewport_size.height as f32;
+        let desired_width = f32::ceil(vp_width * 0.7);
+        let desired_height = f32::ceil(vp_height * 0.7);
+
+        let visible_rows = (desired_height - 2f32) as u8;
+
+        state.width.set(desired_width);
+        state.height.set(desired_height);
+        state.visible_rows.set(visible_rows);
+    }
+}
 
 impl Component for SyntaxThemeSelector {
     type State = SyntaxThemeSelectorState;
@@ -305,6 +266,28 @@ impl Component for SyntaxThemeSelector {
 
     fn accept_focus(&self) -> bool {
         true
+    }
+
+    fn resize(
+        &mut self,
+        state: &mut Self::State,
+        _: anathema::widgets::Elements<'_, '_>,
+        mut context: anathema::prelude::Context<'_, Self::State>,
+    ) {
+        // NOTE: Causes a panic in anathema, revisit after updating anathema fork
+        //
+        // self.resize_window(state, &mut context);
+
+        // let current_last_index =
+        //     min(*state.visible_rows.to_ref(), self.items_list.len() as u8).saturating_sub(1);
+        // state.cursor.set(0);
+        // state.current_first_index.set(0);
+        // state.current_last_index.set(current_last_index);
+
+        // let first_index: usize = *state.current_first_index.to_ref() as usize;
+        // let last_index: usize = *state.current_last_index.to_ref() as usize;
+        //
+        // self.update_list(first_index, last_index, selected_index, state, &mut context);
     }
 
     fn on_focus(
@@ -322,6 +305,8 @@ impl Component for SyntaxThemeSelector {
         );
 
         self.items_list = get_syntax_themes();
+
+        self.resize_window(state, &mut context);
 
         let current_last_index =
             min(*state.visible_rows.to_ref(), self.items_list.len() as u8).saturating_sub(1);

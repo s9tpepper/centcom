@@ -1,12 +1,12 @@
 align [alignment: "center"]
-  border [foreground: border_color, border_style: "╭─╮│╯─╰│", max_width: 80]
+  border [foreground: border_color, border_style: "╭─╮│╯─╰│", max_width: width]
     hstack
       container [max_width: 30]
         vstack
           container [height: 1, background: "yellow", foreground: #131313]
             expand
               hstack
-                text " Theme: " selected_item
+                text " Current Theme: " selected_item
 
           for theme in window_list
             hstack [fill: "‧", foreground: theme.row_color]
@@ -20,6 +20,6 @@ align [alignment: "center"]
                 text "Enter [choose] Esc [cancel]"
       vstack
         border [sides: "left"]
-          container [height: 9]
+          container [height: height]
             vstack
               @code_sample_renderer
