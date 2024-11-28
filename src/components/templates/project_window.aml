@@ -1,7 +1,7 @@
 align [alignment: "center"]
   border [foreground: border_color, border_style: "╭─╮│╯─╰│", min_width: minwidth, max_width: 80]
     vstack
-      container [height: 1, background: "yellow", foreground: #131313]
+      container [fill: " ", height: 1, background: "yellow", foreground: #131313]
         expand
           hstack
             text " Project: " current_project
@@ -14,7 +14,7 @@ align [alignment: "center"]
           spacer
           text "9"
 
-      container [height: 1, background: "red", foreground: #131313]
+      container [fill: " ", height: 1, background: "red", foreground: #131313]
         expand
           hstack
             text " hjkl"
