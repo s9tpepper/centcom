@@ -147,7 +147,17 @@ impl EndpointsSelector {
         selected_index: usize,
         state: &mut EndpointsSelectorState,
     ) {
-        let display_items = &self.items_list[first_index..=last_index];
+        if self.items_list.is_empty() {
+            return;
+        }
+
+        let mut range_end = last_index;
+        let actual_last_index = self.items_list.len().saturating_sub(1);
+        if last_index > actual_last_index {
+            range_end = actual_last_index;
+        }
+
+        let display_items = &self.items_list[first_index..=range_end];
         let mut new_items_list: Vec<Endpoint> = vec![];
         display_items.iter().for_each(|display_endpoint| {
             new_items_list.push(display_endpoint.into());
