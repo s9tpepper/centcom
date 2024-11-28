@@ -51,9 +51,9 @@ impl Component for TextInput {
         key: anathema::component::KeyEvent,
         state: &mut Self::State,
         elements: Elements<'_, '_>,
-        context: Context<'_, Self::State>,
+        mut context: Context<'_, Self::State>,
     ) {
-        self._on_key(key, state, elements, context);
+        self._on_key(&key, state, &elements, &mut context);
     }
 
     fn message(
@@ -121,10 +121,10 @@ pub trait InputReceiver {
     #[allow(dead_code)]
     fn _on_key(
         &mut self,
-        event: anathema::component::KeyEvent,
+        event: &anathema::component::KeyEvent,
         state: &mut InputState,
-        _: anathema::widgets::Elements<'_, '_>,
-        mut context: anathema::prelude::Context<'_, InputState>,
+        _: &anathema::widgets::Elements<'_, '_>,
+        context: &mut anathema::prelude::Context<'_, InputState>,
     ) {
         match event.code {
             // NOTE: Unused for TextInput
@@ -187,7 +187,7 @@ pub trait InputReceiver {
         &mut self,
         char: char,
         state: &mut InputState,
-        mut context: Context<'_, InputState>,
+        context: &mut Context<'_, InputState>,
     ) {
         let mut input = state.input.to_mut();
         let Some(cursor_position) = state.cursor_position.to_number() else {
@@ -220,7 +220,7 @@ pub trait InputReceiver {
         context.publish("text_change", |state| &state.input)
     }
 
-    fn delete(&self, state: &mut InputState, mut context: Context<'_, InputState>) {
+    fn delete(&self, state: &mut InputState, context: &mut Context<'_, InputState>) {
         let mut input = state.input.to_mut();
         let Some(cursor_position) = state.cursor_position.to_number() else {
             return;
@@ -247,7 +247,7 @@ pub trait InputReceiver {
         context.publish("text_change", |state| &state.input)
     }
 
-    fn backspace(&mut self, state: &mut InputState, mut context: Context<'_, InputState>) {
+    fn backspace(&mut self, state: &mut InputState, context: &mut Context<'_, InputState>) {
         let mut input = state.input.to_mut();
         let Some(cursor_position) = state.cursor_position.to_number() else {
             return;

@@ -534,11 +534,13 @@ impl anathema::component::Component for DashboardComponent {
         message: Self::Message,
         state: &mut Self::State,
         _: Elements<'_, '_>,
-        _: Context<'_, Self::State>,
+        mut context: Context<'_, Self::State>,
     ) {
         if let Ok(dashboard_message) = serde_json::from_str::<DashboardMessages>(&message) {
             match dashboard_message {
                 DashboardMessages::TextInput(text_input_message) => match text_input_message {
+                    // TODO: Refactor this message to not be 100% coupled to only editing the
+                    // endpoint name
                     TextInputMessages::InputChange(value) => {
                         let mut endpoint = state.endpoint.to_mut();
                         let name_still_default = *endpoint.url.to_ref() == *endpoint.name.to_ref();
@@ -549,8 +551,26 @@ impl anathema::component::Component for DashboardComponent {
                             endpoint.name.set(value.to_string());
                         }
                     }
+
+                    #[allow(clippy::single_match)]
+                    TextInputMessages::InputUpdate(text_update) => match text_update.id.as_str() {
+                        "endpoint_url_input" => {
+                            state.endpoint.to_mut().url.set(text_update.value);
+                        }
+
+                        _ => {}
+                    },
+
+                    #[allow(clippy::single_match)]
+                    TextInputMessages::InputEscape(text_update) => match text_update.id.as_str() {
+                        "endpoint_url_input" => context.set_focus("id", "app"),
+
+                        _ => {}
+                    },
                 },
 
+                // TODO: Refactor this message to not be 100% coupled to only editing the
+                // endpoint body
                 DashboardMessages::TextArea(text_area_message) => match text_area_message {
                     TextAreaMessages::InputChange(value) => {
                         state.endpoint.to_mut().body.set(value);

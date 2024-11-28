@@ -41,6 +41,7 @@ use crate::components::{
 };
 
 const RESPONSE_FILTER_INPUT: &str = "./src/components/templates/response_filter_input.aml";
+const NO_BORDER_INPUT: &str = "./src/components/templates/no_border_input.aml";
 
 pub fn app() -> anyhow::Result<()> {
     App::new().run()?;
@@ -246,12 +247,16 @@ impl App {
             builder,
             "edit_endpoint_name_input",
             None,
+            None,
+            vec![],
         )?;
         EditInput::register(
             &self.component_ids,
             builder,
             "edit_project_name_input",
             None,
+            None,
+            vec![],
         )?;
 
         EditInput::register(
@@ -259,6 +264,17 @@ impl App {
             builder,
             "response_filter_input",
             Some(RESPONSE_FILTER_INPUT),
+            None,
+            vec![],
+        )?;
+
+        EditInput::register(
+            &self.component_ids,
+            builder,
+            "url_text_input",
+            Some(NO_BORDER_INPUT),
+            Some(String::from("endpoint_url_input")),
+            vec![String::from("dashboard")],
         )?;
 
         ResponseRenderer::register(

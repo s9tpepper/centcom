@@ -1,7 +1,7 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use anathema::{
-    component::{Component, ComponentId},
+    component::{Component, ComponentId, Emitter, KeyCode},
     prelude::{Context, TuiBackend},
     runtime::RuntimeBuilder,
     widgets::Elements,
@@ -9,12 +9,18 @@ use anathema::{
 
 const TEMPLATE: &str = "./src/components/templates/edit_input.aml";
 
-use super::inputs::{InputReceiver, InputState};
+use super::{
+    dashboard::DashboardMessages,
+    inputs::{InputReceiver, InputState},
+    textinput::TextUpdate,
+};
 
 #[derive(Default)]
 pub struct EditInput {
     #[allow(dead_code)]
     component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>,
+    pub listeners: Vec<String>,
+    input_for: Option<String>,
 }
 
 impl EditInput {
@@ -23,6 +29,8 @@ impl EditInput {
         builder: &mut RuntimeBuilder<TuiBackend, ()>,
         ident: impl Into<String>,
         template: Option<&str>,
+        input_for: Option<String>,
+        listeners: Vec<String>,
     ) -> anyhow::Result<()> {
         let name: String = ident.into();
         let input_template = template.unwrap_or(TEMPLATE);
@@ -32,6 +40,8 @@ impl EditInput {
             input_template,
             EditInput {
                 component_ids: ids.clone(),
+                listeners,
+                input_for,
             },
             InputState::new(),
         )?;
@@ -45,6 +55,68 @@ impl EditInput {
         });
 
         Ok(())
+    }
+
+    fn send_text_update(&self, state: &mut InputState, emitter: Emitter) {
+        if let Ok(ids) = self.component_ids.try_borrow() {
+            let input_value = state.input.to_ref().to_string();
+
+            // TODO: Fix this clone weirdness
+            let id = self.input_for.clone().unwrap_or("".to_string());
+
+            let input_change_message = DashboardMessages::TextInput(
+                super::textinput::TextInputMessages::InputUpdate(TextUpdate {
+                    id,
+                    value: input_value,
+                }),
+            );
+
+            if let Ok(serialized_message) = serde_json::to_string(&input_change_message) {
+                for listener in &self.listeners {
+                    let msg = serialized_message.clone();
+
+                    ids.get(listener)
+                        .map(|component_id| emitter.emit(*component_id, msg));
+                }
+            }
+        }
+    }
+
+    // TODO: Remove the duplication between send_escape and send_text_update()
+    fn send_escape(&self, emitter: Emitter) {
+        if let Ok(ids) = self.component_ids.try_borrow() {
+            // TODO: Fix this clone weirdness
+            let id = self.input_for.clone().unwrap_or("".to_string());
+
+            let input_change_message = DashboardMessages::TextInput(
+                super::textinput::TextInputMessages::InputEscape(TextUpdate {
+                    id,
+                    value: "".to_string(),
+                }),
+            );
+
+            if let Ok(serialized_message) = serde_json::to_string(&input_change_message) {
+                for listener in &self.listeners {
+                    let msg = serialized_message.clone();
+
+                    ids.get(listener)
+                        .map(|component_id| emitter.emit(*component_id, msg));
+                }
+            }
+        }
+    }
+
+    fn send_to_listeners(&self, code: KeyCode, state: &mut InputState, emitter: Emitter) {
+        if let KeyCode::Char(_) = code {}
+        match code {
+            KeyCode::Char(_) => self.send_text_update(state, emitter),
+            KeyCode::CtrlC => self.send_text_update(state, emitter),
+            KeyCode::Backspace => self.send_text_update(state, emitter),
+            KeyCode::Delete => self.send_text_update(state, emitter),
+            KeyCode::Esc => self.send_escape(emitter),
+
+            _ => {}
+        }
     }
 }
 
@@ -67,9 +139,12 @@ impl Component for EditInput {
         key: anathema::component::KeyEvent,
         state: &mut Self::State,
         elements: Elements<'_, '_>,
-        context: Context<'_, Self::State>,
+        mut context: Context<'_, Self::State>,
     ) {
-        self._on_key(key, state, elements, context);
+        self._on_key(&key, state, &elements, &mut context);
+
+        let emitter = context.emitter.clone();
+        self.send_to_listeners(key.code, state, emitter);
     }
 
     fn message(

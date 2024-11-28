@@ -17,7 +17,10 @@ use crate::{
     projects::{get_projects, Endpoint, PersistedProject, Project},
 };
 
-use super::dashboard::{DashboardMessageHandler, FloatingWindow};
+use super::{
+    dashboard::{DashboardMessageHandler, FloatingWindow},
+    send_message,
+};
 
 pub const PROJECT_WINDOW_TEMPLATE: &str = "./src/components/templates/project_window.aml";
 
@@ -213,6 +216,11 @@ impl DashboardMessageHandler for ProjectWindow {
                         let endpoint = endpoints.get(0).unwrap_or(default_endpoint);
 
                         *state.endpoint.to_mut() = endpoint.to_ref().clone();
+
+                        // Update url input in dashboard
+                        let url = endpoint.to_ref().url.to_ref().to_string();
+                        let emitter = context.emitter.clone();
+                        let _ = send_message("url_text_input", url, component_ids, emitter);
                     }
                     Err(_) => todo!(),
                 }

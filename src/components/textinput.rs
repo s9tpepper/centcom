@@ -44,8 +44,16 @@ impl InputState {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct TextUpdate {
+    pub id: String,
+    pub value: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub enum TextInputMessages {
-    InputChange(String),
+    InputChange(String), // This needs to go away in favor of the InputUpdate variant
+    InputUpdate(TextUpdate),
+    InputEscape(TextUpdate),
 }
 
 impl Component for TextInput {
