@@ -6,10 +6,11 @@ align [alignment: "center"]
           hstack
             text " Endpoints"
 
-      container [min_height: 1]
-        for endpoint in window_list
-          hstack [fill: "‧", foreground: endpoint.row_color]
-            text endpoint.name
+      container [min_height: 5]
+        vstack
+          for endpoint in window_list
+            container [fill: ".", width: 80, foreground: endpoint.row_color]
+              text endpoint.name
 
       container [height: 1, background: "red", foreground: #131313]
         expand
