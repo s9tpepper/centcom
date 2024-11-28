@@ -12,7 +12,6 @@ align [alignment: "center"]
         hstack [fill: "‧", foreground: project.row_color]
           text project.name
           spacer
-          text "9"
 
       container [fill: " ", height: 1, background: "red", foreground: #131313]
         expand
