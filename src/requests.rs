@@ -111,8 +111,8 @@ pub fn do_request(
                 ResponseRendererMessages::ResponseUpdate((body.to_string(), ext, None));
             if let Ok(msg) = serde_json::to_string(&response_msg) {
                 if let Ok(component_ids) = dashboard.component_ids.try_borrow() {
-                    let emitter = context.emitter.clone();
-                    let _ = send_message("response_renderer", msg, component_ids, emitter);
+                    let _ =
+                        send_message("response_renderer", msg, &component_ids, &context.emitter);
                 };
             };
         }
@@ -141,8 +141,12 @@ pub fn do_request(
                 ));
                 if let Ok(msg) = serde_json::to_string(&response_msg) {
                     if let Ok(component_ids) = dashboard.component_ids.try_borrow() {
-                        let emitter = context.emitter.clone();
-                        let _ = send_message("response_renderer", msg, component_ids, emitter);
+                        let _ = send_message(
+                            "response_renderer",
+                            msg,
+                            &component_ids,
+                            &context.emitter,
+                        );
                     };
                 };
             }

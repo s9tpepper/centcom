@@ -32,8 +32,8 @@ pub mod textinput;
 pub fn send_message(
     target: &str,
     message: String,
-    component_ids: Ref<'_, HashMap<String, ComponentId<String>>>,
-    emitter: Emitter,
+    component_ids: &Ref<'_, HashMap<String, ComponentId<String>>>,
+    emitter: &Emitter,
 ) -> anyhow::Result<()> {
     if let Some(id) = component_ids.get(target) {
         return Ok(emitter.emit(*id, message)?);

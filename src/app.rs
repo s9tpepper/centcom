@@ -151,22 +151,12 @@ impl App {
 
         component_ids = self.component_ids.clone();
         builder.register_prototype(
-            "request_body_input",
-            TEXTAREA_TEMPLATE,
-            move || TextArea {
-                component_ids: component_ids.clone(),
-                listeners: vec!["dashboard".to_string()],
-            },
-            TextAreaInputState::new,
-        )?;
-
-        component_ids = self.component_ids.clone();
-        builder.register_prototype(
             "response_body_area",
             TEXTAREA_TEMPLATE,
             move || TextArea {
                 component_ids: component_ids.clone(),
                 listeners: vec![],
+                input_for: None,
             },
             TextAreaInputState::new,
         )?;
@@ -178,6 +168,7 @@ impl App {
             move || TextArea {
                 component_ids: component_ids.clone(),
                 listeners: vec![],
+                input_for: None,
             },
             TextAreaInputState::new,
         )?;
@@ -242,6 +233,15 @@ impl App {
     ) -> anyhow::Result<()> {
         self.register_prototypes(builder)?;
 
+        TextArea::register(
+            &self.component_ids,
+            builder,
+            "request_body_input",
+            Some(TEXTAREA_TEMPLATE),
+            Some("endpoint_request_body".to_string()),
+            vec!["dashboard".to_string()],
+        );
+
         EditInput::register(
             &self.component_ids,
             builder,
@@ -301,7 +301,14 @@ impl App {
         EndpointsSelector::register(&self.component_ids, builder)?;
         OptionsView::register(&self.component_ids, builder)?;
         SyntaxThemeSelector::register(&self.component_ids, builder)?;
-        TextArea::register(&self.component_ids, builder, "response_body_area", None)?;
+        TextArea::register(
+            &self.component_ids,
+            builder,
+            "response_body_area",
+            None,
+            None,
+            vec![],
+        )?;
 
         Ok(())
     }

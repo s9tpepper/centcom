@@ -47,8 +47,8 @@ impl DashboardMessageHandler for EditProjectName {
                     let _ = send_message(
                         "edit_project_name",
                         message,
-                        component_ids,
-                        context.emitter.clone(),
+                        &component_ids,
+                        &context.emitter,
                     );
                 };
             }
@@ -89,8 +89,8 @@ impl Component for EditProjectName {
                         let _ = send_message(
                             "edit_project_name_input",
                             "".to_string(),
-                            ids,
-                            context.emitter.clone(),
+                            &ids,
+                            context.emitter,
                         );
                     }
                 }
@@ -102,8 +102,8 @@ impl Component for EditProjectName {
                         let _ = send_message(
                             "edit_project_name_input",
                             input_value,
-                            ids,
-                            context.emitter.clone(),
+                            &ids,
+                            context.emitter,
                         );
                     }
                 }

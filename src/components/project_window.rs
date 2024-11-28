@@ -20,6 +20,7 @@ use crate::{
 use super::{
     dashboard::{DashboardMessageHandler, FloatingWindow},
     send_message,
+    textarea::TextAreaMessages,
 };
 
 pub const PROJECT_WINDOW_TEMPLATE: &str = "./src/components/templates/project_window.aml";
@@ -219,8 +220,19 @@ impl DashboardMessageHandler for ProjectWindow {
 
                         // Update url input in dashboard
                         let url = endpoint.to_ref().url.to_ref().to_string();
-                        let emitter = context.emitter.clone();
-                        let _ = send_message("url_text_input", url, component_ids, emitter);
+                        let _ =
+                            send_message("url_text_input", url, &component_ids, context.emitter);
+
+                        let body = endpoint.to_ref().body.to_ref().to_string();
+                        let textarea_msg = TextAreaMessages::SetInput(body);
+                        if let Ok(message) = serde_json::to_string(&textarea_msg) {
+                            let _ = send_message(
+                                "request_body_input",
+                                message,
+                                &component_ids,
+                                context.emitter,
+                            );
+                        }
                     }
                     Err(_) => todo!(),
                 }

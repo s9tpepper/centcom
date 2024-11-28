@@ -26,6 +26,7 @@ pub const TEXTAREA_TEMPLATE: &str = "./src/components/templates/textarea.aml";
 
 #[derive(Default)]
 pub struct TextArea {
+    pub input_for: Option<String>,
     pub listeners: Vec<String>,
     pub component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>,
 }
@@ -149,13 +150,18 @@ impl anathema::component::Component for TextArea {
     fn message(
         &mut self,
         message: Self::Message,
-        _: &mut Self::State,
+        state: &mut Self::State,
         _: Elements<'_, '_>,
         _: Context<'_, Self::State>,
     ) {
         if let Ok(deserialized_msg) = serde_json::from_str::<TextAreaMessages>(&message) {
+            #[allow(clippy::single_match)]
             match deserialized_msg {
-                TextAreaMessages::InputChange(_) => todo!(),
+                TextAreaMessages::SetInput(value) => {
+                    state.input.set(value);
+                }
+
+                TextAreaMessages::InputChange(_) => {}
             }
         }
     }
@@ -347,6 +353,7 @@ struct CursorData {
 #[derive(Debug, Serialize, Deserialize)]
 pub enum TextAreaMessages {
     InputChange(String),
+    SetInput(String),
 }
 
 impl TextArea {
@@ -355,6 +362,8 @@ impl TextArea {
         builder: &mut RuntimeBuilder<TuiBackend, ()>,
         ident: impl Into<String>,
         template: Option<&str>,
+        input_for: Option<String>,
+        listeners: Vec<String>,
     ) -> anyhow::Result<()> {
         let name: String = ident.into();
         let input_template = template.unwrap_or(TEXTAREA_TEMPLATE);
@@ -364,7 +373,8 @@ impl TextArea {
             input_template,
             TextArea {
                 component_ids: ids.clone(),
-                listeners: vec![],
+                listeners,
+                input_for,
             },
             TextAreaInputState::new(),
         )?;
@@ -382,6 +392,8 @@ impl TextArea {
 
     fn send_to_listeners(&self, code: KeyCode, state: &mut TextAreaInputState, emitter: Emitter) {
         if let KeyCode::Char(_) = code {
+            // TODO: Fix the outgoing message so it is not 100% coupled to only response body
+            // editing, use InputUpdate instead of InputChange, like in edit_input.rs
             if let Ok(ids) = self.component_ids.try_borrow() {
                 let input_value = state.input.to_ref().to_string();
                 let input_change_message =

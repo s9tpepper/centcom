@@ -359,7 +359,7 @@ impl DashboardComponent {
 
             let message = EditProjectNameMessages::InputValue(input_value);
             let _ = serde_json::to_string(&message).map(|msg| {
-                let _ = send_message("edit_project_name", msg, ids, context.emitter.clone());
+                let _ = send_message("edit_project_name", msg, &ids, &context.emitter);
             });
         }
     }
@@ -417,7 +417,7 @@ impl DashboardComponent {
 
             let message = EditEndpointNameMessages::InputValue(input_value);
             let _ = serde_json::to_string(&message).map(|msg| {
-                let _ = send_message("edit_endpoint_name", msg, ids, context.emitter.clone());
+                let _ = send_message("edit_endpoint_name", msg, &ids, &context.emitter);
             });
         }
     }
@@ -465,9 +465,13 @@ impl DashboardComponent {
         if let Ok(message) =
             serde_json::to_string(&ResponseRendererMessages::FilterUpdate(text_filter))
         {
-            let emitter = context.emitter.clone();
             if let Ok(component_ids) = self.component_ids.try_borrow() {
-                let _ = send_message("response_renderer", message, component_ids, emitter);
+                let _ = send_message(
+                    "response_renderer",
+                    message,
+                    &component_ids,
+                    &context.emitter,
+                );
             }
         };
     }
@@ -575,6 +579,9 @@ impl anathema::component::Component for DashboardComponent {
                     TextAreaMessages::InputChange(value) => {
                         state.endpoint.to_mut().body.set(value);
                     }
+
+                    // NOTE: SetInput is only used for sending the TextArea a new value
+                    TextAreaMessages::SetInput(_) => todo!(),
                 },
             }
         }
@@ -714,14 +721,15 @@ impl anathema::component::Component for DashboardComponent {
 
                     // Show projects window
                     'p' => {
-                        state.floating_window.set(FloatingWindow::Project);
                         if let Ok(component_ids) = self.component_ids.try_borrow() {
+                            state.floating_window.set(FloatingWindow::Project);
+
                             if let Some(id) = component_ids.get("project_window") {
                                 context.emit(*id, "load".to_string());
                             }
-                        }
 
-                        context.set_focus("id", "project_window");
+                            context.set_focus("id", "project_window");
+                        }
                     }
 
                     // Show response headers display

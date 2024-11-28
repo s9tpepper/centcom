@@ -39,12 +39,14 @@ Body
 [x] (MVP) Switch projects
 [x] (MVP) Switch endpoints
 [ ] Export to Postman format
+[ ] (MVP) Add Project dialogue
+[ ] (MVP) Add Endpoint dialogue
+[ ] (MVP) Rename Project dialogue
 
 ### Requests
 * [ ] (MVP) Request dependencies/piping results from dependency
 * [ ] (MVP) Project/Request variables, like for tokens so you don't have to copy/paste tokens for every request
-* [ ] (MVP) Code generation (curl, TypeScript/JavaScript, Rust, PHP?, Go?, Python?)
-* [ ] Code generation plugin framework, based on OpenAPI code generation plugins/tools, maybe?
+* [ ] (MVP) Code generation (curl, TypeScript/JavaScript, Rust, PHP?, Go?, Python?) [ ] Code generation plugin framework, based on OpenAPI code generation plugins/tools, maybe?
 [ ] Import/Export OpenAPI?
 
 ### Text Input
