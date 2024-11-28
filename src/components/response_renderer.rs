@@ -407,7 +407,26 @@ impl Component for ResponseRenderer {
     }
 }
 
+fn clear_highlights(state: &mut ResponseRendererState) {
+    let mut lines = state.lines.to_mut();
+
+    lines.iter_mut().for_each(|line| {
+        let mut l = line.to_mut();
+        let mut spans = l.spans.to_mut();
+        spans.iter_mut().for_each(|span| {
+            let mut s = span.to_mut();
+            let og_opt = *s.original_background.to_ref();
+            if let Some(og_bg) = og_opt {
+                s.background.set(og_bg);
+                s.original_background.set(None);
+            };
+        });
+    });
+}
+
 fn highlight_matches(state: &mut ResponseRendererState, matches: &mut [usize], filter: &str) {
+    clear_highlights(state);
+
     let response = state.response.to_ref();
     let response_lines = response.lines().collect::<Vec<&str>>();
     let mut lines = state.lines.to_mut();
@@ -419,16 +438,6 @@ fn highlight_matches(state: &mut ResponseRendererState, matches: &mut [usize], f
             if let Some(ref mut display_line_value) = matched_display_line {
                 let mut display_line = (*display_line_value).to_mut();
                 let mut spans = display_line.spans.to_mut();
-
-                // Reset backgrounds before applying new highlights
-                spans.iter_mut().for_each(|span| {
-                    let og_bg = *span.to_ref().original_background.to_ref();
-                    if let Some(bg) = og_bg {
-                        let mut s = span.to_mut();
-                        s.original_background.set(None);
-                        s.background.set(bg);
-                    }
-                });
 
                 matching_line.match_indices(filter).for_each(|(index, _)| {
                     let last_ndx = index + filter.len();
