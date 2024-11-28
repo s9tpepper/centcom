@@ -240,11 +240,15 @@ impl DashboardComponent {
         // state.floating_window.set(FloatingWindow::None);
     }
 
-    fn save_project(&self, state: &mut DashboardState) {
+    fn save_project(&self, state: &mut DashboardState, show_message: bool) {
         let project: PersistedProject = state.project.to_ref().deref().into();
 
         match save_project(project) {
-            Ok(_) => self.show_message("Project Save", "Saved project successfully", state),
+            Ok(_) => {
+                if show_message {
+                    self.show_message("Project Save", "Saved project successfully", state)
+                }
+            }
             Err(error) => self.show_error(&error.to_string(), state),
         }
     }
@@ -265,6 +269,15 @@ impl DashboardComponent {
         };
 
         context.emit(*app_id, msg);
+    }
+
+    fn new_project(&self, state: &mut DashboardState, context: Context<'_, DashboardState>) {
+        self.save_project(state, false);
+
+        state.project = Project::new().into();
+        state.endpoint = Endpoint::new().into();
+
+        self.clear_url_and_request_body(&context);
     }
 
     fn new_endpoint(&self, state: &mut DashboardState, context: Context<'_, DashboardState>) {
@@ -696,13 +709,14 @@ impl anathema::component::Component for DashboardComponent {
                 let main_display = *state.main_display.to_ref();
 
                 match char {
-                    's' => self.save_project(state),
+                    's' => self.save_project(state, true),
                     'n' => self.open_edit_endpoint_name_window(state, context),
                     'j' => self.open_edit_project_name_window(state, context),
                     'i' => self.save_endpoint(state, &context, true),
                     'f' => context.set_focus("id", "response_body_input"),
                     'o' => self.send_options_open(state, context),
                     't' => self.new_endpoint(state, context),
+                    'w' => self.new_project(state, context),
 
                     'v' => match main_display {
                         DashboardDisplay::RequestBody => {}
