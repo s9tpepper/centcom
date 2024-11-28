@@ -4,6 +4,8 @@ zstack
       expand
         hstack
           text " Pro(j)ect: " project.name " | Endpoint (N)ame: " endpoint.name
+          spacer
+          text "[New Project] [New Endpoin(t)] "
     hstack
       @row [border_color: "#666666", top_label: "(M)ethod", expanding: false, minwidth: 13]
         $children

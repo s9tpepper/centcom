@@ -40,7 +40,7 @@ Body
 [x] (MVP) Switch endpoints
 [ ] Export to Postman format
 [ ] (MVP) Add Project dialogue
-[ ] (MVP) Add Endpoint dialogue
+[x] (MVP) Add Endpoint dialogue
 [ ] (MVP) Rename Project dialogue
 
 ### Requests

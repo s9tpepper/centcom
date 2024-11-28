@@ -172,10 +172,7 @@ impl DashboardState {
                     label: "Save Endpo(i)nt".to_string().into(),
                 },
                 MenuItem {
-                    label: "New Project".to_string().into(),
-                },
-                MenuItem {
-                    label: "New Endpoint".to_string().into(),
+                    label: "Change (E)ndpoint".to_string().into(),
                 },
                 MenuItem {
                     label: "(O)ptions".to_string().into(),
@@ -270,7 +267,37 @@ impl DashboardComponent {
         context.emit(*app_id, msg);
     }
 
-    fn save_endpoint(&self, state: &mut DashboardState, _: Context<'_, DashboardState>) {
+    fn new_endpoint(&self, state: &mut DashboardState, context: Context<'_, DashboardState>) {
+        self.save_endpoint(state, &context, false);
+
+        state.endpoint = Endpoint::new().into();
+        self.clear_url_and_request_body(&context);
+    }
+
+    fn clear_url_and_request_body(&self, context: &Context<'_, DashboardState>) {
+        if let Ok(component_ids) = self.component_ids.try_borrow() {
+            let url = String::from("");
+            let _ = send_message("url_text_input", url, &component_ids, context.emitter);
+
+            let body = String::from("");
+            let textarea_msg = TextAreaMessages::SetInput(body);
+            if let Ok(message) = serde_json::to_string(&textarea_msg) {
+                let _ = send_message(
+                    "request_body_input",
+                    message,
+                    &component_ids,
+                    context.emitter,
+                );
+            }
+        };
+    }
+
+    fn save_endpoint(
+        &self,
+        state: &mut DashboardState,
+        _: &Context<'_, DashboardState>,
+        show_message: bool,
+    ) {
         let project_name = state.project.to_ref().name.to_ref().to_string();
         let endpoint_name = state.endpoint.to_ref().name.to_ref().to_string();
 
@@ -301,7 +328,10 @@ impl DashboardComponent {
 
         match save_project(project.clone()) {
             Ok(_) => {
-                self.show_message("Endoint Save", "Saved endpoint successfully", state);
+                if show_message {
+                    self.show_message("Endpoint Save", "Saved endpoint successfully", state);
+                }
+
                 state.project.set((&project).into());
             }
             Err(error) => self.show_error(&error.to_string(), state),
@@ -669,9 +699,10 @@ impl anathema::component::Component for DashboardComponent {
                     's' => self.save_project(state),
                     'n' => self.open_edit_endpoint_name_window(state, context),
                     'j' => self.open_edit_project_name_window(state, context),
-                    'i' => self.save_endpoint(state, context),
+                    'i' => self.save_endpoint(state, &context, true),
                     'f' => context.set_focus("id", "response_body_input"),
                     'o' => self.send_options_open(state, context),
+                    't' => self.new_endpoint(state, context),
 
                     'v' => match main_display {
                         DashboardDisplay::RequestBody => {}
