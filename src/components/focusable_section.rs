@@ -66,7 +66,7 @@ impl Component for FocusableSection {
             "input_focus" => {
                 let focus = value.to_bool();
                 match focus {
-                    true => state.active_border_color.set("#ffffff".to_string()),
+                    true => state.active_border_color.set("#ffff00".to_string()),
                     false => state.active_border_color.set("#666666".to_string()),
                 }
             }

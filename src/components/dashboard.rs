@@ -13,6 +13,7 @@ use std::{
     collections::HashMap,
     rc::Rc,
 };
+use syntect::highlighting::Theme;
 
 use arboard::Clipboard;
 use serde::{Deserialize, Serialize};
@@ -37,6 +38,7 @@ use super::{
     project_window::ProjectWindow,
     response_renderer::TextFilter,
     send_message,
+    syntax_highlighter::get_theme,
     textarea::TextAreaMessages,
     textinput::TextInputMessages,
 };
@@ -140,6 +142,8 @@ pub struct DashboardState {
     pub filter_indexes: Value<List<usize>>,
     pub filter_total: Value<usize>,
     pub filter_nav_index: Value<usize>,
+
+    pub app_bg: Value<String>,
 }
 
 impl DashboardState {
@@ -186,12 +190,14 @@ impl DashboardState {
             filter_indexes: List::empty(),
             filter_total: 0.into(),
             filter_nav_index: 0.into(),
+            app_bg: "#000000".to_string().into(),
         }
     }
 }
 
 pub struct DashboardComponent {
     pub component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>,
+    theme: Theme,
 }
 
 impl DashboardComponent {
@@ -199,13 +205,22 @@ impl DashboardComponent {
         ids: &Rc<RefCell<HashMap<String, ComponentId<String>>>>,
         builder: &mut RuntimeBuilder<TuiBackend, ()>,
     ) -> anyhow::Result<()> {
+        let theme = get_theme(None);
+
+        let mut state = DashboardState::new();
+        let color = theme.settings.background.unwrap();
+        state
+            .app_bg
+            .set(format!("#{:02X}{:02X}{:02X}", color.r, color.g, color.b));
+
         let id = builder.register_component(
             "dashboard",
             DASHBOARD_TEMPLATE,
             DashboardComponent {
                 component_ids: ids.clone(),
+                theme,
             },
-            DashboardState::new(),
+            state,
         )?;
 
         let ids_ref = ids.clone();

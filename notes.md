@@ -22,6 +22,8 @@
 [x] Clear project/endpoint name dialog inputs if the name is still default
 [x] (MVP) Options screen to choose themes, background for responses/request bodies, etc
 [ ] (MVP) Flesh out the options for the app
+[ ] Open In for URL/response
+[ ] (MVP) Fix Ctrl C in request body
 
 ### Response
 Body
@@ -34,6 +36,7 @@ Body
 [x] (MVP) Update code sample and make window resize dynamically based on available space
 [x] (MVP) Fix the entire response area background to be the intended bg color of the chosen theme
 * [ ] (MVP) Virtualized Response body view
+[ ] Prettier/formatter type of integration to make responses read easier
 
 ### Projects
 [x] (MVP) Switch projects

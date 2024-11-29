@@ -75,7 +75,7 @@ impl Component for AppSection {
                 true => elements
                     .by_attribute("id", CommonVal::Str(section_id))
                     .each(|_element, attributes| {
-                        attributes.set("foreground", "#ffffff");
+                        attributes.set("foreground", "#ffff00");
                     }),
                 false => elements
                     .by_attribute("id", CommonVal::Str(section_id))

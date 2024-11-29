@@ -1,15 +1,16 @@
-zstack
+zstack [background: app_bg]
   vstack
     container [height: 1, background: "green", foreground: #131313]
       expand
         hstack
           text " Pro(j)ect: " project.name " | Endpoint (N)ame: " endpoint.name
           spacer
+          text app_bg
           text "[Ne(w) Project] [New Endpoin(t)] "
     hstack
-      @row [border_color: "#666666", top_label: "(M)ethod", expanding: false, minwidth: 13]
+      @row [border_color: "blue", top_label: "(M)ethod", expanding: false, minwidth: 13]
         $children
-          text [foreground: #666666, text_align: "right"] endpoint.method
+          text [foreground: "#ffffff", bold: true, text_align: "right"] endpoint.method
       expand [axis: "horizontal"]
         @url_input [id: "url", border_color: "#666666", target: "url_input"]
 

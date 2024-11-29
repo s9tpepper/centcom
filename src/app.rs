@@ -240,7 +240,7 @@ impl App {
             Some(TEXTAREA_TEMPLATE),
             Some("endpoint_request_body".to_string()),
             vec!["dashboard".to_string()],
-        );
+        )?;
 
         EditInput::register(
             &self.component_ids,
