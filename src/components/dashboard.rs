@@ -5,14 +5,13 @@ use anathema::{
     state::{CommonVal, List, State, Value},
     widgets::Elements,
 };
-use std::fs;
-use std::ops::Deref;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use std::{
     cell::{Ref, RefCell},
     collections::HashMap,
     rc::Rc,
 };
+use std::{fs, ops::Deref};
 use syntect::highlighting::Theme;
 
 use arboard::Clipboard;
@@ -751,7 +750,11 @@ impl anathema::component::Component for DashboardComponent {
                     'q' => quit::with_code(0),
 
                     // Make the request
-                    'r' => do_request(state, context, elements, self),
+                    'r' => {
+                        // TODO: Handle the error for making a request and let the user know if
+                        // there was an error
+                        let _ = do_request(state, context, elements, self);
+                    }
 
                     // Show request body editor window
                     'b' => match main_display {

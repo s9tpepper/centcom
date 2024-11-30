@@ -1,5 +1,14 @@
-overflow [id: "container", background: response_background]
-  for line in lines
-    text [background: response_background]
-      for span in line.spans
-        span [foreground: span.foreground, background: span.background, bold: span.bold] span.text
+@app_section [
+  border_color: "#ffffff",
+  top_label: response_body_window_label,
+  bottom_label: ["(B)ack to Request", "Show Response (H)eaders", "Cop(y) Response", "Sa(v)e Response"],
+  show_top_label: true,
+  show_bottom_label: true,
+  section_id: "response_border"
+]
+  $children
+    overflow [id: "container", background: response_background]
+      for line in lines
+        text [background: response_background]
+          for span in line.spans
+            span [foreground: span.foreground, background: span.background, bold: span.bold] span.text

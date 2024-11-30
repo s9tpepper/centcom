@@ -23,15 +23,7 @@ zstack [background: app_bg]
         if main_display == "response_body"
           expand
             zstack
-              @app_section [
-                border_color: "#ffffff",
-                top_label: response_body_window_label,
-                bottom_label: ["(B)ack to Request", "Show Response (H)eaders", "Cop(y) Response", "Sa(v)e Response"],
-                show_top_label: true,
-                show_bottom_label: true
-              ]
-                $children
-                  @response_renderer [id: "response_renderer"]
+              @response_renderer [id: "response_renderer"]
 
               hstack
                 spacer

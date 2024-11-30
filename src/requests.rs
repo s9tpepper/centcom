@@ -1,3 +1,9 @@
+use std::{
+    fs::{File, OpenOptions},
+    io::{BufRead, BufReader, Lines, Write},
+    path::PathBuf,
+};
+
 use crate::{
     components::{
         dashboard::{DashboardComponent, DashboardDisplay, DashboardState, FloatingWindow},
@@ -12,7 +18,7 @@ pub fn do_request(
     mut context: anathema::prelude::Context<'_, DashboardState>,
     _: anathema::widgets::Elements<'_, '_>,
     dashboard: &mut DashboardComponent,
-) {
+) -> anyhow::Result<()> {
     let endpoint = state.endpoint.to_ref();
     let url = endpoint.url.to_ref().clone();
     let method = endpoint.method.to_ref().clone();
@@ -41,7 +47,7 @@ pub fn do_request(
         let error = http_request_result.unwrap_err();
         state.error_message.set(error.to_string());
         state.floating_window.set(FloatingWindow::Error);
-        return;
+        return Ok(());
     }
 
     let http_request = http_request_result.unwrap();
@@ -92,27 +98,39 @@ pub fn do_request(
                 });
             }
 
-            let body = response.into_string();
-            if body.is_err() {
-                println!("Cant read body: {body:?}");
-            }
+            let mut response_path = PathBuf::from("/tmp");
+            response_path.push("centcom_response.txt");
 
-            let body = body.unwrap_or("Could not read response body".to_string());
+            let mut response_reader = response.into_reader();
+            let mut buf: Vec<u8> = vec![];
+            response_reader.read_to_end(&mut buf)?;
+
+            let mut file_path = PathBuf::from("/tmp");
+            file_path.push("centcom_response.txt");
+
+            let mut file = OpenOptions::new()
+                .create(true)
+                .truncate(true)
+                .write(true)
+                .open(file_path)?;
+
+            let write_result = file.write_all(buf.as_slice());
+            // TODO: Fix the error handling to message the user
+            if write_result.is_err() {
+                return Ok(());
+            }
 
             let window_label = format!("Response Body (Status Code: {status})");
 
-            state.response.set(body.to_string());
             state.response_body_window_label.set(window_label);
             state.main_display.set(DashboardDisplay::ResponseBody);
 
             context.set_focus("id", "response_renderer");
 
-            let response_msg =
-                ResponseRendererMessages::ResponseUpdate((body.to_string(), ext, None));
+            let response_msg = ResponseRendererMessages::ResponseUpdate(ext);
             if let Ok(msg) = serde_json::to_string(&response_msg) {
                 if let Ok(component_ids) = dashboard.component_ids.try_borrow() {
-                    let _ =
-                        send_message("response_renderer", msg, &component_ids, &context.emitter);
+                    let _ = send_message("response_renderer", msg, &component_ids, context.emitter);
                 };
             };
         }
@@ -134,19 +152,15 @@ pub fn do_request(
 
                 // TODO: Once the response headers are being extracted, figure out the correct
                 // extension type to use to syntax highlight the response
-                let response_msg = ResponseRendererMessages::ResponseUpdate((
+                let response_msg = ResponseRendererMessages::SyntaxPreview((
                     body.to_string(),
                     "txt".to_string(),
                     None,
                 ));
                 if let Ok(msg) = serde_json::to_string(&response_msg) {
                     if let Ok(component_ids) = dashboard.component_ids.try_borrow() {
-                        let _ = send_message(
-                            "response_renderer",
-                            msg,
-                            &component_ids,
-                            &context.emitter,
-                        );
+                        let _ =
+                            send_message("response_renderer", msg, &component_ids, context.emitter);
                     };
                 };
             }
@@ -157,5 +171,7 @@ pub fn do_request(
                 state.floating_window.set(FloatingWindow::Error);
             }
         },
-    }
+    };
+
+    Ok(())
 }

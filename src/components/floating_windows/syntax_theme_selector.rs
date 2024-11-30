@@ -232,7 +232,7 @@ impl SyntaxThemeSelector {
 
         let code = String::from(CODE_SAMPLE);
         let ext = String::from("rs");
-        if let Ok(msg) = serde_json::to_string(&ResponseRendererMessages::ResponseUpdate((
+        if let Ok(msg) = serde_json::to_string(&ResponseRendererMessages::SyntaxPreview((
             code,
             ext,
             Some(theme_name.to_string()),

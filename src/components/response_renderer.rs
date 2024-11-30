@@ -1,16 +1,26 @@
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::{
+    borrow::BorrowMut,
+    cell::RefCell,
+    collections::HashMap,
+    fs::File,
+    io::{BufRead, BufReader, Read},
+    ops::{Deref, DerefMut},
+    rc::Rc,
+};
 
 use anathema::{
     component::{Component, ComponentId},
-    default_widgets::Overflow,
+    default_widgets::{Border, Overflow},
     geometry::{Pos, Size},
     prelude::{Context, TuiBackend},
     runtime::RuntimeBuilder,
     state::{Hex, List, State, Value},
-    widgets::Elements,
+    widgets::{AnyWidget, Element, Elements},
 };
 use serde::{Deserialize, Serialize};
 use syntect::highlighting::Theme;
+
+use crate::options::get_syntax_theme;
 
 use super::syntax_highlighter::{highlight, Instruction, Parser};
 
@@ -21,15 +31,22 @@ enum ScrollDirection {
     Down,
 }
 
-pub struct ResponseRenderer {
+pub struct ResponseRenderer<'app> {
     #[allow(unused)]
     component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>,
-    cursor: Pos,
+    syntax_highlighter_cursor: Pos,
     foreground: Hex,
     background: Hex,
     instructions: Vec<Instruction>,
     text_filter: TextFilter,
     theme: Option<Theme>,
+
+    overflow: Option<&'app mut Overflow>,
+    size: Option<Size>,
+    response_reader: Option<BufReader<File>>,
+    response_offset: usize,
+    total_lines: usize,
+    viewport_height: usize,
 }
 
 fn scroll(
@@ -59,7 +76,7 @@ fn scroll(
         });
 }
 
-impl ResponseRenderer {
+impl ResponseRenderer<'_> {
     pub fn register(
         ids: &Rc<RefCell<HashMap<String, ComponentId<String>>>>,
         builder: &mut RuntimeBuilder<TuiBackend, ()>,
@@ -86,7 +103,7 @@ impl ResponseRenderer {
     pub fn new(component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>) -> Self {
         ResponseRenderer {
             component_ids,
-            cursor: Pos::ZERO,
+            syntax_highlighter_cursor: Pos::ZERO,
             foreground: Hex::from((255, 255, 255)),
             background: Hex::BLACK,
             instructions: vec![],
@@ -94,31 +111,42 @@ impl ResponseRenderer {
                 ..Default::default()
             },
             theme: None,
+            response_reader: None,
+            response_offset: 0,
+            total_lines: 0,
+            viewport_height: 0,
+            overflow: None,
+            size: None,
         }
     }
 
-    fn update_cursor(
-        &mut self,
-        state: &mut ResponseRendererState,
-        overflow: &mut Overflow,
-        size: Size,
-    ) {
+    // TODO: Fix update_cursor/update_cursor2 so I only need 2
+    fn update_cursor2(&mut self, state: &mut ResponseRendererState) {
+        if self.overflow.is_none() || self.size.is_none() {
+            return;
+        }
+
+        let overflow: &mut Overflow = self.overflow.as_mut().unwrap();
+        let size: Size = self.size.unwrap();
+
         // Make sure there are enough lines and spans
-        while self.cursor.y as usize >= state.lines.len() {
+        while self.syntax_highlighter_cursor.y as usize >= state.lines.len() {
             state.lines.push_back(Line::empty());
         }
 
         {
             let mut lines = state.lines.to_mut();
-            let line = lines.get_mut(self.cursor.y as usize).unwrap();
+            let line = lines
+                .get_mut(self.syntax_highlighter_cursor.y as usize)
+                .unwrap();
 
             let spans = &mut line.to_mut().spans;
-            while self.cursor.x as usize > spans.len() {
+            while self.syntax_highlighter_cursor.x as usize > spans.len() {
                 spans.push_back(Span::empty());
             }
         }
 
-        let mut screen_cursor = self.cursor - overflow.offset();
+        let mut screen_cursor = self.syntax_highlighter_cursor - overflow.offset();
 
         if screen_cursor.y < 0 {
             overflow.scroll_up_by(-screen_cursor.y);
@@ -133,8 +161,104 @@ impl ResponseRenderer {
 
         state.screen_cursor_x.set(screen_cursor.x);
         state.screen_cursor_y.set(screen_cursor.y);
-        state.buf_cursor_x.set(self.cursor.x);
-        state.buf_cursor_y.set(self.cursor.y);
+        state.buf_cursor_x.set(self.syntax_highlighter_cursor.x);
+        state.buf_cursor_y.set(self.syntax_highlighter_cursor.y);
+    }
+
+    fn update_cursor(
+        &mut self,
+        state: &mut ResponseRendererState,
+        overflow: &mut Overflow,
+        size: Size,
+    ) {
+        // Make sure there are enough lines and spans
+        while self.syntax_highlighter_cursor.y as usize >= state.lines.len() {
+            state.lines.push_back(Line::empty());
+        }
+
+        {
+            let mut lines = state.lines.to_mut();
+            let line = lines
+                .get_mut(self.syntax_highlighter_cursor.y as usize)
+                .unwrap();
+
+            let spans = &mut line.to_mut().spans;
+            while self.syntax_highlighter_cursor.x as usize > spans.len() {
+                spans.push_back(Span::empty());
+            }
+        }
+
+        let mut screen_cursor = self.syntax_highlighter_cursor - overflow.offset();
+
+        if screen_cursor.y < 0 {
+            overflow.scroll_up_by(-screen_cursor.y);
+            screen_cursor.y = 0;
+        }
+
+        if screen_cursor.y >= size.height as i32 {
+            let offset = screen_cursor.y + 1 - size.height as i32;
+            overflow.scroll_down_by(offset);
+            screen_cursor.y = size.height as i32 - 1;
+        }
+
+        state.screen_cursor_x.set(screen_cursor.x);
+        state.screen_cursor_y.set(screen_cursor.y);
+        state.buf_cursor_x.set(self.syntax_highlighter_cursor.x);
+        state.buf_cursor_y.set(self.syntax_highlighter_cursor.y);
+    }
+
+    // TODO: Fix apply_inst2/apply_inst so I only need apply_inst2
+    pub fn apply_inst2(&mut self, inst: &Instruction, state: &mut ResponseRendererState) {
+        state.current_instruction.set(Some(format!("{inst:?}")));
+
+        if self.overflow.is_none() || self.size.is_none() {
+            return;
+        }
+
+        match inst {
+            Instruction::MoveCursor(x, y) => {
+                self.syntax_highlighter_cursor.x = *x as i32;
+                self.syntax_highlighter_cursor.y = *y as i32;
+                self.update_cursor2(state);
+            }
+            Instruction::Type(c, bold) => {
+                {
+                    let mut lines = state.lines.to_mut();
+                    let line = lines.get_mut(self.syntax_highlighter_cursor.y as usize);
+
+                    if line.is_none() {
+                        return;
+                    }
+
+                    let line = line.unwrap();
+                    let mut line = line.to_mut();
+                    // let spans = line.spans.len();
+                    line.spans.insert(
+                        self.syntax_highlighter_cursor.x as usize,
+                        Span::new(*c, self.foreground, self.background, *bold),
+                    );
+                    self.syntax_highlighter_cursor.x += 1;
+                }
+
+                self.update_cursor2(state);
+            }
+            Instruction::SetForeground(hex) => self.foreground = *hex,
+            Instruction::SetBackground(hex) => self.background = *hex,
+            Instruction::Newline { x } => {
+                self.syntax_highlighter_cursor.x = *x;
+                self.syntax_highlighter_cursor.y += 1;
+                self.update_cursor2(state);
+            }
+            Instruction::SetX(x) => {
+                self.syntax_highlighter_cursor.x = *x;
+                self.update_cursor2(state);
+            }
+            Instruction::Pause(_) => unreachable!(),
+            Instruction::Wait => state.waiting.set(true.to_string()),
+            Instruction::HideCursor => {
+                state.show_cursor.set(false);
+            }
+        }
     }
 
     pub fn apply_inst(
@@ -150,14 +274,14 @@ impl ResponseRenderer {
 
             match inst {
                 Instruction::MoveCursor(x, y) => {
-                    self.cursor.x = *x as i32;
-                    self.cursor.y = *y as i32;
+                    self.syntax_highlighter_cursor.x = *x as i32;
+                    self.syntax_highlighter_cursor.y = *y as i32;
                     self.update_cursor(state, vp, size);
                 }
                 Instruction::Type(c, bold) => {
                     {
                         let mut lines = state.lines.to_mut();
-                        let line = lines.get_mut(self.cursor.y as usize);
+                        let line = lines.get_mut(self.syntax_highlighter_cursor.y as usize);
 
                         if line.is_none() {
                             return;
@@ -167,10 +291,10 @@ impl ResponseRenderer {
                         let mut line = line.to_mut();
                         // let spans = line.spans.len();
                         line.spans.insert(
-                            self.cursor.x as usize,
+                            self.syntax_highlighter_cursor.x as usize,
                             Span::new(*c, self.foreground, self.background, *bold),
                         );
-                        self.cursor.x += 1;
+                        self.syntax_highlighter_cursor.x += 1;
                     }
 
                     self.update_cursor(state, vp, size);
@@ -178,12 +302,12 @@ impl ResponseRenderer {
                 Instruction::SetForeground(hex) => self.foreground = *hex,
                 Instruction::SetBackground(hex) => self.background = *hex,
                 Instruction::Newline { x } => {
-                    self.cursor.x = *x;
-                    self.cursor.y += 1;
+                    self.syntax_highlighter_cursor.x = *x;
+                    self.syntax_highlighter_cursor.y += 1;
                     self.update_cursor(state, vp, size);
                 }
                 Instruction::SetX(x) => {
-                    self.cursor.x = *x;
+                    self.syntax_highlighter_cursor.x = *x;
                     self.update_cursor(state, vp, size);
                 }
                 Instruction::Pause(_) => unreachable!(),
@@ -193,6 +317,101 @@ impl ResponseRenderer {
                 }
             }
         });
+    }
+
+    // NOTE: Renders initial response when its new
+    // TODO: Make this work for scrolling the response
+    fn render_response(
+        &mut self,
+        extension: &str,
+        _context: anathema::prelude::Context<'_, ResponseRendererState>,
+        _elements: &mut Elements<'_, '_>,
+        state: &mut ResponseRendererState,
+    ) {
+        if self.response_reader.is_none() {
+            return;
+        }
+
+        if self.overflow.is_none() || self.size.is_none() {
+            return;
+        }
+
+        let size = self.size.unwrap();
+        let response_reader = self.response_reader.as_mut().unwrap();
+        self.response_offset = 0;
+        self.viewport_height = size.height;
+
+        let mut buf: Vec<u8> = vec![];
+        match response_reader.read_to_end(&mut buf) {
+            Ok(_) => {
+                let response = String::from_utf8(buf).unwrap_or(String::from("oops"));
+                let mut lines = response.lines();
+
+                let size = self.size.unwrap();
+
+                let mut viewable_lines: Vec<String> = vec![];
+                for _ in self.response_offset..self.viewport_height {
+                    #[allow(clippy::single_match)]
+                    match lines.next() {
+                        Some(line) => {
+                            if line.len() > size.width {
+                                let (new_line, _) = line.split_at(size.width.saturating_sub(5));
+
+                                let t = format!("{new_line}...");
+
+                                viewable_lines.push(t.to_string());
+                            } else {
+                                viewable_lines.push(line.to_string());
+                            }
+                        }
+
+                        None => {}
+                    }
+                }
+
+                let theme = get_syntax_theme();
+                let viewable_response = viewable_lines.join("\n");
+
+                self.set_response(state, &viewable_response, extension, Some(theme));
+            }
+            Err(_) => todo!(),
+        }
+    }
+
+    // NOTE: This one is now the one setting the response in the response text area with the syntax
+    // highlighting
+    fn set_response(
+        &mut self,
+        state: &mut ResponseRendererState,
+        response: &str,
+        extension: &str,
+        theme: Option<String>,
+    ) {
+        loop {
+            if state.lines.len() == 0 {
+                break;
+            }
+
+            state.lines.remove(0);
+        }
+
+        let (highlighted_lines, parsed_theme) = highlight(response, extension, theme);
+
+        self.theme = Some(parsed_theme.clone());
+
+        if let Some(color) = parsed_theme.settings.background {
+            let hex_color = format!("#{:02X}{:02X}{:02X}", color.r, color.g, color.b);
+            state.response_background.set(hex_color);
+        }
+
+        self.instructions = Parser::new(highlighted_lines).instructions();
+
+        for instruction in self.instructions.clone() {
+            self.apply_inst2(&instruction, state);
+        }
+
+        let the_response = response.to_string();
+        state.response.set(the_response);
     }
 }
 
@@ -277,12 +496,51 @@ impl ResponseRendererState {
     }
 }
 
-impl Component for ResponseRenderer {
+impl Component for ResponseRenderer<'_> {
     type State = ResponseRendererState;
     type Message = String;
 
     fn accept_focus(&self) -> bool {
         true
+    }
+
+    // TODO: Stop using tick() for this, this needs to happen only one time, so dont do it on
+    // tick()
+    fn tick(
+        &mut self,
+        _: &mut Self::State,
+        mut elements: Elements<'_, '_>,
+        context: Context<'_, Self::State>,
+        _: std::time::Duration,
+    ) {
+        if self.overflow.is_none() {
+            elements
+                .by_attribute("id", "container")
+                .first(|element: &mut Element<'_>, _| {
+                    let overflow = element.to::<Overflow>();
+
+                    // TODO: Try to get this removed by using the elements directly in the
+                    // rendering functions to query for the Overflow
+                    unsafe {
+                        self.overflow = Some(std::mem::transmute::<
+                            &mut anathema::default_widgets::Overflow,
+                            &mut anathema::default_widgets::Overflow,
+                        >(overflow));
+                    }
+                });
+
+            let size = context.viewport.size();
+
+            let app_titles = 2; // top/bottom menus of dashboard
+            let url_method_inputs = 3; // height of url and method inputs with borders
+            let response_borders = 2; // borders around response input
+            let total_height_offset = app_titles + url_method_inputs + response_borders;
+
+            self.size = Some(Size {
+                width: size.width,
+                height: size.height - total_height_offset,
+            });
+        }
     }
 
     fn on_key(
@@ -360,7 +618,20 @@ impl Component for ResponseRenderer {
         #[allow(clippy::single_match)]
         match response_renderer_message {
             Ok(message) => match message {
-                ResponseRendererMessages::ResponseUpdate((response, extension, theme)) => {
+                ResponseRendererMessages::ResponseUpdate(extension) => {
+                    // TODO: Try to delete this file if the program closes/quits/crashes
+                    let reader_result = get_file_reader("/tmp/centcom_response.txt");
+                    if reader_result.is_err() {
+                        println!("Error getting reader for response...");
+                        return;
+                    }
+
+                    let response_reader = reader_result.unwrap();
+                    self.response_reader = Some(response_reader);
+                    self.render_response(&extension, context, &mut elements, state);
+                }
+
+                ResponseRendererMessages::SyntaxPreview((response, extension, theme)) => {
                     loop {
                         if state.lines.len() == 0 {
                             break;
@@ -481,9 +752,15 @@ fn scroll_to_line(
         });
 }
 
+fn get_file_reader(file_path: &str) -> anyhow::Result<BufReader<File>> {
+    let file = File::open(file_path)?;
+    Ok(BufReader::new(file))
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub enum ResponseRendererMessages {
-    ResponseUpdate((String, String, Option<String>)),
+    ResponseUpdate(String),
+    SyntaxPreview((String, String, Option<String>)),
     FilterUpdate(TextFilter),
 }
 
