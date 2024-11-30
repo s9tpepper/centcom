@@ -425,6 +425,20 @@ impl ResponseRenderer {
         let the_response = response.to_string();
         state.response.set(the_response);
     }
+
+    fn update_size(&mut self, context: Context<'_, ResponseRendererState>) {
+        let size = context.viewport.size();
+
+        let app_titles = 2; // top/bottom menus of dashboard
+        let url_method_inputs = 3; // height of url and method inputs with borders
+        let response_borders = 2; // borders around response input
+        let total_height_offset = app_titles + url_method_inputs + response_borders;
+
+        self.size = Some(Size {
+            width: size.width,
+            height: size.height - total_height_offset,
+        });
+    }
 }
 
 #[derive(State)]
@@ -516,26 +530,22 @@ impl Component for ResponseRenderer {
         true
     }
 
-    // TODO: Stop using tick() for this, this needs to happen only one time, so dont do it on
-    // tick()
-    fn tick(
+    fn on_focus(
         &mut self,
         _: &mut Self::State,
         _: Elements<'_, '_>,
         context: Context<'_, Self::State>,
-        _: std::time::Duration,
     ) {
-        let size = context.viewport.size();
+        self.update_size(context);
+    }
 
-        let app_titles = 2; // top/bottom menus of dashboard
-        let url_method_inputs = 3; // height of url and method inputs with borders
-        let response_borders = 2; // borders around response input
-        let total_height_offset = app_titles + url_method_inputs + response_borders;
-
-        self.size = Some(Size {
-            width: size.width,
-            height: size.height - total_height_offset,
-        });
+    fn resize(
+        &mut self,
+        _: &mut Self::State,
+        _: Elements<'_, '_>,
+        context: Context<'_, Self::State>,
+    ) {
+        self.update_size(context);
     }
 
     fn on_key(
