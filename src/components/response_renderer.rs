@@ -1,21 +1,19 @@
 use std::{
-    borrow::BorrowMut,
     cell::RefCell,
     collections::HashMap,
     fs::File,
-    io::{BufRead, BufReader, Read},
-    ops::{Deref, DerefMut},
+    io::{BufReader, Read},
     rc::Rc,
 };
 
 use anathema::{
     component::{Component, ComponentId},
-    default_widgets::{Border, Overflow},
+    default_widgets::Overflow,
     geometry::{Pos, Size},
     prelude::{Context, TuiBackend},
     runtime::RuntimeBuilder,
     state::{Hex, List, State, Value},
-    widgets::{AnyWidget, Element, Elements},
+    widgets::Elements,
 };
 use serde::{Deserialize, Serialize};
 use syntect::highlighting::Theme;
@@ -31,7 +29,7 @@ enum ScrollDirection {
     Down,
 }
 
-pub struct ResponseRenderer<'app> {
+pub struct ResponseRenderer {
     #[allow(unused)]
     component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>,
     syntax_highlighter_cursor: Pos,
@@ -41,7 +39,7 @@ pub struct ResponseRenderer<'app> {
     text_filter: TextFilter,
     theme: Option<Theme>,
 
-    overflow: Option<&'app mut Overflow>,
+    // overflow: Option<&'app mut Overflow>,
     size: Option<Size>,
     response_reader: Option<BufReader<File>>,
     response_offset: usize,
@@ -76,7 +74,7 @@ fn scroll(
         });
 }
 
-impl ResponseRenderer<'_> {
+impl ResponseRenderer {
     pub fn register(
         ids: &Rc<RefCell<HashMap<String, ComponentId<String>>>>,
         builder: &mut RuntimeBuilder<TuiBackend, ()>,
@@ -115,54 +113,62 @@ impl ResponseRenderer<'_> {
             response_offset: 0,
             total_lines: 0,
             viewport_height: 0,
-            overflow: None,
             size: None,
         }
     }
 
     // TODO: Fix update_cursor/update_cursor2 so I only need 2
-    fn update_cursor2(&mut self, state: &mut ResponseRendererState) {
-        if self.overflow.is_none() || self.size.is_none() {
+    fn update_cursor2(
+        &mut self,
+        state: &mut ResponseRendererState,
+        elements: &mut Elements<'_, '_>,
+    ) {
+        if self.size.is_none() {
             return;
         }
 
-        let overflow: &mut Overflow = self.overflow.as_mut().unwrap();
-        let size: Size = self.size.unwrap();
+        elements
+            .by_attribute("id", "container")
+            .first(|element, _| {
+                let overflow = element.to::<Overflow>();
 
-        // Make sure there are enough lines and spans
-        while self.syntax_highlighter_cursor.y as usize >= state.lines.len() {
-            state.lines.push_back(Line::empty());
-        }
+                let size: Size = self.size.unwrap();
 
-        {
-            let mut lines = state.lines.to_mut();
-            let line = lines
-                .get_mut(self.syntax_highlighter_cursor.y as usize)
-                .unwrap();
+                // Make sure there are enough lines and spans
+                while self.syntax_highlighter_cursor.y as usize >= state.lines.len() {
+                    state.lines.push_back(Line::empty());
+                }
 
-            let spans = &mut line.to_mut().spans;
-            while self.syntax_highlighter_cursor.x as usize > spans.len() {
-                spans.push_back(Span::empty());
-            }
-        }
+                {
+                    let mut lines = state.lines.to_mut();
+                    let line = lines
+                        .get_mut(self.syntax_highlighter_cursor.y as usize)
+                        .unwrap();
 
-        let mut screen_cursor = self.syntax_highlighter_cursor - overflow.offset();
+                    let spans = &mut line.to_mut().spans;
+                    while self.syntax_highlighter_cursor.x as usize > spans.len() {
+                        spans.push_back(Span::empty());
+                    }
+                }
 
-        if screen_cursor.y < 0 {
-            overflow.scroll_up_by(-screen_cursor.y);
-            screen_cursor.y = 0;
-        }
+                let mut screen_cursor = self.syntax_highlighter_cursor - overflow.offset();
 
-        if screen_cursor.y >= size.height as i32 {
-            let offset = screen_cursor.y + 1 - size.height as i32;
-            overflow.scroll_down_by(offset);
-            screen_cursor.y = size.height as i32 - 1;
-        }
+                if screen_cursor.y < 0 {
+                    overflow.scroll_up_by(-screen_cursor.y);
+                    screen_cursor.y = 0;
+                }
 
-        state.screen_cursor_x.set(screen_cursor.x);
-        state.screen_cursor_y.set(screen_cursor.y);
-        state.buf_cursor_x.set(self.syntax_highlighter_cursor.x);
-        state.buf_cursor_y.set(self.syntax_highlighter_cursor.y);
+                if screen_cursor.y >= size.height as i32 {
+                    let offset = screen_cursor.y + 1 - size.height as i32;
+                    overflow.scroll_down_by(offset);
+                    screen_cursor.y = size.height as i32 - 1;
+                }
+
+                state.screen_cursor_x.set(screen_cursor.x);
+                state.screen_cursor_y.set(screen_cursor.y);
+                state.buf_cursor_x.set(self.syntax_highlighter_cursor.x);
+                state.buf_cursor_y.set(self.syntax_highlighter_cursor.y);
+            });
     }
 
     fn update_cursor(
@@ -208,10 +214,15 @@ impl ResponseRenderer<'_> {
     }
 
     // TODO: Fix apply_inst2/apply_inst so I only need apply_inst2
-    pub fn apply_inst2(&mut self, inst: &Instruction, state: &mut ResponseRendererState) {
+    pub fn apply_inst2(
+        &mut self,
+        inst: &Instruction,
+        state: &mut ResponseRendererState,
+        elements: &mut Elements<'_, '_>,
+    ) {
         state.current_instruction.set(Some(format!("{inst:?}")));
 
-        if self.overflow.is_none() || self.size.is_none() {
+        if self.size.is_none() {
             return;
         }
 
@@ -219,7 +230,7 @@ impl ResponseRenderer<'_> {
             Instruction::MoveCursor(x, y) => {
                 self.syntax_highlighter_cursor.x = *x as i32;
                 self.syntax_highlighter_cursor.y = *y as i32;
-                self.update_cursor2(state);
+                self.update_cursor2(state, elements);
             }
             Instruction::Type(c, bold) => {
                 {
@@ -240,18 +251,18 @@ impl ResponseRenderer<'_> {
                     self.syntax_highlighter_cursor.x += 1;
                 }
 
-                self.update_cursor2(state);
+                self.update_cursor2(state, elements);
             }
             Instruction::SetForeground(hex) => self.foreground = *hex,
             Instruction::SetBackground(hex) => self.background = *hex,
             Instruction::Newline { x } => {
                 self.syntax_highlighter_cursor.x = *x;
                 self.syntax_highlighter_cursor.y += 1;
-                self.update_cursor2(state);
+                self.update_cursor2(state, elements);
             }
             Instruction::SetX(x) => {
                 self.syntax_highlighter_cursor.x = *x;
-                self.update_cursor2(state);
+                self.update_cursor2(state, elements);
             }
             Instruction::Pause(_) => unreachable!(),
             Instruction::Wait => state.waiting.set(true.to_string()),
@@ -325,14 +336,14 @@ impl ResponseRenderer<'_> {
         &mut self,
         extension: &str,
         _context: anathema::prelude::Context<'_, ResponseRendererState>,
-        _elements: &mut Elements<'_, '_>,
+        elements: &mut Elements<'_, '_>,
         state: &mut ResponseRendererState,
     ) {
         if self.response_reader.is_none() {
             return;
         }
 
-        if self.overflow.is_none() || self.size.is_none() {
+        if self.size.is_none() {
             return;
         }
 
@@ -372,7 +383,7 @@ impl ResponseRenderer<'_> {
                 let theme = get_syntax_theme();
                 let viewable_response = viewable_lines.join("\n");
 
-                self.set_response(state, &viewable_response, extension, Some(theme));
+                self.set_response(state, &viewable_response, extension, Some(theme), elements);
             }
             Err(_) => todo!(),
         }
@@ -386,6 +397,7 @@ impl ResponseRenderer<'_> {
         response: &str,
         extension: &str,
         theme: Option<String>,
+        elements: &mut Elements<'_, '_>,
     ) {
         loop {
             if state.lines.len() == 0 {
@@ -407,7 +419,7 @@ impl ResponseRenderer<'_> {
         self.instructions = Parser::new(highlighted_lines).instructions();
 
         for instruction in self.instructions.clone() {
-            self.apply_inst2(&instruction, state);
+            self.apply_inst2(&instruction, state, elements);
         }
 
         let the_response = response.to_string();
@@ -496,7 +508,7 @@ impl ResponseRendererState {
     }
 }
 
-impl Component for ResponseRenderer<'_> {
+impl Component for ResponseRenderer {
     type State = ResponseRendererState;
     type Message = String;
 
@@ -509,38 +521,21 @@ impl Component for ResponseRenderer<'_> {
     fn tick(
         &mut self,
         _: &mut Self::State,
-        mut elements: Elements<'_, '_>,
+        _: Elements<'_, '_>,
         context: Context<'_, Self::State>,
         _: std::time::Duration,
     ) {
-        if self.overflow.is_none() {
-            elements
-                .by_attribute("id", "container")
-                .first(|element: &mut Element<'_>, _| {
-                    let overflow = element.to::<Overflow>();
+        let size = context.viewport.size();
 
-                    // TODO: Try to get this removed by using the elements directly in the
-                    // rendering functions to query for the Overflow
-                    unsafe {
-                        self.overflow = Some(std::mem::transmute::<
-                            &mut anathema::default_widgets::Overflow,
-                            &mut anathema::default_widgets::Overflow,
-                        >(overflow));
-                    }
-                });
+        let app_titles = 2; // top/bottom menus of dashboard
+        let url_method_inputs = 3; // height of url and method inputs with borders
+        let response_borders = 2; // borders around response input
+        let total_height_offset = app_titles + url_method_inputs + response_borders;
 
-            let size = context.viewport.size();
-
-            let app_titles = 2; // top/bottom menus of dashboard
-            let url_method_inputs = 3; // height of url and method inputs with borders
-            let response_borders = 2; // borders around response input
-            let total_height_offset = app_titles + url_method_inputs + response_borders;
-
-            self.size = Some(Size {
-                width: size.width,
-                height: size.height - total_height_offset,
-            });
-        }
+        self.size = Some(Size {
+            width: size.width,
+            height: size.height - total_height_offset,
+        });
     }
 
     fn on_key(
