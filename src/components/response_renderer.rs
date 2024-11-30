@@ -45,33 +45,8 @@ pub struct ResponseRenderer {
     response_offset: usize,
     total_lines: usize,
     viewport_height: usize,
-}
-
-fn scroll(
-    state: &mut ResponseRendererState,
-    mut elements: Elements<'_, '_>,
-    context: Context<'_, ResponseRendererState>,
-    direction: ScrollDirection,
-) {
-    elements
-        .by_attribute("id", "container")
-        .each(|el, _attributes| {
-            let overflow = el.to::<Overflow>();
-
-            let scroll_amount = context.viewport.size().height / 2;
-            let scroll_position = *state.scroll_position.to_ref();
-            let new_scroll_position = match direction {
-                ScrollDirection::Up => scroll_position.saturating_sub(scroll_amount),
-                ScrollDirection::Down => scroll_position + scroll_amount,
-            };
-
-            state.scroll_position.set(new_scroll_position);
-
-            match direction {
-                ScrollDirection::Up => overflow.scroll_up_by(scroll_amount as i32),
-                ScrollDirection::Down => overflow.scroll_down_by(scroll_amount as i32),
-            }
-        });
+    extension: String,
+    response_lines: Vec<String>,
 }
 
 impl ResponseRenderer {
@@ -114,6 +89,8 @@ impl ResponseRenderer {
             total_lines: 0,
             viewport_height: 0,
             size: None,
+            extension: "".to_string(),
+            response_lines: vec![],
         }
     }
 
@@ -334,10 +311,10 @@ impl ResponseRenderer {
     // TODO: Make this work for scrolling the response
     fn render_response(
         &mut self,
-        extension: &str,
-        _context: anathema::prelude::Context<'_, ResponseRendererState>,
+        extension: String,
         elements: &mut Elements<'_, '_>,
         state: &mut ResponseRendererState,
+        offset: usize,
     ) {
         if self.response_reader.is_none() {
             return;
@@ -349,44 +326,64 @@ impl ResponseRenderer {
 
         let size = self.size.unwrap();
         let response_reader = self.response_reader.as_mut().unwrap();
-        self.response_offset = 0;
+        self.response_offset = offset;
         self.viewport_height = size.height;
 
         let mut buf: Vec<u8> = vec![];
         match response_reader.read_to_end(&mut buf) {
             Ok(_) => {
                 let response = String::from_utf8(buf).unwrap_or(String::from("oops"));
-                let mut lines = response.lines();
-
-                let size = self.size.unwrap();
-
-                let mut viewable_lines: Vec<String> = vec![];
-                for _ in self.response_offset..self.viewport_height {
-                    #[allow(clippy::single_match)]
-                    match lines.next() {
-                        Some(line) => {
-                            if line.len() > size.width {
-                                let (new_line, _) = line.split_at(size.width.saturating_sub(5));
-
-                                let t = format!("{new_line}...");
-
-                                viewable_lines.push(t.to_string());
-                            } else {
-                                viewable_lines.push(line.to_string());
-                            }
-                        }
-
-                        None => {}
-                    }
-                }
-
-                let theme = get_syntax_theme();
-                let viewable_response = viewable_lines.join("\n");
-
-                self.set_response(state, &viewable_response, extension, Some(theme), elements);
+                let lines = response.lines();
+                let response_lines: Vec<String> = lines.map(|s| s.to_string()).collect();
+                self.response_lines = response_lines;
             }
+            // TODO: Figure out what to do if this fails
             Err(_) => todo!(),
         }
+
+        self.scroll_response(extension, elements, state, offset);
+    }
+
+    fn scroll_response(
+        &mut self,
+        extension: String,
+        elements: &mut Elements<'_, '_>,
+        state: &mut ResponseRendererState,
+        offset: usize,
+    ) {
+        if self.response_reader.is_none() {
+            return;
+        }
+
+        if self.size.is_none() {
+            return;
+        }
+
+        let size = self.size.unwrap();
+        self.response_offset = offset;
+        self.viewport_height = size.height;
+
+        let mut viewable_lines: Vec<String> = vec![];
+        let ending_index = self.response_offset + self.viewport_height;
+
+        for index in self.response_offset..ending_index {
+            let line = self.response_lines[index].clone();
+
+            if line.len() > size.width {
+                let (new_line, _) = line.split_at(size.width.saturating_sub(5));
+
+                let t = format!("{new_line}...");
+
+                viewable_lines.push(t.to_string());
+            } else {
+                viewable_lines.push(line.to_string());
+            }
+        }
+
+        let theme = get_syntax_theme();
+        let viewable_response = viewable_lines.join("\n");
+
+        self.set_response(state, viewable_response, extension, Some(theme), elements);
     }
 
     // NOTE: This one is now the one setting the response in the response text area with the syntax
@@ -394,8 +391,8 @@ impl ResponseRenderer {
     fn set_response(
         &mut self,
         state: &mut ResponseRendererState,
-        response: &str,
-        extension: &str,
+        response: String,
+        extension: String,
         theme: Option<String>,
         elements: &mut Elements<'_, '_>,
     ) {
@@ -407,9 +404,10 @@ impl ResponseRenderer {
             state.lines.remove(0);
         }
 
-        let (highlighted_lines, parsed_theme) = highlight(response, extension, theme);
+        let (highlighted_lines, parsed_theme) = highlight(&response, &extension, theme);
 
         self.theme = Some(parsed_theme.clone());
+        self.extension = extension;
 
         if let Some(color) = parsed_theme.settings.background {
             let hex_color = format!("#{:02X}{:02X}{:02X}", color.r, color.g, color.b);
@@ -438,6 +436,21 @@ impl ResponseRenderer {
             width: size.width,
             height: size.height - total_height_offset,
         });
+    }
+
+    fn scroll(
+        &mut self,
+        state: &mut ResponseRendererState,
+        mut elements: Elements<'_, '_>,
+        _: Context<'_, ResponseRendererState>,
+        direction: ScrollDirection,
+    ) {
+        let new_offset = match direction {
+            ScrollDirection::Up => self.response_offset.saturating_sub(self.viewport_height),
+            ScrollDirection::Down => self.response_offset + self.viewport_height,
+        };
+
+        self.scroll_response(self.extension.clone(), &mut elements, state, new_offset);
     }
 }
 
@@ -546,6 +559,8 @@ impl Component for ResponseRenderer {
         context: Context<'_, Self::State>,
     ) {
         self.update_size(context);
+
+        // TODO: Update response text when the window gets resized
     }
 
     fn on_key(
@@ -565,8 +580,8 @@ impl Component for ResponseRenderer {
                 match event.ctrl {
                     true => {
                         match char {
-                            'd' => scroll(state, elements, context, ScrollDirection::Down),
-                            'u' => scroll(state, elements, context, ScrollDirection::Up),
+                            'd' => self.scroll(state, elements, context, ScrollDirection::Down),
+                            'u' => self.scroll(state, elements, context, ScrollDirection::Up),
 
                             'p' => {
                                 // move to previous find
@@ -633,7 +648,7 @@ impl Component for ResponseRenderer {
 
                     let response_reader = reader_result.unwrap();
                     self.response_reader = Some(response_reader);
-                    self.render_response(&extension, context, &mut elements, state);
+                    self.render_response(extension, &mut elements, state, 0);
                 }
 
                 ResponseRendererMessages::SyntaxPreview((response, extension, theme)) => {
