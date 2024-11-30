@@ -35,7 +35,7 @@ Body
 [x] (MVP) Save new syntax themes to options
 [x] (MVP) Update code sample and make window resize dynamically based on available space
 [x] (MVP) Fix the entire response area background to be the intended bg color of the chosen theme
-* [ ] (MVP) Virtualized Response body view
+* [x] (MVP) Virtualized Response body view
 [ ] Prettier/formatter type of integration to make responses read easier
 
 ### Projects
