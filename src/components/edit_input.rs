@@ -154,7 +154,9 @@ impl Component for EditInput {
         elements: Elements<'_, '_>,
         context: Context<'_, Self::State>,
     ) {
+        let emitter = context.emitter.clone();
         self._message(message, state, elements, context);
+        self.send_to_listeners(KeyCode::Char(' '), state, emitter);
     }
 
     fn accept_focus(&self) -> bool {
