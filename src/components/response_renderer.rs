@@ -322,6 +322,8 @@ impl ResponseRenderer {
             return;
         }
 
+        self.extension = extension;
+
         let size = self.size.unwrap();
         let response_reader = self.response_reader.as_mut().unwrap();
         self.response_offset = offset;
@@ -339,12 +341,11 @@ impl ResponseRenderer {
             Err(_) => todo!(),
         }
 
-        self.scroll_response(extension, elements, state, offset);
+        self.scroll_response(elements, state, offset);
     }
 
     fn scroll_response(
         &mut self,
-        extension: String,
         elements: &mut Elements<'_, '_>,
         state: &mut ResponseRendererState,
         offset: usize,
@@ -381,7 +382,7 @@ impl ResponseRenderer {
         let theme = get_syntax_theme();
         let viewable_response = viewable_lines.join("\n");
 
-        self.set_response(state, viewable_response, extension, Some(theme), elements);
+        self.set_response(state, viewable_response, Some(theme), elements);
     }
 
     // NOTE: This one is now the one setting the response in the response text area with the syntax
@@ -390,7 +391,6 @@ impl ResponseRenderer {
         &mut self,
         state: &mut ResponseRendererState,
         response: String,
-        extension: String,
         theme: Option<String>,
         elements: &mut Elements<'_, '_>,
     ) {
@@ -402,13 +402,11 @@ impl ResponseRenderer {
             state.lines.remove(0);
         }
 
-        let (highlighted_lines, parsed_theme) = highlight(&response, &extension, theme);
+        let (highlighted_lines, parsed_theme) = highlight(&response, &self.extension, theme);
 
         if self.theme.is_none() {
             self.theme = Some(parsed_theme.clone());
         }
-
-        self.extension = extension;
 
         if let Some(color) = parsed_theme.settings.background {
             let hex_color = format!("#{:02X}{:02X}{:02X}", color.r, color.g, color.b);
@@ -449,7 +447,7 @@ impl ResponseRenderer {
             ScrollDirection::Down => self.response_offset + self.viewport_height,
         };
 
-        self.scroll_response(self.extension.clone(), &mut elements, state, new_offset);
+        self.scroll_response(&mut elements, state, new_offset);
     }
 }
 
