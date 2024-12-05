@@ -873,7 +873,7 @@ impl anathema::component::Component for DashboardComponent {
         if let Ok(ids) = self.component_ids.try_borrow() {
             let _ = send_message(
                 "url_text_input",
-                "https://jsonplaceholder.typicode.com/todos/1".to_string(),
+                "https://jsonplaceholder.typicode.com/todos".to_string(),
                 &ids,
                 context.emitter,
             );
