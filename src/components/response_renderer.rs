@@ -35,7 +35,6 @@ pub struct ResponseRenderer {
     syntax_highlighter_cursor: Pos,
     foreground: Hex,
     background: Hex,
-    instructions: Vec<Instruction>,
     text_filter: TextFilter,
     theme: Option<Theme>,
 
@@ -79,7 +78,6 @@ impl ResponseRenderer {
             syntax_highlighter_cursor: Pos::ZERO,
             foreground: Hex::from((255, 255, 255)),
             background: Hex::BLACK,
-            instructions: vec![],
             text_filter: TextFilter {
                 ..Default::default()
             },
@@ -367,14 +365,14 @@ impl ResponseRenderer {
         let ending_index = self.response_offset + self.viewport_height;
 
         for index in self.response_offset..ending_index {
-            let line = self.response_lines[index].clone();
+            let line = &self.response_lines[index];
 
             if line.len() > size.width {
                 let (new_line, _) = line.split_at(size.width.saturating_sub(5));
 
                 let t = format!("{new_line}...");
 
-                viewable_lines.push(t.to_string());
+                viewable_lines.push(t);
             } else {
                 viewable_lines.push(line.to_string());
             }
@@ -406,7 +404,10 @@ impl ResponseRenderer {
 
         let (highlighted_lines, parsed_theme) = highlight(&response, &extension, theme);
 
-        self.theme = Some(parsed_theme.clone());
+        if self.theme.is_none() {
+            self.theme = Some(parsed_theme.clone());
+        }
+
         self.extension = extension;
 
         if let Some(color) = parsed_theme.settings.background {
@@ -414,14 +415,12 @@ impl ResponseRenderer {
             state.response_background.set(hex_color);
         }
 
-        self.instructions = Parser::new(highlighted_lines).instructions();
-
-        for instruction in self.instructions.clone() {
+        let instructions = Parser::new(highlighted_lines).instructions();
+        for instruction in instructions {
             self.apply_inst2(&instruction, state, elements);
         }
 
-        let the_response = response.to_string();
-        state.response.set(the_response);
+        state.response.set(response);
     }
 
     fn update_size(&mut self, context: Context<'_, ResponseRendererState>) {
@@ -663,16 +662,17 @@ impl Component for ResponseRenderer {
                     let (highlighted_lines, parsed_theme) = highlight(&response, &extension, theme);
 
                     // NOTE: Maybe remove this if its not useful
-                    self.theme = Some(parsed_theme.clone());
+                    if self.theme.is_none() {
+                        self.theme = Some(parsed_theme.clone());
+                    }
 
                     if let Some(color) = parsed_theme.settings.background {
                         let hex_color = format!("#{:02X}{:02X}{:02X}", color.r, color.g, color.b);
                         state.response_background.set(hex_color);
                     }
 
-                    self.instructions = Parser::new(highlighted_lines).instructions();
-
-                    for instruction in self.instructions.clone() {
+                    let instructions = Parser::new(highlighted_lines).instructions();
+                    for instruction in instructions {
                         self.apply_inst(&instruction, state, &mut elements);
                     }
 
