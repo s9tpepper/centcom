@@ -1,5 +1,6 @@
 use std::{
     cell::RefCell,
+    cmp::min,
     collections::HashMap,
     fs::File,
     io::{BufReader, Read},
@@ -202,11 +203,6 @@ impl ResponseRenderer {
         }
 
         match inst {
-            Instruction::MoveCursor(x, y) => {
-                self.syntax_highlighter_cursor.x = *x as i32;
-                self.syntax_highlighter_cursor.y = *y as i32;
-                self.update_cursor2(state, elements);
-            }
             Instruction::Type(c, bold) => {
                 {
                     let mut lines = state.lines.to_mut();
@@ -239,11 +235,7 @@ impl ResponseRenderer {
                 self.syntax_highlighter_cursor.x = *x;
                 self.update_cursor2(state, elements);
             }
-            Instruction::Pause(_) => unreachable!(),
-            Instruction::Wait => state.waiting.set(true.to_string()),
-            Instruction::HideCursor => {
-                state.show_cursor.set(false);
-            }
+            _ => {}
         }
     }
 
@@ -259,11 +251,6 @@ impl ResponseRenderer {
             let vp = el.to::<Overflow>();
 
             match inst {
-                Instruction::MoveCursor(x, y) => {
-                    self.syntax_highlighter_cursor.x = *x as i32;
-                    self.syntax_highlighter_cursor.y = *y as i32;
-                    self.update_cursor(state, vp, size);
-                }
                 Instruction::Type(c, bold) => {
                     {
                         let mut lines = state.lines.to_mut();
@@ -296,11 +283,8 @@ impl ResponseRenderer {
                     self.syntax_highlighter_cursor.x = *x;
                     self.update_cursor(state, vp, size);
                 }
-                Instruction::Pause(_) => unreachable!(),
-                Instruction::Wait => state.waiting.set(true.to_string()),
-                Instruction::HideCursor => {
-                    state.show_cursor.set(false);
-                }
+
+                _ => {}
             }
         });
     }
@@ -363,7 +347,10 @@ impl ResponseRenderer {
         self.viewport_height = size.height;
 
         let mut viewable_lines: Vec<String> = vec![];
-        let ending_index = self.response_offset + self.viewport_height;
+
+        let last_response_line_index = self.response_lines.len().saturating_sub(1);
+        let last_viewable_index = self.response_offset + self.viewport_height;
+        let ending_index = min(last_viewable_index, last_response_line_index);
 
         for index in self.response_offset..ending_index {
             let line = &self.response_lines[index];

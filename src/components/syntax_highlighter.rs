@@ -117,15 +117,11 @@ pub struct Parser<'a> {
 
 #[derive(Debug, Clone)]
 pub enum Instruction {
-    MoveCursor(u16, u16),
     Type(char, bool),
     SetForeground(Hex),
     SetBackground(Hex),
     Newline { x: i32 },
     SetX(i32),
-    Pause(u64),
-    Wait,
-    HideCursor,
 }
 
 impl<'a> Parser<'a> {
