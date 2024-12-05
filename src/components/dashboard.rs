@@ -197,6 +197,7 @@ impl DashboardState {
 pub struct DashboardComponent {
     pub component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>,
     theme: Theme,
+    test: bool,
 }
 
 impl DashboardComponent {
@@ -218,6 +219,7 @@ impl DashboardComponent {
             DashboardComponent {
                 component_ids: ids.clone(),
                 theme,
+                test: false,
             },
             state,
         )?;
@@ -863,6 +865,10 @@ impl anathema::component::Component for DashboardComponent {
         _: Elements<'_, '_>,
         context: Context<'_, Self::State>,
     ) {
+        if self.test {
+            return;
+        }
+
         // TODO: REMOVE THIS - ONLY FOR TESTING
         if let Ok(ids) = self.component_ids.try_borrow() {
             let _ = send_message(
@@ -871,6 +877,8 @@ impl anathema::component::Component for DashboardComponent {
                 &ids,
                 context.emitter,
             );
+
+            self.test = true;
         }
     }
 

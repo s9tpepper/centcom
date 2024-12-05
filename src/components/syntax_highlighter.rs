@@ -142,7 +142,7 @@ impl<'a> Parser<'a> {
 
             let (count, src, bold) = line.head.take_space();
             if let Some(x) = count {
-                self.instructions.push(Instruction::SetX(x));
+                // self.instructions.push(Instruction::SetX(x));
                 line_start = x;
             } else {
                 self.instructions.push(Instruction::SetX(0));
@@ -150,12 +150,22 @@ impl<'a> Parser<'a> {
 
             self.set_foreground(&line.head);
             self.set_background(&line.head);
-            self.push_chars(src, bold, line_start);
+
+            if line_start == 0 {
+                self.push_chars(src, bold, line_start);
+            } else {
+                let mut spaces = "".to_string();
+                for _ in 0..line_start {
+                    spaces.push(' ');
+                }
+
+                self.push_chars(&spaces, bold, 0);
+            }
 
             for span in &*line.tail {
                 self.set_foreground(span);
                 self.set_background(span);
-                self.push_chars(span.src, span.bold, line_start);
+                self.push_chars(span.src, span.bold, 0);
             }
         }
 
