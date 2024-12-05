@@ -369,6 +369,13 @@ impl ResponseRenderer {
         let theme = get_syntax_theme();
         let viewable_response = viewable_lines.join("\n");
 
+        let screens = last_response_line_index as f32 / self.viewport_height as f32;
+        let current_screen = self.response_offset as f32 / self.viewport_height as f32;
+        let percent = (current_screen / screens) * 100f32;
+        let percent_scrolled = format!("{:0>2}", percent as usize);
+
+        state.percent_scrolled.set(percent_scrolled);
+
         self.set_response(state, viewable_response, Some(theme), elements);
     }
 
@@ -497,6 +504,7 @@ pub struct ResponseRendererState {
     pub show_cursor: Value<bool>,
     pub response: Value<String>,
     pub response_background: Value<String>,
+    pub percent_scrolled: Value<String>,
 }
 
 impl ResponseRendererState {
@@ -515,6 +523,7 @@ impl ResponseRendererState {
             waiting: false.to_string().into(),
             show_cursor: true.into(),
             response_background: "#000000".to_string().into(),
+            percent_scrolled: "0".to_string().into(),
         }
     }
 }
