@@ -348,7 +348,7 @@ impl ResponseRenderer {
 
         let mut viewable_lines: Vec<String> = vec![];
 
-        let last_response_line_index = self.response_lines.len().saturating_sub(1);
+        let last_response_line_index = self.response_lines.len();
         let last_viewable_index = self.response_offset + self.viewport_height;
         let ending_index = min(last_viewable_index, last_response_line_index);
 
