@@ -23,7 +23,7 @@
 [x] (MVP) Options screen to choose themes, background for responses/request bodies, etc
 [ ] (MVP) Flesh out the options for the app
 [ ] Open In for URL/response
-[ ] (MVP) Fix Ctrl C in request body
+[x] (MVP) Fix Ctrl C in request body
 
 ### Response
 Body
