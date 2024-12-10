@@ -29,12 +29,14 @@ pub struct OptionsViewState {
 
 #[derive(Default, State)]
 struct OptionsState {
+    app_theme: Value<String>,
     syntax_theme: Value<String>,
 }
 
 impl From<Options> for OptionsState {
     fn from(val: Options) -> Self {
         OptionsState {
+            app_theme: val.app_theme.into(),
             syntax_theme: val.syntax_theme.into(),
         }
     }

@@ -2,9 +2,13 @@ zstack
   border [id: "options", foreground: #ffffff, border_style: "╭─╮│╯─╰│"]
     expand
       padding [padding: 1]
-        hstack
-          text [foreground: "blue"] "Synta(x) Highlight Theme: "
-          text options.syntax_theme
+        vstack
+          hstack
+            text [foreground: "blue"] "(A)pp Theme: "
+            text options.app_theme
+          hstack
+            text [foreground: "blue"] "Synta(x) Highlight Theme: "
+            text options.syntax_theme
 
   vstack
     text "╭─Options:"

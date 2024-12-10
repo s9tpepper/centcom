@@ -59,7 +59,7 @@ pub fn get_constant_from_name(name: &str) -> String {
         .replace("__", "_")
 }
 
-pub fn get_theme(name: Option<String>) -> Theme {
+pub fn get_highlight_theme(name: Option<String>) -> Theme {
     let theme_name = name.unwrap_or(get_syntax_theme());
     let const_name = get_constant_from_name(&theme_name);
 
@@ -75,7 +75,7 @@ pub fn get_theme(name: Option<String>) -> Theme {
 
 pub fn highlight<'a>(src: &'a str, ext: &str, name: Option<String>) -> (Box<[Line<'a>]>, Theme) {
     let ps = SyntaxSet::load_defaults_newlines();
-    let theme = get_theme(name);
+    let theme = get_highlight_theme(name);
 
     let mut extension = ext;
     if ext.contains(";") {

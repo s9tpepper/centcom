@@ -17,12 +17,15 @@ use syntect::highlighting::Theme;
 use arboard::Clipboard;
 use serde::{Deserialize, Serialize};
 
-use crate::fs::get_documents_dir;
-use crate::projects::{
-    save_project, Endpoint, HeaderState, PersistedEndpoint, PersistedProject, Project,
-    DEFAULT_ENDPOINT_NAME, DEFAULT_PROJECT_NAME,
-};
 use crate::requests::do_request;
+use crate::{fs::get_documents_dir, theme::get_app_theme};
+use crate::{
+    projects::{
+        save_project, Endpoint, HeaderState, PersistedEndpoint, PersistedProject, Project,
+        DEFAULT_ENDPOINT_NAME, DEFAULT_PROJECT_NAME,
+    },
+    theme::AppTheme,
+};
 
 use super::{
     add_header_window::AddHeaderWindow,
@@ -37,7 +40,7 @@ use super::{
     project_window::ProjectWindow,
     response_renderer::TextFilter,
     send_message,
-    syntax_highlighter::get_theme,
+    syntax_highlighter::get_highlight_theme,
     textarea::TextAreaMessages,
     textinput::TextInputMessages,
 };
@@ -143,10 +146,11 @@ pub struct DashboardState {
     pub filter_nav_index: Value<usize>,
 
     pub app_bg: Value<String>,
+    pub app_theme: Value<AppTheme>,
 }
 
 impl DashboardState {
-    pub fn new() -> Self {
+    pub fn new(app_theme: AppTheme) -> Self {
         let project = Project::new();
 
         DashboardState {
@@ -190,6 +194,7 @@ impl DashboardState {
             filter_total: 0.into(),
             filter_nav_index: 0.into(),
             app_bg: "#000000".to_string().into(),
+            app_theme: app_theme.into(),
         }
     }
 }
@@ -205,9 +210,10 @@ impl DashboardComponent {
         ids: &Rc<RefCell<HashMap<String, ComponentId<String>>>>,
         builder: &mut RuntimeBuilder<TuiBackend, ()>,
     ) -> anyhow::Result<()> {
-        let theme = get_theme(None);
+        let theme = get_highlight_theme(None);
+        let app_theme = get_app_theme();
 
-        let mut state = DashboardState::new();
+        let mut state = DashboardState::new(app_theme);
         let color = theme.settings.background.unwrap();
         state
             .app_bg

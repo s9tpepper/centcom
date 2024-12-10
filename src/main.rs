@@ -3,12 +3,14 @@ use std::env;
 use clap::{Parser, Subcommand};
 
 mod app;
+mod app_themes;
 mod components;
 mod fs;
 mod messages;
 mod options;
 mod projects;
 mod requests;
+mod theme;
 mod themes;
 
 use crate::app::app;

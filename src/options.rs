@@ -8,11 +8,13 @@ use serde::{Deserialize, Serialize};
 use crate::fs::get_app_dir;
 
 const DEFAULT_SYNTAX_THEME: &str = "monokai";
+const DEFAULT_APP_THEME: &str = "default theme";
 const SYNTAX_THEMES_LIST: &str = include_str!("../themes/themes.txt");
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Options {
     pub syntax_theme: String,
+    pub app_theme: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -31,9 +33,14 @@ pub fn get_syntax_theme() -> String {
     get_options().syntax_theme
 }
 
+pub fn get_app_theme_name() -> String {
+    get_options().app_theme
+}
+
 pub fn get_default_options() -> Options {
     Options {
         syntax_theme: String::from(DEFAULT_SYNTAX_THEME),
+        app_theme: String::from(DEFAULT_APP_THEME),
     }
 }
 

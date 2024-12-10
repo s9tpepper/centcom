@@ -1,5 +1,5 @@
 @app_section [
-  border_color: active_border_color,
+  border_color: border_color,
   top_label: "Request (B)ody",
   show_top_label: true,
   show_bottom_label: true,

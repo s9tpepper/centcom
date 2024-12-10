@@ -1,0 +1,11 @@
+{
+  "name": "default theme",
+  "background": "#000000",
+  "foreground": "#ffffff",
+  "border_unfocused": "#323232",
+  "border_focused": "#ffffff",
+  "top_bar_background": "#0000ff",
+  "top_bar_foreground": "#ffffff",
+  "bottom_bar_background": "#ff0000",
+  "bottom_bar_foreground": "#000000"
+}
