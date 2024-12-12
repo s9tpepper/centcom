@@ -79,7 +79,7 @@ zstack [background: app_theme.background]
     container [height: 1, background: app_theme.bottom_bar_background, foreground: app_theme.bottom_bar_foreground]
       expand
         hstack
-          text " App messages here?"
+          text app_message
           spacer
           for item in menu_items
             @menu_item

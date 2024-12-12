@@ -134,6 +134,15 @@ impl Component for EditInput {
         self._on_focus(state, elements, context);
     }
 
+    fn on_blur(
+        &mut self,
+        state: &mut Self::State,
+        elements: Elements<'_, '_>,
+        context: Context<'_, Self::State>,
+    ) {
+        self._on_blur(state, elements, context);
+    }
+
     fn on_key(
         &mut self,
         key: anathema::component::KeyEvent,

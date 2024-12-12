@@ -645,7 +645,18 @@ impl anathema::component::Component for DashboardComponent {
 
                     #[allow(clippy::single_match)]
                     TextInputMessages::InputEscape(text_update) => match text_update.id.as_str() {
-                        "endpoint_url_input" => context.set_focus("id", "app"),
+                        "endpoint_url_input" => {
+                            context.set_focus("id", "app");
+
+                            if let Ok(ids) = self.component_ids.try_borrow() {
+                                let _ = send_message(
+                                    "url_input",
+                                    "unfocus".to_string(),
+                                    &ids,
+                                    context.emitter,
+                                );
+                            }
+                        }
 
                         _ => {}
                     },

@@ -119,6 +119,24 @@ pub trait InputReceiver {
     }
 
     #[allow(dead_code)]
+    fn _on_blur(
+        &mut self,
+        state: &mut InputState,
+        _: Elements<'_, '_>,
+        mut context: Context<'_, InputState>,
+    ) {
+        let cursor_char = ' ';
+
+        state.cursor_char.set(cursor_char.to_string());
+        state.fg_color.set("white".to_string());
+        state.bg_color.set("".to_string());
+        state.focused.set(false);
+
+        context.publish("textarea_focus", |state| &state.focused);
+        context.set_focus("id", "app");
+    }
+
+    #[allow(dead_code)]
     fn _on_key(
         &mut self,
         event: &anathema::component::KeyEvent,

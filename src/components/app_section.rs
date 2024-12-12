@@ -69,10 +69,14 @@ impl Component for AppSection {
         value: CommonVal<'_>,
         state: &mut Self::State,
         mut elements: anathema::widgets::Elements<'_, '_>,
-        _context: anathema::prelude::Context<'_, Self::State>,
+        mut context: anathema::prelude::Context<'_, Self::State>,
     ) {
         if ident == "input_focus" {
             let focus = value.to_bool();
+            if !focus {
+                context.set_focus("id", "app");
+            }
+
             let section_id = state.section_id.to_ref().clone();
             let Some(section_id) = section_id else { return };
             let section_id = section_id.to_string().leak();

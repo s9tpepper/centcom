@@ -133,13 +133,6 @@ impl App {
         let mut component_ids = self.component_ids.clone();
 
         builder.register_prototype(
-            "url_input",
-            "./src/components/templates/url_input.aml",
-            || FocusableSection,
-            FocusableSectionState::new,
-        )?;
-
-        builder.register_prototype(
             "textinput",
             TEXTINPUT_TEMPLATE,
             move || TextInput {
@@ -173,6 +166,16 @@ impl App {
             TextAreaInputState::new,
         )?;
 
+        component_ids = self.component_ids.clone();
+        builder.register_prototype(
+            "request_body_section",
+            REQUEST_BODY_SECTION_TEMPLATE,
+            move || FocusableSection {
+                component_ids: component_ids.clone(),
+            },
+            FocusableSectionState::new,
+        )?;
+
         builder.register_prototype(
             "method_selector",
             METHOD_SELECTOR_TEMPLATE,
@@ -202,13 +205,6 @@ impl App {
         )?;
 
         builder.register_prototype(
-            "request_body_section",
-            REQUEST_BODY_SECTION_TEMPLATE,
-            || FocusableSection,
-            FocusableSectionState::new,
-        )?;
-
-        builder.register_prototype(
             "add_header_window",
             ADD_HEADER_WINDOW_TEMPLATE,
             || AddHeaderWindow,
@@ -232,6 +228,13 @@ impl App {
         builder: &mut RuntimeBuilder<TuiBackend, ()>,
     ) -> anyhow::Result<()> {
         self.register_prototypes(builder)?;
+
+        FocusableSection::register(
+            &self.component_ids,
+            builder,
+            "url_input",
+            "./src/components/templates/url_input.aml",
+        )?;
 
         TextArea::register(
             &self.component_ids,

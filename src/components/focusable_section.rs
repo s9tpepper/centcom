@@ -1,29 +1,72 @@
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
+
 use anathema::{
-    component::Component,
+    component::{Component, ComponentId},
+    prelude::TuiBackend,
+    runtime::RuntimeBuilder,
     state::{State, Value},
 };
 
+use crate::theme::{get_app_theme, AppTheme};
+
 #[derive(Default)]
-pub struct FocusableSection;
+pub struct FocusableSection {
+    pub component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>,
+}
+
+impl FocusableSection {
+    pub fn register(
+        ids: &Rc<RefCell<HashMap<String, ComponentId<String>>>>,
+        builder: &mut RuntimeBuilder<TuiBackend, ()>,
+        ident: impl Into<String>,
+        template: &str,
+    ) -> anyhow::Result<()> {
+        let name: String = ident.into();
+        let input_template = template;
+
+        let app_id = builder.register_component(
+            name.clone(),
+            input_template,
+            FocusableSection {
+                component_ids: ids.clone(),
+            },
+            FocusableSectionState::new(),
+        )?;
+
+        let ids_ref = ids.clone();
+        ids_ref.replace_with(|old| {
+            let mut new_map = old.clone();
+            new_map.insert(name, app_id);
+
+            new_map
+        });
+
+        Ok(())
+    }
+}
 
 #[derive(Default, State)]
 pub struct FocusableSectionState {
     target: Value<Option<String>>,
     active_border_color: Value<String>,
+    app_theme: Value<AppTheme>,
 }
 
 impl FocusableSectionState {
     pub fn new() -> Self {
+        let app_theme = get_app_theme();
+        let unfocused_border_color = app_theme.border_unfocused.to_ref().to_string();
         FocusableSectionState {
             target: None.into(),
-            active_border_color: String::from("#666666").into(),
+            active_border_color: unfocused_border_color.into(),
+            app_theme: app_theme.into(),
         }
     }
 }
 
 impl Component for FocusableSection {
     type State = FocusableSectionState;
-    type Message = ();
+    type Message = String;
 
     fn accept_focus(&self) -> bool {
         false
@@ -49,6 +92,30 @@ impl Component for FocusableSection {
         }
     }
 
+    fn message(
+        &mut self,
+        message: Self::Message,
+        state: &mut Self::State,
+        _: anathema::widgets::Elements<'_, '_>,
+        _: anathema::prelude::Context<'_, Self::State>,
+    ) {
+        #[allow(clippy::single_match)]
+        match message.as_str() {
+            "unfocus" => {
+                state.active_border_color.set(
+                    state
+                        .app_theme
+                        .to_ref()
+                        .border_unfocused
+                        .to_ref()
+                        .to_string(),
+                );
+            }
+
+            _ => {}
+        }
+    }
+
     fn receive(
         &mut self,
         ident: &str,
@@ -63,11 +130,26 @@ impl Component for FocusableSection {
 
         #[allow(clippy::single_match)]
         match ident {
-            "input_focus" => {
+            "url_input_focus" => {
                 let focus = value.to_bool();
+                // dbg!(&focus);
+
                 match focus {
-                    true => state.active_border_color.set("#ffff00".to_string()),
-                    false => state.active_border_color.set("#666666".to_string()),
+                    true => {
+                        state
+                            .active_border_color
+                            .set(state.app_theme.to_ref().border_focused.to_ref().to_string());
+                    }
+                    false => {
+                        state.active_border_color.set(
+                            state
+                                .app_theme
+                                .to_ref()
+                                .border_unfocused
+                                .to_ref()
+                                .to_string(),
+                        );
+                    }
                 }
             }
 
