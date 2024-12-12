@@ -1,2 +1,4 @@
-container
-  text " [" item.label "]"
+hstack
+  text [bold: true, background: app_theme.top_bar_background, foreground: item.color] "█"
+  text [bold: false, foreground: app_theme.top_bar_background, background: item.color] item.label
+  text [bold: true, background: app_theme.top_bar_background, foreground: item.color] "█"

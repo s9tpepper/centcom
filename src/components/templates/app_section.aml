@@ -12,7 +12,7 @@ zstack
         spacer
         text [min_height: 1] "╰"
           for val in bottom_label
-            span [foreground: border_color, background: "reset"] "─"
-            span [foreground: border_color, background: "reset"] "["
-            span [foreground: border_color, background: "black"] val
-            span [foreground: border_color, background: "reset"] "]"
+            span [foreground: border_color, background: app_theme.background] "─"
+            span [bold: true, background: app_theme.background, foreground: app_theme.menu_opt_background] "█"
+            span [foreground: app_theme.background, background: app_theme.menu_opt_background] val
+            span [background: app_theme.background, foreground: app_theme.menu_opt_background] "█"

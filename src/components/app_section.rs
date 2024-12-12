@@ -3,6 +3,8 @@ use anathema::{
     state::{CommonVal, State, Value},
 };
 
+use crate::theme::{get_app_theme, AppTheme};
+
 pub const APP_SECTION_TEMPLATE: &str = "./src/components/templates/app_section.aml";
 
 #[derive(Default)]
@@ -12,13 +14,17 @@ pub struct AppSection;
 pub struct AppSectionState {
     section_id: Value<Option<String>>,
     section_text_id: Value<Option<String>>,
+    app_theme: Value<AppTheme>,
 }
 
 impl AppSectionState {
     pub fn new() -> Self {
+        let app_theme = get_app_theme();
+
         AppSectionState {
             section_id: None.into(),
             section_text_id: None.into(),
+            app_theme: app_theme.into(),
         }
     }
 }

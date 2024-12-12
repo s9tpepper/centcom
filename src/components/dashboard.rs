@@ -75,6 +75,7 @@ impl anathema::state::State for DashboardDisplay {
 #[derive(anathema::state::State)]
 pub struct MenuItem {
     label: Value<String>,
+    color: Value<String>,
 }
 
 #[derive(PartialEq, Eq)]
@@ -153,6 +154,13 @@ impl DashboardState {
     pub fn new(app_theme: AppTheme) -> Self {
         let project = Project::new();
 
+        // TODO: Re-do this in a way that doesn't suck
+        let color: Value<String> = app_theme.menu_color_1.to_ref().to_string().into();
+        let color1: Value<String> = app_theme.menu_color_1.to_ref().to_string().into();
+        let color2: Value<String> = app_theme.menu_color_2.to_ref().to_string().into();
+        let color3: Value<String> = app_theme.menu_color_3.to_ref().to_string().into();
+        let color4: Value<String> = app_theme.menu_color_4.to_ref().to_string().into();
+
         DashboardState {
             // project_count: 0.into(),
             project: project.into(),
@@ -173,19 +181,24 @@ impl DashboardState {
             logs: "".to_string().into(),
             menu_items: List::from_iter([
                 MenuItem {
+                    color: color1,
                     label: "(S)ave Project".to_string().into(),
                 },
                 MenuItem {
+                    color: color2,
                     label: "Save Endpo(i)nt".to_string().into(),
                 },
                 MenuItem {
+                    color: color3,
                     label: "Change (E)ndpoint".to_string().into(),
                 },
                 MenuItem {
+                    color: color4,
                     label: "(O)ptions".to_string().into(),
                 },
             ]),
             top_menu_items: List::from_iter([MenuItem {
+                color,
                 label: "(P)rojects".to_string().into(),
             }]),
             response_headers: List::from_iter(vec![]),
