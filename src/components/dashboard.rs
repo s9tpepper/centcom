@@ -160,6 +160,7 @@ impl DashboardState {
         let color2: Value<String> = app_theme.menu_color_2.to_ref().to_string().into();
         let color3: Value<String> = app_theme.menu_color_3.to_ref().to_string().into();
         let color4: Value<String> = app_theme.menu_color_4.to_ref().to_string().into();
+        let color5: Value<String> = app_theme.menu_color_5.to_ref().to_string().into();
 
         DashboardState {
             // project_count: 0.into(),
@@ -190,10 +191,14 @@ impl DashboardState {
                 },
                 MenuItem {
                     color: color3,
-                    label: "Change (E)ndpoint".to_string().into(),
+                    label: "Swap (P)roject".to_string().into(),
                 },
                 MenuItem {
                     color: color4,
+                    label: "Swap (E)ndpoint".to_string().into(),
+                },
+                MenuItem {
+                    color: color5,
                     label: "(O)ptions".to_string().into(),
                 },
             ]),
