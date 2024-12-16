@@ -5,6 +5,8 @@ use anathema::{
     state::{State, Value},
 };
 
+use crate::theme::{get_app_theme, AppTheme};
+
 use super::dashboard::{DashboardMessageHandler, FloatingWindow};
 
 pub const METHOD_SELECTOR_TEMPLATE: &str = "./src/components/templates/method_selector.aml";
@@ -15,12 +17,16 @@ pub struct MethodSelector;
 #[derive(Default, State)]
 pub struct MethodSelectorState {
     selection: Value<String>,
+    app_theme: Value<AppTheme>,
 }
 
 impl MethodSelectorState {
     pub fn new() -> Self {
+        let app_theme = get_app_theme();
+
         MethodSelectorState {
             selection: "GET".to_string().into(),
+            app_theme: app_theme.into(),
         }
     }
 }
