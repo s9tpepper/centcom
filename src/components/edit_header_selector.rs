@@ -3,6 +3,8 @@ use anathema::{
     state::{State, Value},
 };
 
+use crate::theme::{get_app_theme, AppTheme};
+
 use super::dashboard::{DashboardMessageHandler, FloatingWindow};
 
 pub const EDIT_HEADER_SELECTOR_TEMPLATE: &str =
@@ -14,12 +16,16 @@ pub struct EditHeaderSelector;
 #[derive(Default, State)]
 pub struct EditHeaderSelectorState {
     selection: Value<Option<char>>,
+    app_theme: Value<AppTheme>,
 }
 
 impl EditHeaderSelectorState {
     pub fn new() -> Self {
+        let app_theme = get_app_theme();
+
         EditHeaderSelectorState {
             selection: None.into(),
+            app_theme: app_theme.into(),
         }
     }
 }
@@ -45,7 +51,15 @@ impl DashboardMessageHandler for EditHeaderSelector {
 
             "edit_header_selector__selection" => {
                 let selection: usize = value.to_string().parse().unwrap();
-                let header = state.endpoint.to_mut().headers.remove(selection);
+                let mut endpoint = state.endpoint.to_mut();
+
+                let last_index = endpoint.headers.len().saturating_sub(1);
+                if selection > last_index {
+                    return;
+                }
+
+                let header = endpoint.headers.remove(selection);
+
                 if let Some(selected_header) = &header {
                     let header = selected_header.to_ref();
                     state.edit_header_name.set(header.name.to_ref().clone());
@@ -53,7 +67,6 @@ impl DashboardMessageHandler for EditHeaderSelector {
                 };
 
                 state.header_being_edited.set(header);
-
                 state.floating_window.set(FloatingWindow::EditHeader);
 
                 let edit_header_name_input_id = component_ids.get("edit_header_name_input");

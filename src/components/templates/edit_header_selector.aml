@@ -1,12 +1,11 @@
 align [alignment: "center"]
-  @app_section [
-    border_color: "#ffffff",
-    top_label: "Choose Header to Edit",
-    bottom_label: "hello",
-    show_top_label: true,
-    show_bottom_label: false
-  ]
-    $children
-      vstack
-        for header in endpoint.headers
-          text loop ". " header.name ": " header.value
+  vstack [background: app_theme.overlay_background, foreground: app_theme.overlay_foreground]
+    hstack [background: app_theme.overlay_heading, width: 50]
+      text [background: app_theme.overlay_heading]  "  Choose Header"
+
+    zstack
+      border [id: section_id, foreground: border_color, border_style: "│─││╯─╰│", sides: ["left", "right", "bottom"]]
+        padding [padding: 1]
+          vstack [width: 46]
+            for header in endpoint.headers
+              text [width: 46] loop ". " header.name  ": " header.value
