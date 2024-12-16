@@ -1,11 +1,11 @@
 align [alignment: "center"]
   vstack [background: app_theme.overlay_background, foreground: app_theme.overlay_foreground]
-    hstack [background: app_theme.overlay_heading, width: 50]
+    hstack [background: app_theme.overlay_heading, width: 50, fill: " "]
       text [bold: true, background: app_theme.overlay_heading]  "  Choose Header"
 
-    zstack
+    zstack [fill: " "]
       border [id: section_id, foreground: border_color, border_style: "│─││╯─╰│", sides: ["left", "right", "bottom"]]
         padding [padding: 1]
           vstack [width: 46]
             for header in endpoint.headers
-              text [width: 46] loop ". " header.name  ": " header.value
+              text [width: 46, foreground: app_theme.foreground] loop ". " header.name  ": " header.value
