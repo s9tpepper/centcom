@@ -5,7 +5,10 @@ use anathema::{
     state::{State, Value},
 };
 
-use crate::projects::HeaderState;
+use crate::{
+    projects::HeaderState,
+    theme::{get_app_theme, AppTheme},
+};
 
 use super::dashboard::{DashboardMessageHandler, FloatingWindow};
 
@@ -18,13 +21,17 @@ pub struct AddHeaderWindow;
 pub struct AddHeaderWindowState {
     name: Value<String>,
     value: Value<String>,
+    app_theme: Value<AppTheme>,
 }
 
 impl AddHeaderWindowState {
     pub fn new() -> Self {
+        let app_theme = get_app_theme();
+
         AddHeaderWindowState {
             name: "".to_string().into(),
             value: "".to_string().into(),
+            app_theme: app_theme.into(),
         }
     }
 }
@@ -122,6 +129,8 @@ impl Component for AddHeaderWindow {
             KeyCode::Char(char) => {
                 match char {
                     's' => context.publish("add_header__submit", |state| &state.name),
+
+                    'c' => context.publish("add_header__cancel", |state| &state.name),
 
                     // Sets focus to header name text input
                     'n' => context.set_focus("id", "header_name_input"),

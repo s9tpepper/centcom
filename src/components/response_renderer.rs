@@ -46,6 +46,8 @@ pub struct ResponseRenderer {
     total_lines: usize,
     viewport_height: usize,
     extension: String,
+
+    // All lines from the response
     response_lines: Vec<String>,
 }
 
@@ -497,6 +499,7 @@ pub struct ResponseRendererState {
     pub screen_cursor_y: Value<i32>,
     pub buf_cursor_x: Value<i32>,
     pub buf_cursor_y: Value<i32>,
+    // Rendered lines in the text area for current page
     pub lines: Value<List<Line>>,
     pub current_instruction: Value<Option<String>>,
     pub title: Value<String>,

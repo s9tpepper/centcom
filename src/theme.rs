@@ -44,6 +44,14 @@ pub struct AppTheme {
     pub menu_color_3: Value<String>,
     pub menu_color_4: Value<String>,
     pub menu_color_5: Value<String>,
+
+    pub overlay_background: Value<String>,
+    pub overlay_foreground: Value<String>,
+    pub overlay_heading: Value<String>,
+    pub overlay_submit_background: Value<String>,
+    pub overlay_submit_foreground: Value<String>,
+    pub overlay_cancel_background: Value<String>,
+    pub overlay_cancel_foreground: Value<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -84,6 +92,13 @@ pub struct AppThemePersisted {
     pub menu_color_3: String,
     pub menu_color_4: String,
     pub menu_color_5: String,
+    pub overlay_background: String,
+    pub overlay_foreground: String,
+    pub overlay_heading: String,
+    pub overlay_submit_background: String,
+    pub overlay_submit_foreground: String,
+    pub overlay_cancel_background: String,
+    pub overlay_cancel_foreground: String,
 }
 
 impl From<AppTheme> for AppThemePersisted {
@@ -109,6 +124,13 @@ impl From<AppTheme> for AppThemePersisted {
             menu_color_3: theme.menu_color_3.to_ref().to_string(),
             menu_color_4: theme.menu_color_4.to_ref().to_string(),
             menu_color_5: theme.menu_color_5.to_ref().to_string(),
+            overlay_background: theme.overlay_background.to_ref().to_string(),
+            overlay_foreground: theme.overlay_foreground.to_ref().to_string(),
+            overlay_heading: theme.overlay_heading.to_ref().to_string(),
+            overlay_submit_background: theme.overlay_submit_background.to_ref().to_string(),
+            overlay_submit_foreground: theme.overlay_submit_foreground.to_ref().to_string(),
+            overlay_cancel_background: theme.overlay_cancel_background.to_ref().to_string(),
+            overlay_cancel_foreground: theme.overlay_cancel_foreground.to_ref().to_string(),
         }
     }
 }
@@ -136,6 +158,13 @@ impl From<AppThemePersisted> for AppTheme {
             menu_color_3: theme_persisted.menu_color_3.into(),
             menu_color_4: theme_persisted.menu_color_4.into(),
             menu_color_5: theme_persisted.menu_color_5.into(),
+            overlay_background: theme_persisted.overlay_background.into(),
+            overlay_foreground: theme_persisted.overlay_foreground.into(),
+            overlay_heading: theme_persisted.overlay_heading.into(),
+            overlay_submit_background: theme_persisted.overlay_submit_background.into(),
+            overlay_submit_foreground: theme_persisted.overlay_submit_foreground.into(),
+            overlay_cancel_background: theme_persisted.overlay_cancel_background.into(),
+            overlay_cancel_foreground: theme_persisted.overlay_cancel_foreground.into(),
         }
     }
 }

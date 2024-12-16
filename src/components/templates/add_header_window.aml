@@ -1,30 +1,46 @@
 align [alignment: "center"]
-  container [background: "black"]
+  container [background: app_theme.overlay_background]
     zstack
       // NOTE: Prevents the glyphs behind the window from showing in the
       // floating dialog window
       zstack
-        border [foreground: #ffffff, border_style: "╭─╮│╯─╰│"]
-          vstack
-            container [height: 3, max_height: 3]
-              zstack
-                border [foreground: border_color, border_style: "╭─╮│╯─╰│", min_width: minwidth, max_width: 60]
-                  expand [axis: "horizontal"]
-                    @headernameinput (text_change -> header_name_update, textarea_focus -> name_input_focus) [id: "header_name_input"]
-                text "╭─(N)ame:"
+        border [foreground: app_theme.overlay_foreground, border_style: "╭─╮│╯─╰│"]
+          padding [padding: 1]
+            vstack
+              container [height: 3, max_height: 3]
+                zstack
+                  border [foreground: border_color, border_style: "╭─╮│╯─╰│", min_width: minwidth, max_width: 60]
+                    expand [axis: "horizontal"]
+                      @headernameinput (
+                        text_change -> header_name_update,
+                        textarea_focus -> name_input_focus
+                      ) [id: "header_name_input"]
+                  text "╭─(N)ame:"
 
-            container [height: 3, max_height: 3]
-              zstack
-                border [foreground: border_color, border_style: "╭─╮│╯─╰│", min_width: minwidth, max_width: 60]
-                  expand [axis: "horizontal"]
-                    @headervalueinput (text_change -> header_value_update, textarea_focus -> value_input_focus) [id: "header_value_input"]
-                text "╭─(V)alue:"
+              container [height: 3, max_height: 3]
+                zstack
+                  border [foreground: border_color, border_style: "╭─╮│╯─╰│", min_width: minwidth, max_width: 60]
+                    expand [axis: "horizontal"]
+                      @headervalueinput (
+                        text_change -> header_value_update,
+                        textarea_focus -> value_input_focus
+                      ) [id: "header_value_input"]
+                  text "╭─(V)alue:"
 
-        vstack [height: 8]
-          text "╭─Add Header:"
+        vstack [height: 10]
+          container [background: app_theme.overlay_heading, width: 64, fill: " "]
+            text [background: app_theme.overlay_heading, width: 80, bold: true] "  Add Header"
           spacer
-          text [min_height: 1] "╰"
-            span [foreground: border_color] "─"
-            span [foreground: border_color] "["
-            span [foreground: border_color] "(S)ubmit"
-            span [foreground: border_color] "]"
+          hstack
+            container [width: 36]
+              text ""
+            text [min_height: 1] ""
+              span [foreground: border_color] "─"
+              span [bold: true, background: app_theme.overlay_background, foreground: app_theme.overlay_submit_background] "█"
+              span [background: app_theme.overlay_submit_background, foreground: app_theme.overlay_submit_foreground] "(S)ubmit"
+              span [bold: true, background: app_theme.overlay_background, foreground: app_theme.overlay_submit_background] "█"
+            text [min_height: 1] ""
+              span [foreground: border_color] "─"
+              span [bold: true, background: app_theme.overlay_background, foreground: app_theme.overlay_cancel_background] "█"
+              span [background: app_theme.overlay_cancel_background, foreground: app_theme.overlay_cancel_foreground] "(C)ancel"
+              span [bold: true, background: app_theme.overlay_background, foreground: app_theme.overlay_cancel_background] "█"
