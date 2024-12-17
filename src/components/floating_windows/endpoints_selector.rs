@@ -18,6 +18,7 @@ use crate::{
     components::dashboard::{DashboardMessageHandler, DashboardState, FloatingWindow},
     messages::confirm_delete_endpoint::ConfirmDeleteEndpoint,
     projects::{Endpoint, PersistedEndpoint},
+    theme::{get_app_theme, AppTheme},
 };
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -41,10 +42,13 @@ pub struct EndpointsSelectorState {
     window_list: Value<List<Endpoint>>,
     count: Value<u8>,
     selected_item: Value<String>,
+    app_theme: Value<AppTheme>,
 }
 
 impl EndpointsSelectorState {
     pub fn new() -> Self {
+        let app_theme = get_app_theme();
+
         EndpointsSelectorState {
             cursor: 0.into(),
             count: 0.into(),
@@ -53,6 +57,7 @@ impl EndpointsSelectorState {
             visible_rows: 5.into(),
             window_list: List::empty(),
             selected_item: "".to_string().into(),
+            app_theme: app_theme.into(),
         }
     }
 }
