@@ -5,6 +5,7 @@ use anathema::{
     prelude::TuiBackend,
     runtime::RuntimeBuilder,
     state::{State, Value},
+    widgets::Elements,
 };
 
 use crate::projects::HeaderState;
@@ -66,6 +67,7 @@ impl DashboardMessageHandler for EditHeaderWindow {
         ident: impl Into<String>,
         state: &mut super::dashboard::DashboardState,
         mut context: anathema::prelude::Context<'_, super::dashboard::DashboardState>,
+        _: Elements<'_, '_>,
         _component_ids: std::cell::Ref<'_, HashMap<String, ComponentId<String>>>,
     ) {
         let event: String = ident.into();

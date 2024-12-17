@@ -10,6 +10,7 @@ use anathema::{
     prelude::TuiBackend,
     runtime::RuntimeBuilder,
     state::{List, State, Value},
+    widgets::Elements,
 };
 
 use crate::{
@@ -193,6 +194,7 @@ impl DashboardMessageHandler for ProjectWindow {
         ident: impl Into<String>,
         state: &mut super::dashboard::DashboardState,
         mut context: anathema::prelude::Context<'_, super::dashboard::DashboardState>,
+        _: Elements<'_, '_>,
         component_ids: std::cell::Ref<'_, HashMap<String, ComponentId<String>>>,
     ) {
         let event: String = ident.into();

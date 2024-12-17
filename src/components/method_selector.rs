@@ -3,6 +3,7 @@ use std::{fmt::Display, str::FromStr};
 use anathema::{
     component::{Component, KeyCode},
     state::{State, Value},
+    widgets::Elements,
 };
 
 use crate::theme::{get_app_theme, AppTheme};
@@ -37,6 +38,7 @@ impl DashboardMessageHandler for MethodSelector {
         ident: impl Into<String>,
         state: &mut super::dashboard::DashboardState,
         mut context: anathema::prelude::Context<'_, super::dashboard::DashboardState>,
+        _: Elements<'_, '_>,
         _component_ids: std::cell::Ref<
             '_,
             std::collections::HashMap<String, anathema::component::ComponentId<String>>,

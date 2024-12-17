@@ -3,6 +3,7 @@ use std::{cell::Ref, collections::HashMap};
 use anathema::{
     component::{self, Component, ComponentId, KeyCode},
     state::{State, Value},
+    widgets::Elements,
 };
 
 use crate::{
@@ -42,6 +43,7 @@ impl DashboardMessageHandler for AddHeaderWindow {
         ident: impl Into<String>,
         state: &mut super::dashboard::DashboardState,
         mut context: anathema::prelude::Context<'_, super::dashboard::DashboardState>,
+        _: Elements<'_, '_>,
         _component_ids: Ref<'_, HashMap<String, ComponentId<String>>>,
     ) {
         let event: String = ident.into();

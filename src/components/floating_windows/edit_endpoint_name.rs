@@ -5,6 +5,7 @@ use anathema::{
     prelude::TuiBackend,
     runtime::RuntimeBuilder,
     state::{State, Value},
+    widgets::Elements,
 };
 use serde::{Deserialize, Serialize};
 
@@ -29,6 +30,7 @@ impl DashboardMessageHandler for EditEndpointName {
         ident: impl Into<String>,
         state: &mut crate::components::dashboard::DashboardState,
         mut context: anathema::prelude::Context<'_, crate::components::dashboard::DashboardState>,
+        _: Elements<'_, '_>,
         component_ids: std::cell::Ref<'_, HashMap<String, ComponentId<String>>>,
     ) {
         let event: String = ident.into();

@@ -1,9 +1,10 @@
 use anathema::{
     component::{ComponentId, KeyCode, KeyEvent},
+    default_widgets::{HStack, Text, VStack},
     prelude::{Context, TuiBackend},
     runtime::RuntimeBuilder,
     state::{CommonVal, List, State, Value},
-    widgets::Elements,
+    widgets::{AnyWidget, Elements},
 };
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use std::{
@@ -311,11 +312,16 @@ impl DashboardComponent {
         context.emit(*app_id, msg);
     }
 
-    fn new_project(&self, state: &mut DashboardState, context: Context<'_, DashboardState>) {
+    fn new_project(
+        &self,
+        state: &mut DashboardState,
+        context: Context<'_, DashboardState>,
+        _: anathema::widgets::Elements<'_, '_>,
+    ) {
         self.save_project(state, false);
 
-        state.project = Project::new().into();
-        state.endpoint = Endpoint::new().into();
+        state.project.set(Project::new());
+        state.endpoint.set(Endpoint::new());
 
         self.clear_url_and_request_body(&context);
     }
@@ -602,6 +608,7 @@ pub trait DashboardMessageHandler {
         ident: impl Into<String>,
         state: &mut DashboardState,
         context: Context<'_, DashboardState>,
+        elements: Elements<'_, '_>,
         component_ids: Ref<'_, HashMap<String, ComponentId<String>>>,
     );
 }
@@ -686,7 +693,7 @@ impl anathema::component::Component for DashboardComponent {
         ident: &str,
         value: CommonVal<'_>,
         state: &mut Self::State,
-        _elements: Elements<'_, '_>,
+        elements: Elements<'_, '_>,
         mut context: Context<'_, Self::State>,
     ) {
         #[allow(clippy::single_match)]
@@ -710,35 +717,91 @@ impl anathema::component::Component for DashboardComponent {
                 },
 
                 "add_header" => {
-                    AddHeaderWindow::handle_message(value, ident, state, context, component_ids);
+                    AddHeaderWindow::handle_message(
+                        value,
+                        ident,
+                        state,
+                        context,
+                        elements,
+                        component_ids,
+                    );
                 }
 
                 "edit_header" => {
-                    EditHeaderWindow::handle_message(value, ident, state, context, component_ids);
+                    EditHeaderWindow::handle_message(
+                        value,
+                        ident,
+                        state,
+                        context,
+                        elements,
+                        component_ids,
+                    );
                 }
 
                 "edit_header_selector" => {
-                    EditHeaderSelector::handle_message(value, ident, state, context, component_ids);
+                    EditHeaderSelector::handle_message(
+                        value,
+                        ident,
+                        state,
+                        context,
+                        elements,
+                        component_ids,
+                    );
                 }
 
                 "method_selector" => {
-                    MethodSelector::handle_message(value, ident, state, context, component_ids);
+                    MethodSelector::handle_message(
+                        value,
+                        ident,
+                        state,
+                        context,
+                        elements,
+                        component_ids,
+                    );
                 }
 
                 "project_window" => {
-                    ProjectWindow::handle_message(value, ident, state, context, component_ids);
+                    ProjectWindow::handle_message(
+                        value,
+                        ident,
+                        state,
+                        context,
+                        elements,
+                        component_ids,
+                    );
                 }
 
                 "edit_endpoint_name" => {
-                    EditEndpointName::handle_message(value, ident, state, context, component_ids);
+                    EditEndpointName::handle_message(
+                        value,
+                        ident,
+                        state,
+                        context,
+                        elements,
+                        component_ids,
+                    );
                 }
 
                 "edit_project_name" => {
-                    EditProjectName::handle_message(value, ident, state, context, component_ids);
+                    EditProjectName::handle_message(
+                        value,
+                        ident,
+                        state,
+                        context,
+                        elements,
+                        component_ids,
+                    );
                 }
 
                 "endpoints_selector" => {
-                    EndpointsSelector::handle_message(value, ident, state, context, component_ids);
+                    EndpointsSelector::handle_message(
+                        value,
+                        ident,
+                        state,
+                        context,
+                        elements,
+                        component_ids,
+                    );
                 }
 
                 _ => {}
@@ -767,7 +830,7 @@ impl anathema::component::Component for DashboardComponent {
                     'f' => context.set_focus("id", "response_body_input"),
                     'o' => self.send_options_open(state, context),
                     't' => self.new_endpoint(state, context),
-                    'w' => self.new_project(state, context),
+                    'w' => self.new_project(state, context, elements),
 
                     'v' => match main_display {
                         DashboardDisplay::RequestBody => {}
