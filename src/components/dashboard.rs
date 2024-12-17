@@ -12,7 +12,6 @@ use std::{
     rc::Rc,
 };
 use std::{fs, ops::Deref};
-use syntect::highlighting::Theme;
 
 use arboard::Clipboard;
 use serde::{Deserialize, Serialize};
@@ -113,7 +112,7 @@ impl State for FloatingWindow {
     }
 }
 
-#[derive(anathema::state::State)]
+#[derive(State)]
 pub struct DashboardState {
     pub main_display: Value<DashboardDisplay>,
     pub floating_window: Value<FloatingWindow>,
@@ -178,7 +177,8 @@ impl DashboardState {
             edit_header_name: "".to_string().into(),
             edit_header_value: "".to_string().into(),
             floating_window: FloatingWindow::None.into(),
-            main_display: Value::<DashboardDisplay>::new(DashboardDisplay::RequestBody),
+            // main_display: Value::<DashboardDisplay>::new(DashboardDisplay::RequestBody),
+            main_display: DashboardDisplay::RequestBody.into(),
             logs: "".to_string().into(),
             menu_items: List::from_iter([
                 MenuItem {
@@ -219,7 +219,6 @@ impl DashboardState {
 
 pub struct DashboardComponent {
     pub component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>,
-    theme: Theme,
     test: bool,
 }
 
@@ -229,10 +228,12 @@ impl DashboardComponent {
         builder: &mut RuntimeBuilder<TuiBackend, ()>,
     ) -> anyhow::Result<()> {
         let theme = get_highlight_theme(None);
+
         let app_theme = get_app_theme();
 
         let mut state = DashboardState::new(app_theme);
         let color = theme.settings.background.unwrap();
+
         state
             .app_bg
             .set(format!("#{:02X}{:02X}{:02X}", color.r, color.g, color.b));
@@ -242,7 +243,6 @@ impl DashboardComponent {
             DASHBOARD_TEMPLATE,
             DashboardComponent {
                 component_ids: ids.clone(),
-                theme,
                 test: false,
             },
             state,
