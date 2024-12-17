@@ -15,6 +15,7 @@ use anathema::{
 use crate::{
     messages::confirm_delete_project::ConfirmDeleteProject,
     projects::{get_projects, Endpoint, PersistedProject, Project},
+    theme::{get_app_theme, AppTheme},
 };
 
 use super::{
@@ -38,10 +39,13 @@ pub struct ProjectWindowState {
     window_list: Value<List<Project>>,
     project_count: Value<u8>,
     selected_project: Value<String>,
+    app_theme: Value<AppTheme>,
 }
 
 impl ProjectWindowState {
     pub fn new() -> Self {
+        let app_theme = get_app_theme();
+
         ProjectWindowState {
             cursor: 0.into(),
             project_count: 0.into(),
@@ -50,6 +54,7 @@ impl ProjectWindowState {
             visible_projects: 5.into(),
             window_list: List::empty(),
             selected_project: "".to_string().into(),
+            app_theme: app_theme.into(),
         }
     }
 }

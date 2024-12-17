@@ -1,21 +1,37 @@
 align [alignment: "center"]
-  border [foreground: border_color, border_style: "╭─╮│╯─╰│", min_width: minwidth, max_width: 80]
-    vstack
-      container [fill: " ", height: 1, background: "yellow", foreground: #131313]
+  zstack
+    vstack [width: 80]
+      container [fill: " ", height: 1, background: app_theme.overlay_heading, foreground: #131313]
         expand
           hstack
-            text " Project: " current_project
+            text " Choose Project " current_project
             spacer
             text "[(P)rojects: " project_count "]"
+      border [sides: ["left", "right", "bottom"], background: app_theme.overlay_background, foreground: border_color, border_style: "╭─╮│╯─╰│", min_width: minwidth, max_width: 80]
+        padding [padding: 1]
+          vstack
+            for project in window_list
+              hstack [fill: "‧", foreground: project.row_color]
+                text project.name
+                spacer
 
-      for project in window_list
-        hstack [fill: "‧", foreground: project.row_color]
-          text project.name
+    vstack [height: 9, width: 80]
+      spacer
+      container [height: 1, max_width: 78]
+        hstack
           spacer
-
-      container [fill: " ", height: 1, background: "red", foreground: #131313]
-        expand
-          hstack
-            text " hjkl"
-            spacer
-            text "[(A)dd New] [(R)ename] [(D)elete]"
+          text [min_height: 1] ""
+            span [foreground: border_color] "─"
+            span [bold: true, background: app_theme.overlay_background, foreground: app_theme.overlay_submit_background] "█"
+            span [background: app_theme.overlay_submit_background, foreground: app_theme.overlay_submit_foreground] "(A)dd"
+            span [bold: true, background: app_theme.overlay_background, foreground: app_theme.overlay_submit_background] "█"
+          text [min_height: 1] ""
+            span [foreground: border_color] "─"
+            span [bold: true, background: app_theme.overlay_background, foreground: app_theme.menu_color_2] "█"
+            span [background: app_theme.menu_color_2, foreground: app_theme.overlay_submit_foreground] "(R)ename"
+            span [bold: true, background: app_theme.overlay_background, foreground: app_theme.menu_color_2] "█"
+          text [min_height: 1] ""
+            span [foreground: border_color] "─"
+            span [bold: true, background: app_theme.overlay_background, foreground: app_theme.overlay_cancel_background] "█"
+            span [background: app_theme.overlay_cancel_background, foreground: app_theme.overlay_cancel_foreground] "(D)elete"
+            span [bold: true, background: app_theme.overlay_background, foreground: app_theme.overlay_cancel_background] "█"
