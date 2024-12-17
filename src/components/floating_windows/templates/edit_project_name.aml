@@ -1,20 +1,40 @@
 align [alignment: "center"]
-  border [foreground: border_color, border_style: "╭─╮│╯─╰│", min_width: minwidth, max_width: 80, fill: " "]
-    vstack
-      container [height: 1, background: "yellow", foreground: #131313]
-        expand
-          hstack
-            text " Change Project Name: "
+  vstack [width: 62]
+    container [height: 1, background: "yellow", foreground: #131313, max_width: 62]
+      expand
+        hstack
+          text "  Change Project Name"
 
-      padding [padding: 1]
-        @edit_project_name_input (
-          text_change -> name_input_update,
-          escape -> name_input_escape
-        ) [id: "project_name_input", label: "(P)roject Name"]
+    zstack
+      border [
+        background: app_theme.overlay_background,
+        foreground: border_color,
+        border_style: "╭─╮│╯─╰│",
+        sides: ["left", "right", "bottom"],
+        min_width: minwidth,
+        max_width: 80,
+        fill: " "
+      ]
 
-      container [height: 1, background: "red", foreground: #131313]
-        expand
-          hstack
+        vstack [background: app_theme.overlay_background]
+          padding [padding: 1]
+            @edit_project_name_input (
+              text_change -> name_input_update,
+              escape -> name_input_escape
+            ) [id: "project_name_input", label: "(P)roject Name"]
+
+      container [height: 6]
+        vstack
+          spacer
+          hstack [width: 60]
             spacer
-            text "[(S)ubmit] [(C)ancel]"
-            spacer
+            text [min_height: 1] ""
+              span [foreground: border_color] "─"
+              span [bold: true, background: app_theme.overlay_background, foreground: app_theme.overlay_submit_background] "█"
+              span [background: app_theme.overlay_submit_background, foreground: app_theme.overlay_submit_foreground] "(S)ubmit"
+              span [bold: true, background: app_theme.overlay_background, foreground: app_theme.overlay_submit_background] "█"
+            text [min_height: 1] ""
+              span [foreground: border_color] "─"
+              span [bold: true, background: app_theme.overlay_background, foreground: app_theme.overlay_cancel_background] "█"
+              span [background: app_theme.overlay_cancel_background, foreground: app_theme.overlay_cancel_foreground] "(C)ancel"
+              span [bold: true, background: app_theme.overlay_background, foreground: app_theme.overlay_cancel_background] "█"

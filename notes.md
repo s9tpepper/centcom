@@ -55,4 +55,5 @@ Body
 [x] (MVP) Possible bug with backspace in text input not removing character
 
 ### Optimizations
-[ ] Update AppTheme/AppThemePersisted to use serde w/out derive to try to get rid of the need for two structs to save JSON
+[x] Update AppTheme/AppThemePersisted to use serde w/out derive to try to get rid of the need for two structs to save JSON
+    Note: This didn't turn out so well, too complicated, kept duo structs
