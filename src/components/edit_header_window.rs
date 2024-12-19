@@ -5,9 +5,13 @@ use anathema::{
     prelude::TuiBackend,
     runtime::RuntimeBuilder,
     state::{State, Value},
+    widgets::Elements,
 };
 
-use crate::projects::HeaderState;
+use crate::{
+    projects::HeaderState,
+    theme::{get_app_theme, AppTheme},
+};
 
 use super::dashboard::{DashboardMessageHandler, FloatingWindow};
 
@@ -43,19 +47,28 @@ impl EditHeaderWindow {
 
         Ok(())
     }
+
+    fn update_app_theme(&self, state: &mut EditHeaderWindowState) {
+        let app_theme = get_app_theme();
+        state.app_theme.set(app_theme);
+    }
 }
 
 #[derive(Default, State)]
 pub struct EditHeaderWindowState {
     name: Value<String>,
     value: Value<String>,
+    app_theme: Value<AppTheme>,
 }
 
 impl EditHeaderWindowState {
     pub fn new() -> Self {
+        let app_theme = get_app_theme();
+
         EditHeaderWindowState {
             name: "".to_string().into(),
             value: "".to_string().into(),
+            app_theme: app_theme.into(),
         }
     }
 }
@@ -66,6 +79,7 @@ impl DashboardMessageHandler for EditHeaderWindow {
         ident: impl Into<String>,
         state: &mut super::dashboard::DashboardState,
         mut context: anathema::prelude::Context<'_, super::dashboard::DashboardState>,
+        _: Elements<'_, '_>,
         _component_ids: std::cell::Ref<'_, HashMap<String, ComponentId<String>>>,
     ) {
         let event: String = ident.into();
@@ -113,6 +127,15 @@ impl Component for EditHeaderWindow {
     type State = EditHeaderWindowState;
     type Message = String;
 
+    fn on_focus(
+        &mut self,
+        state: &mut Self::State,
+        _: Elements<'_, '_>,
+        _: anathema::prelude::Context<'_, Self::State>,
+    ) {
+        self.update_app_theme(state);
+    }
+
     fn receive(
         &mut self,
         ident: &str,
@@ -152,6 +175,7 @@ impl Component for EditHeaderWindow {
             KeyCode::Char(char) => {
                 match char {
                     's' => context.publish("edit_header__submit", |state| &state.name),
+                    'c' => context.publish("edit_header__cancel", |state| &state.name),
 
                     // Sets focus to header name text input
                     'n' => context.set_focus("id", "edit_header_name_input_id"),

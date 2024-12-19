@@ -43,6 +43,13 @@ impl FocusableSection {
 
         Ok(())
     }
+
+    // TODO: Get a message like the MenuItem so it updates the theme changes
+    #[allow(unused)]
+    fn update_app_theme(&self, state: &mut FocusableSectionState) {
+        let app_theme = get_app_theme();
+        state.app_theme.set(app_theme);
+    }
 }
 
 #[derive(Default, State)]

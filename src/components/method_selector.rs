@@ -3,6 +3,7 @@ use std::{fmt::Display, str::FromStr};
 use anathema::{
     component::{Component, KeyCode},
     state::{State, Value},
+    widgets::Elements,
 };
 
 use crate::theme::{get_app_theme, AppTheme};
@@ -13,6 +14,13 @@ pub const METHOD_SELECTOR_TEMPLATE: &str = "./src/components/templates/method_se
 
 #[derive(Default)]
 pub struct MethodSelector;
+
+impl MethodSelector {
+    fn update_app_theme(&self, state: &mut MethodSelectorState) {
+        let app_theme = get_app_theme();
+        state.app_theme.set(app_theme);
+    }
+}
 
 #[derive(Default, State)]
 pub struct MethodSelectorState {
@@ -37,6 +45,7 @@ impl DashboardMessageHandler for MethodSelector {
         ident: impl Into<String>,
         state: &mut super::dashboard::DashboardState,
         mut context: anathema::prelude::Context<'_, super::dashboard::DashboardState>,
+        _: Elements<'_, '_>,
         _component_ids: std::cell::Ref<
             '_,
             std::collections::HashMap<String, anathema::component::ComponentId<String>>,
@@ -74,10 +83,12 @@ impl Component for MethodSelector {
 
     fn on_focus(
         &mut self,
-        _state: &mut Self::State,
+        state: &mut Self::State,
         mut _elements: anathema::widgets::Elements<'_, '_>,
         mut _context: anathema::prelude::Context<'_, Self::State>,
     ) {
+        self.update_app_theme(state);
+
         // TODO: Highlight current selection
     }
 

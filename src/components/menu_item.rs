@@ -3,15 +3,21 @@ use anathema::{
     state::{State, Value},
 };
 
-use crate::{
-    app_themes,
-    theme::{get_app_theme, AppTheme},
-};
+use crate::theme::{get_app_theme, AppTheme};
 
 pub const MENU_ITEM_TEMPLATE: &str = "./src/components/templates/menu_item.aml";
 
 #[derive(Default)]
 pub struct MenuItem;
+
+impl MenuItem {
+    // TODO: Add a message to update the app theme when it changes for the menu items
+    #[allow(unused)]
+    fn update_app_theme(&self, state: &mut MenuItemState) {
+        let app_theme = get_app_theme();
+        state.app_theme.set(app_theme);
+    }
+}
 
 #[derive(Default, State)]
 pub struct MenuItemState {

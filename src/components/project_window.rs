@@ -10,11 +10,13 @@ use anathema::{
     prelude::TuiBackend,
     runtime::RuntimeBuilder,
     state::{List, State, Value},
+    widgets::Elements,
 };
 
 use crate::{
     messages::confirm_delete_project::ConfirmDeleteProject,
     projects::{get_projects, Endpoint, PersistedProject, Project},
+    theme::{get_app_theme, AppTheme},
 };
 
 use super::{
@@ -38,10 +40,13 @@ pub struct ProjectWindowState {
     window_list: Value<List<Project>>,
     project_count: Value<u8>,
     selected_project: Value<String>,
+    app_theme: Value<AppTheme>,
 }
 
 impl ProjectWindowState {
     pub fn new() -> Self {
+        let app_theme = get_app_theme();
+
         ProjectWindowState {
             cursor: 0.into(),
             project_count: 0.into(),
@@ -50,6 +55,7 @@ impl ProjectWindowState {
             visible_projects: 5.into(),
             window_list: List::empty(),
             selected_project: "".to_string().into(),
+            app_theme: app_theme.into(),
         }
     }
 }
@@ -66,8 +72,10 @@ impl ProjectWindow {
         ids: &Rc<RefCell<HashMap<String, ComponentId<String>>>>,
         builder: &mut RuntimeBuilder<TuiBackend, ()>,
     ) -> anyhow::Result<()> {
+        println!("Registering project window component...");
+
         let id = builder.register_component(
-            "project_window",
+            "project_selector",
             PROJECT_WINDOW_TEMPLATE,
             ProjectWindow::new(ids.clone()),
             ProjectWindowState::new(),
@@ -76,12 +84,21 @@ impl ProjectWindow {
         let ids_ref = ids.clone();
         ids_ref.replace_with(|old| {
             let mut new_map = old.clone();
-            new_map.insert(String::from("project_window"), id);
+            new_map.insert(String::from("project_selector"), id);
+            println!("Registered project_window with id project_window {id:?}");
 
             new_map
         });
 
+        println!("ids: {ids_ref:?}");
+        println!("project selector registered");
+
         Ok(())
+    }
+
+    fn update_app_theme(&self, state: &mut ProjectWindowState) {
+        let app_theme = get_app_theme();
+        state.app_theme.set(app_theme);
     }
 
     pub fn new(component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>) -> Self {
@@ -188,6 +205,7 @@ impl DashboardMessageHandler for ProjectWindow {
         ident: impl Into<String>,
         state: &mut super::dashboard::DashboardState,
         mut context: anathema::prelude::Context<'_, super::dashboard::DashboardState>,
+        _: Elements<'_, '_>,
         component_ids: std::cell::Ref<'_, HashMap<String, ComponentId<String>>>,
     ) {
         let event: String = ident.into();
@@ -347,6 +365,8 @@ impl Component for ProjectWindow {
         _: anathema::widgets::Elements<'_, '_>,
         _: anathema::prelude::Context<'_, Self::State>,
     ) {
+        self.update_app_theme(state);
+
         match self.load(state) {
             Ok(_) => {
                 // Reset navigation state
@@ -373,12 +393,13 @@ impl Component for ProjectWindow {
 
     fn message(
         &mut self,
-        _: Self::Message,
+        message: Self::Message,
         _: &mut Self::State,
         _: anathema::widgets::Elements<'_, '_>,
         _: anathema::prelude::Context<'_, Self::State>,
     ) {
-        // println!("Received message in project window: {message}");
+        println!("Received message in project window: {message}");
+
         // NOTE: The currently selected project might need to be sent from the dashboard
         // when opening the project window after choosing a project
     }

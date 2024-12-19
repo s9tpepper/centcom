@@ -1,6 +1,7 @@
 use anathema::{
     component::Component,
     state::{State, Value},
+    widgets::Elements,
 };
 
 use crate::theme::{get_app_theme, AppTheme};
@@ -12,6 +13,13 @@ pub const EDIT_HEADER_SELECTOR_TEMPLATE: &str =
 
 #[derive(Default)]
 pub struct EditHeaderSelector;
+
+impl EditHeaderSelector {
+    fn update_app_theme(&self, state: &mut EditHeaderSelectorState) {
+        let app_theme = get_app_theme();
+        state.app_theme.set(app_theme);
+    }
+}
 
 #[derive(Default, State)]
 pub struct EditHeaderSelectorState {
@@ -36,6 +44,7 @@ impl DashboardMessageHandler for EditHeaderSelector {
         ident: impl Into<String>,
         state: &mut super::dashboard::DashboardState,
         mut context: anathema::prelude::Context<'_, super::dashboard::DashboardState>,
+        _: Elements<'_, '_>,
         component_ids: std::cell::Ref<
             '_,
             std::collections::HashMap<String, anathema::component::ComponentId<String>>,
@@ -93,6 +102,15 @@ impl Component for EditHeaderSelector {
 
     fn accept_focus(&self) -> bool {
         true
+    }
+
+    fn on_focus(
+        &mut self,
+        state: &mut Self::State,
+        _: Elements<'_, '_>,
+        _: anathema::prelude::Context<'_, Self::State>,
+    ) {
+        self.update_app_theme(state);
     }
 
     fn on_key(

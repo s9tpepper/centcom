@@ -1,8 +1,10 @@
 align [alignment: "center"]
-  container [background: "black"]
-    zstack
-      zstack
-        border [foreground: #ffffff, border_style: "╭─╮│╯─╰│"]
+  zstack [background: app_theme.overlay_background]
+    vstack
+      container [fill: " ", bold: true, foreground: app_theme.overlay_foreground, background: app_theme.overlay_heading, width: 64]
+        text "  Edit Header:"
+      border [sides: ["left", "right", "bottom"], foreground: app_theme.border_focused, border_style: "╭─╮│╯─╰│"]
+        padding [padding: 1]
           vstack
             container [height: 3, max_height: 3]
               zstack
@@ -18,11 +20,17 @@ align [alignment: "center"]
                     @editheadervalue (text_change -> edit_header_value_update, textarea_focus -> edit_value_input_focus) [id: "edit_header_value_input_id"]
                 text "╭─(V)alue:"
 
-        vstack [height: 8]
-          text "╭─Edit Header:"
-          spacer
-          text [min_height: 1] "╰"
-            span [foreground: border_color] "─"
-            span [foreground: border_color] "["
-            span [foreground: border_color] "(S)ubmit"
-            span [foreground: border_color] "]"
+    vstack [height: 10]
+      spacer
+      hstack [width: 62]
+        spacer
+        text [min_height: 1] ""
+          span [foreground: border_color] "─"
+          span [bold: true, background: app_theme.overlay_background, foreground: app_theme.overlay_submit_background] "█"
+          span [background: app_theme.overlay_submit_background, foreground: app_theme.overlay_submit_foreground] "(S)ubmit"
+          span [bold: true, background: app_theme.overlay_background, foreground: app_theme.overlay_submit_background] "█"
+        text [min_height: 1] ""
+          span [foreground: border_color] "─"
+          span [bold: true, background: app_theme.overlay_background, foreground: app_theme.overlay_cancel_background] "█"
+          span [background: app_theme.overlay_cancel_background, foreground: app_theme.overlay_cancel_foreground] "(C)ancel"
+          span [bold: true, background: app_theme.overlay_background, foreground: app_theme.overlay_cancel_background] "█"

@@ -4,7 +4,7 @@ align [alignment: "center"]
       text [bold: true, background: app_theme.overlay_heading]  "  Choose Header"
 
     zstack [fill: " "]
-      border [id: section_id, foreground: border_color, border_style: "│─││╯─╰│", sides: ["left", "right", "bottom"]]
+      border [id: section_id, foreground: app_theme.border_focused, border_style: "│─││╯─╰│", sides: ["left", "right", "bottom"]]
         padding [padding: 1]
           vstack [width: 46]
             for header in endpoint.headers

@@ -5,10 +5,14 @@ use anathema::{
     prelude::TuiBackend,
     runtime::RuntimeBuilder,
     state::{State, Value},
+    widgets::Elements,
 };
 use serde::{Deserialize, Serialize};
 
-use crate::components::{dashboard::DashboardMessageHandler, send_message};
+use crate::{
+    components::{dashboard::DashboardMessageHandler, send_message},
+    theme::{get_app_theme, AppTheme},
+};
 
 const TEMPLATE: &str = "./src/components/floating_windows/templates/edit_endpoint_name.aml";
 
@@ -29,6 +33,7 @@ impl DashboardMessageHandler for EditEndpointName {
         ident: impl Into<String>,
         state: &mut crate::components::dashboard::DashboardState,
         mut context: anathema::prelude::Context<'_, crate::components::dashboard::DashboardState>,
+        _: Elements<'_, '_>,
         component_ids: std::cell::Ref<'_, HashMap<String, ComponentId<String>>>,
     ) {
         let event: String = ident.into();
@@ -71,6 +76,15 @@ impl Component for EditEndpointName {
 
     fn accept_focus(&self) -> bool {
         true
+    }
+
+    fn on_focus(
+        &mut self,
+        state: &mut Self::State,
+        _: Elements<'_, '_>,
+        _: anathema::prelude::Context<'_, Self::State>,
+    ) {
+        self.update_app_theme(state);
     }
 
     fn message(
@@ -156,6 +170,7 @@ impl EditEndpointName {
         ids: &Rc<RefCell<HashMap<String, ComponentId<String>>>>,
         builder: &mut RuntimeBuilder<TuiBackend, ()>,
     ) -> anyhow::Result<()> {
+        let app_theme = get_app_theme();
         let id = builder.register_component(
             "edit_endpoint_name",
             TEMPLATE,
@@ -164,6 +179,7 @@ impl EditEndpointName {
             },
             EditEndpointNameState {
                 name: String::from("").into(),
+                app_theme: app_theme.into(),
             },
         )?;
 
@@ -177,9 +193,15 @@ impl EditEndpointName {
 
         Ok(())
     }
+
+    fn update_app_theme(&self, state: &mut EditEndpointNameState) {
+        let app_theme = get_app_theme();
+        state.app_theme.set(app_theme);
+    }
 }
 
 #[derive(State)]
 pub struct EditEndpointNameState {
     name: Value<String>,
+    app_theme: Value<AppTheme>,
 }

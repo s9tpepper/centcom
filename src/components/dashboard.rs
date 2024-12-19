@@ -12,7 +12,6 @@ use std::{
     rc::Rc,
 };
 use std::{fs, ops::Deref};
-use syntect::highlighting::Theme;
 
 use arboard::Clipboard;
 use serde::{Deserialize, Serialize};
@@ -113,7 +112,7 @@ impl State for FloatingWindow {
     }
 }
 
-#[derive(anathema::state::State)]
+#[derive(State)]
 pub struct DashboardState {
     pub main_display: Value<DashboardDisplay>,
     pub floating_window: Value<FloatingWindow>,
@@ -178,7 +177,8 @@ impl DashboardState {
             edit_header_name: "".to_string().into(),
             edit_header_value: "".to_string().into(),
             floating_window: FloatingWindow::None.into(),
-            main_display: Value::<DashboardDisplay>::new(DashboardDisplay::RequestBody),
+            // main_display: Value::<DashboardDisplay>::new(DashboardDisplay::RequestBody),
+            main_display: DashboardDisplay::RequestBody.into(),
             logs: "".to_string().into(),
             menu_items: List::from_iter([
                 MenuItem {
@@ -219,7 +219,6 @@ impl DashboardState {
 
 pub struct DashboardComponent {
     pub component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>,
-    theme: Theme,
     test: bool,
 }
 
@@ -229,10 +228,12 @@ impl DashboardComponent {
         builder: &mut RuntimeBuilder<TuiBackend, ()>,
     ) -> anyhow::Result<()> {
         let theme = get_highlight_theme(None);
+
         let app_theme = get_app_theme();
 
         let mut state = DashboardState::new(app_theme);
         let color = theme.settings.background.unwrap();
+
         state
             .app_bg
             .set(format!("#{:02X}{:02X}{:02X}", color.r, color.g, color.b));
@@ -242,7 +243,6 @@ impl DashboardComponent {
             DASHBOARD_TEMPLATE,
             DashboardComponent {
                 component_ids: ids.clone(),
-                theme,
                 test: false,
             },
             state,
@@ -257,6 +257,11 @@ impl DashboardComponent {
         });
 
         Ok(())
+    }
+
+    fn update_app_theme(&self, state: &mut DashboardState) {
+        let app_theme = get_app_theme();
+        state.app_theme.set(app_theme);
     }
 
     fn show_message(&self, title: &str, message: &str, state: &mut DashboardState) {
@@ -311,11 +316,16 @@ impl DashboardComponent {
         context.emit(*app_id, msg);
     }
 
-    fn new_project(&self, state: &mut DashboardState, context: Context<'_, DashboardState>) {
+    fn new_project(
+        &self,
+        state: &mut DashboardState,
+        context: Context<'_, DashboardState>,
+        _: anathema::widgets::Elements<'_, '_>,
+    ) {
         self.save_project(state, false);
 
-        state.project = Project::new().into();
-        state.endpoint = Endpoint::new().into();
+        state.project.set(Project::new());
+        state.endpoint.set(Endpoint::new());
 
         self.clear_url_and_request_body(&context);
     }
@@ -453,7 +463,7 @@ impl DashboardComponent {
         mut context: Context<'_, DashboardState>,
     ) {
         state.floating_window.set(FloatingWindow::EndpointsSelector);
-        context.set_focus("id", "endpoints_selector");
+        context.set_focus("id", "endpoints_selector_window");
 
         let persisted_endpoints: Vec<PersistedEndpoint> = state
             .project
@@ -472,9 +482,12 @@ impl DashboardComponent {
         #[allow(clippy::single_match)]
         match self.component_ids.try_borrow() {
             #[allow(clippy::single_match)]
-            Ok(ids) => match ids.get("endpoints_selector") {
+            Ok(ids) => match ids.get("endpoints_selector_window") {
                 Some(id) => {
-                    let _ = serde_json::to_string(&msg).map(|payload| context.emit(*id, payload));
+                    let _ = serde_json::to_string(&msg).map(|payload| {
+                        println!("Sending endpoints msg to {id:?}");
+                        context.emit(*id, payload);
+                    });
                 }
                 None => self.show_error("Unable to find endpoints window id", state),
             },
@@ -602,6 +615,7 @@ pub trait DashboardMessageHandler {
         ident: impl Into<String>,
         state: &mut DashboardState,
         context: Context<'_, DashboardState>,
+        elements: Elements<'_, '_>,
         component_ids: Ref<'_, HashMap<String, ComponentId<String>>>,
     );
 }
@@ -686,7 +700,7 @@ impl anathema::component::Component for DashboardComponent {
         ident: &str,
         value: CommonVal<'_>,
         state: &mut Self::State,
-        _elements: Elements<'_, '_>,
+        elements: Elements<'_, '_>,
         mut context: Context<'_, Self::State>,
     ) {
         #[allow(clippy::single_match)]
@@ -710,35 +724,91 @@ impl anathema::component::Component for DashboardComponent {
                 },
 
                 "add_header" => {
-                    AddHeaderWindow::handle_message(value, ident, state, context, component_ids);
+                    AddHeaderWindow::handle_message(
+                        value,
+                        ident,
+                        state,
+                        context,
+                        elements,
+                        component_ids,
+                    );
                 }
 
                 "edit_header" => {
-                    EditHeaderWindow::handle_message(value, ident, state, context, component_ids);
+                    EditHeaderWindow::handle_message(
+                        value,
+                        ident,
+                        state,
+                        context,
+                        elements,
+                        component_ids,
+                    );
                 }
 
                 "edit_header_selector" => {
-                    EditHeaderSelector::handle_message(value, ident, state, context, component_ids);
+                    EditHeaderSelector::handle_message(
+                        value,
+                        ident,
+                        state,
+                        context,
+                        elements,
+                        component_ids,
+                    );
                 }
 
                 "method_selector" => {
-                    MethodSelector::handle_message(value, ident, state, context, component_ids);
+                    MethodSelector::handle_message(
+                        value,
+                        ident,
+                        state,
+                        context,
+                        elements,
+                        component_ids,
+                    );
                 }
 
                 "project_window" => {
-                    ProjectWindow::handle_message(value, ident, state, context, component_ids);
+                    ProjectWindow::handle_message(
+                        value,
+                        ident,
+                        state,
+                        context,
+                        elements,
+                        component_ids,
+                    );
                 }
 
                 "edit_endpoint_name" => {
-                    EditEndpointName::handle_message(value, ident, state, context, component_ids);
+                    EditEndpointName::handle_message(
+                        value,
+                        ident,
+                        state,
+                        context,
+                        elements,
+                        component_ids,
+                    );
                 }
 
                 "edit_project_name" => {
-                    EditProjectName::handle_message(value, ident, state, context, component_ids);
+                    EditProjectName::handle_message(
+                        value,
+                        ident,
+                        state,
+                        context,
+                        elements,
+                        component_ids,
+                    );
                 }
 
                 "endpoints_selector" => {
-                    EndpointsSelector::handle_message(value, ident, state, context, component_ids);
+                    EndpointsSelector::handle_message(
+                        value,
+                        ident,
+                        state,
+                        context,
+                        elements,
+                        component_ids,
+                    );
                 }
 
                 _ => {}
@@ -767,7 +837,7 @@ impl anathema::component::Component for DashboardComponent {
                     'f' => context.set_focus("id", "response_body_input"),
                     'o' => self.send_options_open(state, context),
                     't' => self.new_endpoint(state, context),
-                    'w' => self.new_project(state, context),
+                    'w' => self.new_project(state, context, elements),
 
                     'v' => match main_display {
                         DashboardDisplay::RequestBody => {}
@@ -817,18 +887,23 @@ impl anathema::component::Component for DashboardComponent {
                     }
 
                     // Open Endpoints selector
-                    'e' => self.open_endpoints_selector(state, context),
+                    'e' => {
+                        self.open_endpoints_selector(state, context);
+                    }
 
                     // Show projects window
                     'p' => {
                         if let Ok(component_ids) = self.component_ids.try_borrow() {
                             state.floating_window.set(FloatingWindow::Project);
+                            context.set_focus("id", "project_selector");
 
-                            if let Some(id) = component_ids.get("project_window") {
-                                context.emit(*id, "load".to_string());
-                            }
+                            println!("Map before sending msg: {component_ids:?}");
 
-                            context.set_focus("id", "project_window");
+                            let _ = component_ids.get("project_selector").map(|id| {
+                                println!("\nSending message to id: {id:?}");
+
+                                context.emit(*id, "projects".to_string());
+                            });
                         }
                     }
 
@@ -896,10 +971,12 @@ impl anathema::component::Component for DashboardComponent {
 
     fn on_focus(
         &mut self,
-        _: &mut Self::State,
+        state: &mut Self::State,
         _: Elements<'_, '_>,
         context: Context<'_, Self::State>,
     ) {
+        self.update_app_theme(state);
+
         if self.test {
             return;
         }

@@ -10,6 +10,7 @@ use anathema::{
     prelude::TuiBackend,
     runtime::RuntimeBuilder,
     state::{List, State, Value},
+    widgets::Elements,
 };
 use serde::{Deserialize, Serialize};
 
@@ -17,6 +18,7 @@ use crate::{
     components::dashboard::{DashboardMessageHandler, DashboardState, FloatingWindow},
     messages::confirm_delete_endpoint::ConfirmDeleteEndpoint,
     projects::{Endpoint, PersistedEndpoint},
+    theme::{get_app_theme, AppTheme},
 };
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -40,10 +42,13 @@ pub struct EndpointsSelectorState {
     window_list: Value<List<Endpoint>>,
     count: Value<u8>,
     selected_item: Value<String>,
+    app_theme: Value<AppTheme>,
 }
 
 impl EndpointsSelectorState {
     pub fn new() -> Self {
+        let app_theme = get_app_theme();
+
         EndpointsSelectorState {
             cursor: 0.into(),
             count: 0.into(),
@@ -52,6 +57,7 @@ impl EndpointsSelectorState {
             visible_rows: 5.into(),
             window_list: List::empty(),
             selected_item: "".to_string().into(),
+            app_theme: app_theme.into(),
         }
     }
 }
@@ -68,8 +74,10 @@ impl EndpointsSelector {
         ids: &Rc<RefCell<HashMap<String, ComponentId<String>>>>,
         builder: &mut RuntimeBuilder<TuiBackend, ()>,
     ) -> anyhow::Result<()> {
+        println!("Registering endpoints selector with id endpoints_selector_window");
+
         let id = builder.register_component(
-            "endpoints_selector",
+            "endpoints_selector_window",
             ENDPOINTS_SELECTOR_TEMPLATE,
             EndpointsSelector::new(ids.clone()),
             EndpointsSelectorState::new(),
@@ -78,12 +86,21 @@ impl EndpointsSelector {
         let ids_ref = ids.clone();
         ids_ref.replace_with(|old| {
             let mut new_map = old.clone();
-            new_map.insert(String::from("endpoints_selector"), id);
+            new_map.insert(String::from("endpoints_selector_window"), id);
+            println!("Registered endpoints selector with id endpoints_selector_window {id:?}");
 
             new_map
         });
 
+        println!("ids: {ids_ref:?}");
+        println!("endpoints selector registered");
+
         Ok(())
+    }
+
+    fn update_app_theme(&self, state: &mut EndpointsSelectorState) {
+        let app_theme = get_app_theme();
+        state.app_theme.set(app_theme);
     }
 
     pub fn new(component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>) -> Self {
@@ -196,6 +213,7 @@ impl DashboardMessageHandler for EndpointsSelector {
         ident: impl Into<String>,
         state: &mut DashboardState,
         mut context: anathema::prelude::Context<'_, DashboardState>,
+        _: Elements<'_, '_>,
         component_ids: std::cell::Ref<'_, HashMap<String, ComponentId<String>>>,
     ) {
         let event: String = ident.into();
@@ -258,6 +276,15 @@ impl Component for EndpointsSelector {
 
     fn accept_focus(&self) -> bool {
         true
+    }
+
+    fn on_focus(
+        &mut self,
+        state: &mut Self::State,
+        _: Elements<'_, '_>,
+        _: anathema::prelude::Context<'_, Self::State>,
+    ) {
+        self.update_app_theme(state);
     }
 
     fn on_key(
@@ -335,6 +362,8 @@ impl Component for EndpointsSelector {
         _: anathema::widgets::Elements<'_, '_>,
         _: anathema::prelude::Context<'_, Self::State>,
     ) {
+        println!("Endpoints Selector got the message: {message}");
+
         let endpoints_selector_message =
             serde_json::from_str::<EndpointsSelectorMessages>(&message);
 
@@ -359,7 +388,10 @@ impl Component for EndpointsSelector {
             },
 
             // TODO: Figure out what to do with deserialization errors
-            Err(_) => todo!(),
+            Err(_error) => {
+                // eprintln!("{error}");
+                // dbg!(error);
+            }
         }
     }
 }

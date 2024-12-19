@@ -11,7 +11,7 @@ checksum = "512761e0bb2578dd7380c6baaa0f4ce03e84f95e960231d1dec8bf4d7d6e2627"
 [[package]]
 name = "anathema"
 version = "0.2.0"
-source = "git+https://github.com/s9tpepper/anathema.git?branch=dev#9fc87058ccb379d3cd1b7bb830d91f46aab3797c"
+source = "git+https://github.com/s9tpepper/anathema.git?branch=dev#0f832cc105b1ea975db12214521b31b57f89efcc"
 dependencies = [
  "anathema-backend",
  "anathema-debug",
@@ -28,7 +28,7 @@ dependencies = [
 [[package]]
 name = "anathema-backend"
 version = "0.2.0"
-source = "git+https://github.com/s9tpepper/anathema.git?branch=dev#9fc87058ccb379d3cd1b7bb830d91f46aab3797c"
+source = "git+https://github.com/s9tpepper/anathema.git?branch=dev#0f832cc105b1ea975db12214521b31b57f89efcc"
 dependencies = [
  "anathema-geometry",
  "anathema-state",
@@ -43,12 +43,12 @@ dependencies = [
 [[package]]
 name = "anathema-debug"
 version = "0.2.0"
-source = "git+https://github.com/s9tpepper/anathema.git?branch=dev#9fc87058ccb379d3cd1b7bb830d91f46aab3797c"
+source = "git+https://github.com/s9tpepper/anathema.git?branch=dev#0f832cc105b1ea975db12214521b31b57f89efcc"
 
 [[package]]
 name = "anathema-default-widgets"
 version = "0.2.0"
-source = "git+https://github.com/s9tpepper/anathema.git?branch=dev#9fc87058ccb379d3cd1b7bb830d91f46aab3797c"
+source = "git+https://github.com/s9tpepper/anathema.git?branch=dev#0f832cc105b1ea975db12214521b31b57f89efcc"
 dependencies = [
  "anathema-backend",
  "anathema-geometry",
@@ -63,12 +63,12 @@ dependencies = [
 [[package]]
 name = "anathema-geometry"
 version = "0.2.0"
-source = "git+https://github.com/s9tpepper/anathema.git?branch=dev#9fc87058ccb379d3cd1b7bb830d91f46aab3797c"
+source = "git+https://github.com/s9tpepper/anathema.git?branch=dev#0f832cc105b1ea975db12214521b31b57f89efcc"
 
 [[package]]
 name = "anathema-runtime"
 version = "0.2.0"
-source = "git+https://github.com/s9tpepper/anathema.git?branch=dev#9fc87058ccb379d3cd1b7bb830d91f46aab3797c"
+source = "git+https://github.com/s9tpepper/anathema.git?branch=dev#0f832cc105b1ea975db12214521b31b57f89efcc"
 dependencies = [
  "anathema-backend",
  "anathema-debug",
@@ -85,7 +85,7 @@ dependencies = [
 [[package]]
 name = "anathema-state"
 version = "0.2.0"
-source = "git+https://github.com/s9tpepper/anathema.git?branch=dev#9fc87058ccb379d3cd1b7bb830d91f46aab3797c"
+source = "git+https://github.com/s9tpepper/anathema.git?branch=dev#0f832cc105b1ea975db12214521b31b57f89efcc"
 dependencies = [
  "anathema-debug",
  "anathema-state-derive",
@@ -95,7 +95,7 @@ dependencies = [
 [[package]]
 name = "anathema-state-derive"
 version = "0.2.0"
-source = "git+https://github.com/s9tpepper/anathema.git?branch=dev#9fc87058ccb379d3cd1b7bb830d91f46aab3797c"
+source = "git+https://github.com/s9tpepper/anathema.git?branch=dev#0f832cc105b1ea975db12214521b31b57f89efcc"
 dependencies = [
  "manyhow",
  "quote",
@@ -106,7 +106,7 @@ dependencies = [
 [[package]]
 name = "anathema-store"
 version = "0.2.0"
-source = "git+https://github.com/s9tpepper/anathema.git?branch=dev#9fc87058ccb379d3cd1b7bb830d91f46aab3797c"
+source = "git+https://github.com/s9tpepper/anathema.git?branch=dev#0f832cc105b1ea975db12214521b31b57f89efcc"
 dependencies = [
  "anathema-debug",
 ]
@@ -114,7 +114,7 @@ dependencies = [
 [[package]]
 name = "anathema-templates"
 version = "0.2.0"
-source = "git+https://github.com/s9tpepper/anathema.git?branch=dev#9fc87058ccb379d3cd1b7bb830d91f46aab3797c"
+source = "git+https://github.com/s9tpepper/anathema.git?branch=dev#0f832cc105b1ea975db12214521b31b57f89efcc"
 dependencies = [
  "anathema-debug",
  "anathema-state",
@@ -124,7 +124,7 @@ dependencies = [
 [[package]]
 name = "anathema-widgets"
 version = "0.2.0"
-source = "git+https://github.com/s9tpepper/anathema.git?branch=dev#9fc87058ccb379d3cd1b7bb830d91f46aab3797c"
+source = "git+https://github.com/s9tpepper/anathema.git?branch=dev#0f832cc105b1ea975db12214521b31b57f89efcc"
 dependencies = [
  "anathema-debug",
  "anathema-geometry",

@@ -3,6 +3,7 @@ use std::{cell::Ref, collections::HashMap};
 use anathema::{
     component::{self, Component, ComponentId, KeyCode},
     state::{State, Value},
+    widgets::Elements,
 };
 
 use crate::{
@@ -16,6 +17,13 @@ pub const ADD_HEADER_WINDOW_TEMPLATE: &str = "./src/components/templates/add_hea
 
 #[derive(Default)]
 pub struct AddHeaderWindow;
+
+impl AddHeaderWindow {
+    fn update_app_theme(&self, state: &mut AddHeaderWindowState) {
+        let app_theme = get_app_theme();
+        state.app_theme.set(app_theme);
+    }
+}
 
 #[derive(Default, State)]
 pub struct AddHeaderWindowState {
@@ -42,6 +50,7 @@ impl DashboardMessageHandler for AddHeaderWindow {
         ident: impl Into<String>,
         state: &mut super::dashboard::DashboardState,
         mut context: anathema::prelude::Context<'_, super::dashboard::DashboardState>,
+        _: Elements<'_, '_>,
         _component_ids: Ref<'_, HashMap<String, ComponentId<String>>>,
     ) {
         let event: String = ident.into();
@@ -80,6 +89,15 @@ impl DashboardMessageHandler for AddHeaderWindow {
 impl Component for AddHeaderWindow {
     type State = AddHeaderWindowState;
     type Message = ();
+
+    fn on_focus(
+        &mut self,
+        state: &mut Self::State,
+        _: Elements<'_, '_>,
+        _: anathema::prelude::Context<'_, Self::State>,
+    ) {
+        self.update_app_theme(state);
+    }
 
     fn receive(
         &mut self,

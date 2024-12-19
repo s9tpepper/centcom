@@ -10,6 +10,15 @@ pub const APP_SECTION_TEMPLATE: &str = "./src/components/templates/app_section.a
 #[derive(Default)]
 pub struct AppSection;
 
+impl AppSection {
+    // TODO: Add a message so the theme can update since this doesn't have focus
+    #[allow(unused)]
+    fn update_app_theme(&self, state: &mut AppSectionState) {
+        let app_theme = get_app_theme();
+        state.app_theme.set(app_theme);
+    }
+}
+
 #[derive(Default, State)]
 pub struct AppSectionState {
     section_id: Value<Option<String>>,

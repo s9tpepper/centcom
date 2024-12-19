@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, rc::Rc, thread::sleep, time::Duration};
 
 use anathema::{
     component::ComponentId,
@@ -83,48 +83,13 @@ impl App {
             let _emitter = runtime.emitter();
 
             runtime.run();
+            // sleep(Duration::from_secs(60));
         } else if let Err(error) = runtime {
             println!("{:?}", error);
         }
 
         Ok(())
     }
-
-    // impl<T, G> RuntimeBuilder<T, G>
-    // pub fn register_prototype<FC, FS, C>(&mut self, ident: impl Into<String>, template: impl ToSourceKind, proto: FC, state: FS) -> Result<()>
-    // where
-    //     FC: 'static + Fn() -> C,
-    //     FS: 'static + FnMut() -> C::State,
-    //     C: Component + 'static,
-    //     // Bounds from impl:
-    //     G: GlobalEvents,
-
-    // fn get_prototypes<FC, FS, S>(
-    //     &self,
-    // ) -> Vec<(
-    //     impl Into<String>,
-    //     impl ToSourceKind,
-    //     Box<dyn Fn() -> Box<dyn Component<State = S, Message = String>>>,
-    //     Box<dyn FnMut() -> Box<dyn Component<State = S, Message = String>>>,
-    // )>
-    // where
-    //     S: State,
-    // {
-    //     vec![
-    //         (
-    //             "textinput",
-    //             TEXTINPUT_TEMPLATE,
-    //             Box::new(|| Box::new(TextInput {})),
-    //             Box::new(|| Box::new(InputState::new())),
-    //         ),
-    //         // (
-    //         //     "textarea",
-    //         //     TEXTAREA_TEMPLATE,
-    //         //     Box::new(|| TextArea),
-    //         //     Box::new(TextAreaInputState::new),
-    //         // ),
-    //     ]
-    // }
 
     fn register_prototypes(
         &self,
@@ -235,6 +200,7 @@ impl App {
             "url_input",
             "./src/components/templates/url_input.aml",
         )?;
+        sleep(Duration::from_millis(1));
 
         TextArea::register(
             &self.component_ids,
@@ -244,6 +210,7 @@ impl App {
             Some("endpoint_request_body".to_string()),
             vec!["dashboard".to_string()],
         )?;
+        sleep(Duration::from_millis(1));
 
         EditInput::register(
             &self.component_ids,
@@ -253,6 +220,7 @@ impl App {
             None,
             vec![],
         )?;
+        sleep(Duration::from_millis(1));
         EditInput::register(
             &self.component_ids,
             builder,
@@ -261,6 +229,7 @@ impl App {
             None,
             vec![],
         )?;
+        sleep(Duration::from_millis(1));
 
         EditInput::register(
             &self.component_ids,
@@ -271,6 +240,7 @@ impl App {
             vec![],
         )?;
 
+        sleep(Duration::from_millis(1));
         EditInput::register(
             &self.component_ids,
             builder,
@@ -279,31 +249,51 @@ impl App {
             Some(String::from("endpoint_url_input")),
             vec![String::from("dashboard")],
         )?;
+        sleep(Duration::from_millis(1));
 
         ResponseRenderer::register(
             &self.component_ids,
             builder,
             "response_renderer".to_string(),
         )?;
+        sleep(Duration::from_millis(1));
         ResponseRenderer::register(
             &self.component_ids,
             builder,
             "code_sample_renderer".to_string(),
         )?;
+        sleep(Duration::from_millis(1));
         AppLayoutComponent::register(&self.component_ids, builder)?;
+        sleep(Duration::from_millis(1));
         EditHeaderWindow::register(&self.component_ids, builder)?;
+        sleep(Duration::from_millis(1));
         HeaderNameTextInput::register(&self.component_ids, builder)?;
+        sleep(Duration::from_millis(1));
         HeaderValueTextInput::register(&self.component_ids, builder)?;
+        sleep(Duration::from_millis(1));
         EditNameTextInput::register(&self.component_ids, builder)?;
+        sleep(Duration::from_millis(1));
         EditValueTextInput::register(&self.component_ids, builder)?;
+        sleep(Duration::from_millis(1));
+
         ProjectWindow::register(&self.component_ids, builder)?;
-        ConfirmActionWindow::register(&self.component_ids, builder)?;
-        DashboardComponent::register(&self.component_ids, builder)?;
-        EditEndpointName::register(&self.component_ids, builder)?;
-        EditProjectName::register(&self.component_ids, builder)?;
+        sleep(Duration::from_secs(10));
+
         EndpointsSelector::register(&self.component_ids, builder)?;
+        sleep(Duration::from_secs(10));
+
+        ConfirmActionWindow::register(&self.component_ids, builder)?;
+        sleep(Duration::from_millis(1));
+        DashboardComponent::register(&self.component_ids, builder)?;
+        sleep(Duration::from_millis(1));
+        EditEndpointName::register(&self.component_ids, builder)?;
+        sleep(Duration::from_millis(1));
+        EditProjectName::register(&self.component_ids, builder)?;
+        sleep(Duration::from_millis(1));
         OptionsView::register(&self.component_ids, builder)?;
+        sleep(Duration::from_millis(1));
         SyntaxThemeSelector::register(&self.component_ids, builder)?;
+        sleep(Duration::from_millis(1));
         TextArea::register(
             &self.component_ids,
             builder,
@@ -312,6 +302,7 @@ impl App {
             None,
             vec![],
         )?;
+        sleep(Duration::from_millis(1));
 
         Ok(())
     }
