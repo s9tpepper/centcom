@@ -2,7 +2,7 @@ use anathema::state::{State, Value};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    app_themes::{APP_THEME_MAP, DEFAULT_APP_THEME},
+    app_themes::{APP_THEME_MAP, CATPPUCCIN_THEME},
     options::get_app_theme_name,
 };
 
@@ -189,7 +189,7 @@ pub fn get_app_theme() -> AppTheme {
 }
 
 fn get_default_app_theme() -> AppTheme {
-    let default_app_theme_contents = String::from_utf8_lossy(DEFAULT_APP_THEME);
+    let default_app_theme_contents = String::from_utf8_lossy(CATPPUCCIN_THEME);
     serde_json::from_str::<AppThemePersisted>(&default_app_theme_contents)
         .unwrap()
         .into()
