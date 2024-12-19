@@ -112,7 +112,7 @@ impl State for FloatingWindow {
     }
 }
 
-#[derive(State)]
+#[derive(anathema::state::State)]
 pub struct DashboardState {
     pub main_display: Value<DashboardDisplay>,
     pub floating_window: Value<FloatingWindow>,
@@ -259,9 +259,13 @@ impl DashboardComponent {
         Ok(())
     }
 
-    fn update_app_theme(&self, state: &mut DashboardState) {
-        let app_theme = get_app_theme();
-        state.app_theme.set(app_theme);
+    fn update_app_theme(&self, _state: &mut DashboardState) {
+        let _app_theme = get_app_theme();
+
+        // TODO: Figure out why this breaks the styling and messaging of the dashboard components
+        // println!("{app_theme:?}");
+        // state.app_theme.set(app_theme);
+        // *state.app_theme.to_mut() = app_theme;
     }
 
     fn show_message(&self, title: &str, message: &str, state: &mut DashboardState) {

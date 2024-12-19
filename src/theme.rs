@@ -6,7 +6,7 @@ use crate::{
     options::get_app_theme_name,
 };
 
-#[derive(Default, State)]
+#[derive(Debug, Default, State)]
 pub struct AppTheme {
     /// Theme name
     pub name: Value<String>,
