@@ -484,7 +484,10 @@ impl DashboardComponent {
             #[allow(clippy::single_match)]
             Ok(ids) => match ids.get("endpoints_selector_window") {
                 Some(id) => {
-                    let _ = serde_json::to_string(&msg).map(|payload| context.emit(*id, payload));
+                    let _ = serde_json::to_string(&msg).map(|payload| {
+                        println!("Sending endpoints msg to {id:?}");
+                        context.emit(*id, payload);
+                    });
                 }
                 None => self.show_error("Unable to find endpoints window id", state),
             },
@@ -892,13 +895,15 @@ impl anathema::component::Component for DashboardComponent {
                     'p' => {
                         if let Ok(component_ids) = self.component_ids.try_borrow() {
                             state.floating_window.set(FloatingWindow::Project);
+                            context.set_focus("id", "project_selector");
 
-                            if let Some(id) = component_ids.get("project_window") {
-                                println!("Sending load message to id: {id:?}");
-                                context.emit(*id, "load".to_string());
-                            }
+                            println!("Map before sending msg: {component_ids:?}");
 
-                            context.set_focus("id", "project_window");
+                            let _ = component_ids.get("project_selector").map(|id| {
+                                println!("\nSending message to id: {id:?}");
+
+                                context.emit(*id, "projects".to_string());
+                            });
                         }
                     }
 

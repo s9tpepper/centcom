@@ -75,7 +75,7 @@ impl ProjectWindow {
         println!("Registering project window component...");
 
         let id = builder.register_component(
-            "project_window",
+            "project_selector",
             PROJECT_WINDOW_TEMPLATE,
             ProjectWindow::new(ids.clone()),
             ProjectWindowState::new(),
@@ -84,11 +84,14 @@ impl ProjectWindow {
         let ids_ref = ids.clone();
         ids_ref.replace_with(|old| {
             let mut new_map = old.clone();
-            new_map.insert(String::from("project_window"), id);
+            new_map.insert(String::from("project_selector"), id);
             println!("Registered project_window with id project_window {id:?}");
 
             new_map
         });
+
+        println!("ids: {ids_ref:?}");
+        println!("project selector registered");
 
         Ok(())
     }

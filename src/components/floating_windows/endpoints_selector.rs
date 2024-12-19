@@ -1,4 +1,3 @@
-use core::panic;
 use std::{
     cell::RefCell,
     cmp::{max, min},
@@ -92,6 +91,9 @@ impl EndpointsSelector {
 
             new_map
         });
+
+        println!("ids: {ids_ref:?}");
+        println!("endpoints selector registered");
 
         Ok(())
     }
@@ -386,9 +388,9 @@ impl Component for EndpointsSelector {
             },
 
             // TODO: Figure out what to do with deserialization errors
-            Err(error) => {
-                eprintln!("{error}");
-                dbg!(error);
+            Err(_error) => {
+                // eprintln!("{error}");
+                // dbg!(error);
             }
         }
     }
