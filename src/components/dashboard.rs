@@ -463,7 +463,7 @@ impl DashboardComponent {
         mut context: Context<'_, DashboardState>,
     ) {
         state.floating_window.set(FloatingWindow::EndpointsSelector);
-        context.set_focus("id", "endpoints_selector");
+        context.set_focus("id", "endpoints_selector_window");
 
         let persisted_endpoints: Vec<PersistedEndpoint> = state
             .project
@@ -482,7 +482,7 @@ impl DashboardComponent {
         #[allow(clippy::single_match)]
         match self.component_ids.try_borrow() {
             #[allow(clippy::single_match)]
-            Ok(ids) => match ids.get("endpoints_selector") {
+            Ok(ids) => match ids.get("endpoints_selector_window") {
                 Some(id) => {
                     let _ = serde_json::to_string(&msg).map(|payload| context.emit(*id, payload));
                 }
@@ -884,7 +884,9 @@ impl anathema::component::Component for DashboardComponent {
                     }
 
                     // Open Endpoints selector
-                    'e' => self.open_endpoints_selector(state, context),
+                    'e' => {
+                        self.open_endpoints_selector(state, context);
+                    }
 
                     // Show projects window
                     'p' => {
@@ -892,6 +894,7 @@ impl anathema::component::Component for DashboardComponent {
                             state.floating_window.set(FloatingWindow::Project);
 
                             if let Some(id) = component_ids.get("project_window") {
+                                println!("Sending load message to id: {id:?}");
                                 context.emit(*id, "load".to_string());
                             }
 

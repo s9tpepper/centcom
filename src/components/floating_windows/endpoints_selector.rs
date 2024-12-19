@@ -1,3 +1,4 @@
+use core::panic;
 use std::{
     cell::RefCell,
     cmp::{max, min},
@@ -74,8 +75,10 @@ impl EndpointsSelector {
         ids: &Rc<RefCell<HashMap<String, ComponentId<String>>>>,
         builder: &mut RuntimeBuilder<TuiBackend, ()>,
     ) -> anyhow::Result<()> {
+        println!("Registering endpoints selector with id endpoints_selector_window");
+
         let id = builder.register_component(
-            "endpoints_selector",
+            "endpoints_selector_window",
             ENDPOINTS_SELECTOR_TEMPLATE,
             EndpointsSelector::new(ids.clone()),
             EndpointsSelectorState::new(),
@@ -84,7 +87,8 @@ impl EndpointsSelector {
         let ids_ref = ids.clone();
         ids_ref.replace_with(|old| {
             let mut new_map = old.clone();
-            new_map.insert(String::from("endpoints_selector"), id);
+            new_map.insert(String::from("endpoints_selector_window"), id);
+            println!("Registered endpoints selector with id endpoints_selector_window {id:?}");
 
             new_map
         });
@@ -356,6 +360,8 @@ impl Component for EndpointsSelector {
         _: anathema::widgets::Elements<'_, '_>,
         _: anathema::prelude::Context<'_, Self::State>,
     ) {
+        println!("Endpoints Selector got the message: {message}");
+
         let endpoints_selector_message =
             serde_json::from_str::<EndpointsSelectorMessages>(&message);
 
@@ -380,7 +386,10 @@ impl Component for EndpointsSelector {
             },
 
             // TODO: Figure out what to do with deserialization errors
-            Err(_) => todo!(),
+            Err(error) => {
+                eprintln!("{error}");
+                dbg!(error);
+            }
         }
     }
 }

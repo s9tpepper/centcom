@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use crate::fs::get_app_dir;
 
 const DEFAULT_SYNTAX_THEME: &str = "monokai";
-const DEFAULT_APP_THEME: &str = "default theme";
+const DEFAULT_APP_THEME: &str = "gruvbox";
 const SYNTAX_THEMES_LIST: &str = include_str!("../themes/themes.txt");
 
 #[derive(Debug, Deserialize, Serialize)]

@@ -72,6 +72,8 @@ impl ProjectWindow {
         ids: &Rc<RefCell<HashMap<String, ComponentId<String>>>>,
         builder: &mut RuntimeBuilder<TuiBackend, ()>,
     ) -> anyhow::Result<()> {
+        println!("Registering project window component...");
+
         let id = builder.register_component(
             "project_window",
             PROJECT_WINDOW_TEMPLATE,
@@ -83,6 +85,7 @@ impl ProjectWindow {
         ids_ref.replace_with(|old| {
             let mut new_map = old.clone();
             new_map.insert(String::from("project_window"), id);
+            println!("Registered project_window with id project_window {id:?}");
 
             new_map
         });
@@ -387,12 +390,13 @@ impl Component for ProjectWindow {
 
     fn message(
         &mut self,
-        _: Self::Message,
+        message: Self::Message,
         _: &mut Self::State,
         _: anathema::widgets::Elements<'_, '_>,
         _: anathema::prelude::Context<'_, Self::State>,
     ) {
-        // println!("Received message in project window: {message}");
+        println!("Received message in project window: {message}");
+
         // NOTE: The currently selected project might need to be sent from the dashboard
         // when opening the project window after choosing a project
     }

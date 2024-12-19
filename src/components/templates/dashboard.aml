@@ -165,8 +165,8 @@ zstack [background: app_theme.background]
     ) [id: "edit_project_name", border_color: "#ffffff"]
 
   if floating_window == "EndpointsSelector"
-    @endpoints_selector (
+    @endpoints_selector_window (
       endpoints_selector__cancel -> endpoints_selector__cancel,
       endpoints_selector__selection -> endpoints_selector__selection,
       endpoints_selector__delete -> endpoints_selector__delete
-    ) [id: "endpoints_selector"]
+    ) [id: "endpoints_selector_window"]
