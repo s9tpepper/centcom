@@ -362,8 +362,6 @@ impl Component for EndpointsSelector {
         _: anathema::widgets::Elements<'_, '_>,
         _: anathema::prelude::Context<'_, Self::State>,
     ) {
-        println!("Endpoints Selector got the message: {message}");
-
         let endpoints_selector_message =
             serde_json::from_str::<EndpointsSelectorMessages>(&message);
 

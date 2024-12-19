@@ -200,7 +200,6 @@ impl App {
             "url_input",
             "./src/components/templates/url_input.aml",
         )?;
-        sleep(Duration::from_millis(1));
 
         TextArea::register(
             &self.component_ids,
@@ -210,7 +209,6 @@ impl App {
             Some("endpoint_request_body".to_string()),
             vec!["dashboard".to_string()],
         )?;
-        sleep(Duration::from_millis(1));
 
         EditInput::register(
             &self.component_ids,
@@ -220,7 +218,6 @@ impl App {
             None,
             vec![],
         )?;
-        sleep(Duration::from_millis(1));
         EditInput::register(
             &self.component_ids,
             builder,
@@ -229,7 +226,6 @@ impl App {
             None,
             vec![],
         )?;
-        sleep(Duration::from_millis(1));
 
         EditInput::register(
             &self.component_ids,
@@ -240,7 +236,6 @@ impl App {
             vec![],
         )?;
 
-        sleep(Duration::from_millis(1));
         EditInput::register(
             &self.component_ids,
             builder,
@@ -249,51 +244,33 @@ impl App {
             Some(String::from("endpoint_url_input")),
             vec![String::from("dashboard")],
         )?;
-        sleep(Duration::from_millis(1));
 
         ResponseRenderer::register(
             &self.component_ids,
             builder,
             "response_renderer".to_string(),
         )?;
-        sleep(Duration::from_millis(1));
         ResponseRenderer::register(
             &self.component_ids,
             builder,
             "code_sample_renderer".to_string(),
         )?;
-        sleep(Duration::from_millis(1));
         AppLayoutComponent::register(&self.component_ids, builder)?;
-        sleep(Duration::from_millis(1));
         EditHeaderWindow::register(&self.component_ids, builder)?;
-        sleep(Duration::from_millis(1));
         HeaderNameTextInput::register(&self.component_ids, builder)?;
-        sleep(Duration::from_millis(1));
         HeaderValueTextInput::register(&self.component_ids, builder)?;
-        sleep(Duration::from_millis(1));
         EditNameTextInput::register(&self.component_ids, builder)?;
-        sleep(Duration::from_millis(1));
         EditValueTextInput::register(&self.component_ids, builder)?;
-        sleep(Duration::from_millis(1));
 
         ProjectWindow::register(&self.component_ids, builder)?;
-        sleep(Duration::from_secs(10));
-
         EndpointsSelector::register(&self.component_ids, builder)?;
-        sleep(Duration::from_secs(10));
 
         ConfirmActionWindow::register(&self.component_ids, builder)?;
-        sleep(Duration::from_millis(1));
         DashboardComponent::register(&self.component_ids, builder)?;
-        sleep(Duration::from_millis(1));
         EditEndpointName::register(&self.component_ids, builder)?;
-        sleep(Duration::from_millis(1));
         EditProjectName::register(&self.component_ids, builder)?;
-        sleep(Duration::from_millis(1));
         OptionsView::register(&self.component_ids, builder)?;
-        sleep(Duration::from_millis(1));
         SyntaxThemeSelector::register(&self.component_ids, builder)?;
-        sleep(Duration::from_millis(1));
         TextArea::register(
             &self.component_ids,
             builder,
@@ -302,7 +279,6 @@ impl App {
             None,
             vec![],
         )?;
-        sleep(Duration::from_millis(1));
 
         Ok(())
     }

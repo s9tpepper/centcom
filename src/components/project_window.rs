@@ -393,12 +393,12 @@ impl Component for ProjectWindow {
 
     fn message(
         &mut self,
-        message: Self::Message,
+        _: Self::Message,
         _: &mut Self::State,
         _: anathema::widgets::Elements<'_, '_>,
         _: anathema::prelude::Context<'_, Self::State>,
     ) {
-        println!("Received message in project window: {message}");
+        // println!("Received message in project window: {message}");
 
         // NOTE: The currently selected project might need to be sent from the dashboard
         // when opening the project window after choosing a project
