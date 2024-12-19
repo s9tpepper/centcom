@@ -78,6 +78,15 @@ impl Component for EditEndpointName {
         true
     }
 
+    fn on_focus(
+        &mut self,
+        state: &mut Self::State,
+        _: Elements<'_, '_>,
+        _: anathema::prelude::Context<'_, Self::State>,
+    ) {
+        self.update_app_theme(state);
+    }
+
     fn message(
         &mut self,
         message: Self::Message,
@@ -183,6 +192,11 @@ impl EditEndpointName {
         });
 
         Ok(())
+    }
+
+    fn update_app_theme(&self, state: &mut EditEndpointNameState) {
+        let app_theme = get_app_theme();
+        state.app_theme.set(app_theme);
     }
 }
 

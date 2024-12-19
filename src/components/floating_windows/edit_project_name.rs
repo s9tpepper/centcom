@@ -53,7 +53,7 @@ impl DashboardMessageHandler for EditProjectName {
                         "edit_project_name",
                         message,
                         &component_ids,
-                        &context.emitter,
+                        context.emitter,
                     );
                 };
             }
@@ -76,6 +76,15 @@ impl Component for EditProjectName {
 
     fn accept_focus(&self) -> bool {
         true
+    }
+
+    fn on_focus(
+        &mut self,
+        state: &mut Self::State,
+        _: Elements<'_, '_>,
+        _: anathema::prelude::Context<'_, Self::State>,
+    ) {
+        self.update_app_theme(state);
     }
 
     fn message(
@@ -184,6 +193,11 @@ impl EditProjectName {
         });
 
         Ok(())
+    }
+
+    fn update_app_theme(&self, state: &mut EditProjectNameState) {
+        let app_theme = get_app_theme();
+        state.app_theme.set(app_theme);
     }
 }
 

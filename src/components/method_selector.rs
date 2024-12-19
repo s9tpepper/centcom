@@ -15,6 +15,13 @@ pub const METHOD_SELECTOR_TEMPLATE: &str = "./src/components/templates/method_se
 #[derive(Default)]
 pub struct MethodSelector;
 
+impl MethodSelector {
+    fn update_app_theme(&self, state: &mut MethodSelectorState) {
+        let app_theme = get_app_theme();
+        state.app_theme.set(app_theme);
+    }
+}
+
 #[derive(Default, State)]
 pub struct MethodSelectorState {
     selection: Value<String>,
@@ -76,10 +83,12 @@ impl Component for MethodSelector {
 
     fn on_focus(
         &mut self,
-        _state: &mut Self::State,
+        state: &mut Self::State,
         mut _elements: anathema::widgets::Elements<'_, '_>,
         mut _context: anathema::prelude::Context<'_, Self::State>,
     ) {
+        self.update_app_theme(state);
+
         // TODO: Highlight current selection
     }
 

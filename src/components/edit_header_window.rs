@@ -47,6 +47,11 @@ impl EditHeaderWindow {
 
         Ok(())
     }
+
+    fn update_app_theme(&self, state: &mut EditHeaderWindowState) {
+        let app_theme = get_app_theme();
+        state.app_theme.set(app_theme);
+    }
 }
 
 #[derive(Default, State)]
@@ -121,6 +126,15 @@ impl DashboardMessageHandler for EditHeaderWindow {
 impl Component for EditHeaderWindow {
     type State = EditHeaderWindowState;
     type Message = String;
+
+    fn on_focus(
+        &mut self,
+        state: &mut Self::State,
+        _: Elements<'_, '_>,
+        _: anathema::prelude::Context<'_, Self::State>,
+    ) {
+        self.update_app_theme(state);
+    }
 
     fn receive(
         &mut self,

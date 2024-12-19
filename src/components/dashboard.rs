@@ -1,10 +1,9 @@
 use anathema::{
     component::{ComponentId, KeyCode, KeyEvent},
-    default_widgets::{HStack, Text, VStack},
     prelude::{Context, TuiBackend},
     runtime::RuntimeBuilder,
     state::{CommonVal, List, State, Value},
-    widgets::{AnyWidget, Elements},
+    widgets::Elements,
 };
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use std::{
@@ -258,6 +257,11 @@ impl DashboardComponent {
         });
 
         Ok(())
+    }
+
+    fn update_app_theme(&self, state: &mut DashboardState) {
+        let app_theme = get_app_theme();
+        state.app_theme.set(app_theme);
     }
 
     fn show_message(&self, title: &str, message: &str, state: &mut DashboardState) {
@@ -959,10 +963,12 @@ impl anathema::component::Component for DashboardComponent {
 
     fn on_focus(
         &mut self,
-        _: &mut Self::State,
+        state: &mut Self::State,
         _: Elements<'_, '_>,
         context: Context<'_, Self::State>,
     ) {
+        self.update_app_theme(state);
+
         if self.test {
             return;
         }

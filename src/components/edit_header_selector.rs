@@ -14,6 +14,13 @@ pub const EDIT_HEADER_SELECTOR_TEMPLATE: &str =
 #[derive(Default)]
 pub struct EditHeaderSelector;
 
+impl EditHeaderSelector {
+    fn update_app_theme(&self, state: &mut EditHeaderSelectorState) {
+        let app_theme = get_app_theme();
+        state.app_theme.set(app_theme);
+    }
+}
+
 #[derive(Default, State)]
 pub struct EditHeaderSelectorState {
     selection: Value<Option<char>>,
@@ -95,6 +102,15 @@ impl Component for EditHeaderSelector {
 
     fn accept_focus(&self) -> bool {
         true
+    }
+
+    fn on_focus(
+        &mut self,
+        state: &mut Self::State,
+        _: Elements<'_, '_>,
+        _: anathema::prelude::Context<'_, Self::State>,
+    ) {
+        self.update_app_theme(state);
     }
 
     fn on_key(

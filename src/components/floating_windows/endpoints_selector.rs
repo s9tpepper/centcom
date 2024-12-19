@@ -92,6 +92,11 @@ impl EndpointsSelector {
         Ok(())
     }
 
+    fn update_app_theme(&self, state: &mut EndpointsSelectorState) {
+        let app_theme = get_app_theme();
+        state.app_theme.set(app_theme);
+    }
+
     pub fn new(component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>) -> Self {
         EndpointsSelector {
             component_ids,
@@ -265,6 +270,15 @@ impl Component for EndpointsSelector {
 
     fn accept_focus(&self) -> bool {
         true
+    }
+
+    fn on_focus(
+        &mut self,
+        state: &mut Self::State,
+        _: Elements<'_, '_>,
+        _: anathema::prelude::Context<'_, Self::State>,
+    ) {
+        self.update_app_theme(state);
     }
 
     fn on_key(

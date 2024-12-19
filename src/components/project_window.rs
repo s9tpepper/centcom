@@ -90,6 +90,11 @@ impl ProjectWindow {
         Ok(())
     }
 
+    fn update_app_theme(&self, state: &mut ProjectWindowState) {
+        let app_theme = get_app_theme();
+        state.app_theme.set(app_theme);
+    }
+
     pub fn new(component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>) -> Self {
         ProjectWindow {
             component_ids,
@@ -354,6 +359,8 @@ impl Component for ProjectWindow {
         _: anathema::widgets::Elements<'_, '_>,
         _: anathema::prelude::Context<'_, Self::State>,
     ) {
+        self.update_app_theme(state);
+
         match self.load(state) {
             Ok(_) => {
                 // Reset navigation state
