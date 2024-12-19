@@ -8,7 +8,10 @@ use anathema::{
     widgets::Elements,
 };
 
-use crate::projects::HeaderState;
+use crate::{
+    projects::HeaderState,
+    theme::{get_app_theme, AppTheme},
+};
 
 use super::dashboard::{DashboardMessageHandler, FloatingWindow};
 
@@ -50,13 +53,17 @@ impl EditHeaderWindow {
 pub struct EditHeaderWindowState {
     name: Value<String>,
     value: Value<String>,
+    app_theme: Value<AppTheme>,
 }
 
 impl EditHeaderWindowState {
     pub fn new() -> Self {
+        let app_theme = get_app_theme();
+
         EditHeaderWindowState {
             name: "".to_string().into(),
             value: "".to_string().into(),
+            app_theme: app_theme.into(),
         }
     }
 }
@@ -154,6 +161,7 @@ impl Component for EditHeaderWindow {
             KeyCode::Char(char) => {
                 match char {
                     's' => context.publish("edit_header__submit", |state| &state.name),
+                    'c' => context.publish("edit_header__cancel", |state| &state.name),
 
                     // Sets focus to header name text input
                     'n' => context.set_focus("id", "edit_header_name_input_id"),

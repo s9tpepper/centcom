@@ -1,14 +1,14 @@
 align [alignment: "center"]
   vstack [width: 62]
-    container [height: 1, background: "yellow", foreground: #131313, max_width: 62]
+    container [height: 1, background: app_theme.overlay_heading, foreground: app_theme.overlay_foreground, max_width: 62]
       expand
         hstack
-          text "  Change Project Name"
+          text [bold: true] "  Change Project Name"
 
     zstack
       border [
         background: app_theme.overlay_background,
-        foreground: border_color,
+        foreground: app_theme.border_focused,
         border_style: "╭─╮│╯─╰│",
         sides: ["left", "right", "bottom"],
         min_width: minwidth,

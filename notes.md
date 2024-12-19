@@ -16,7 +16,7 @@
 ### UI
 [x] Pass on cleaning up keybindings
 [x] (MVP) Reserve Q for quitting app
-[ ] Pass on UI colors for readability
+[x] Pass on UI colors for readability
 [x] (MVP) Fix bindings so they are contextual to the screen that you are on
 [x] Clear project/endpoint name dialog inputs if the name is still default
 [x] (MVP) Options screen to choose themes, background for responses/request bodies, etc
@@ -43,7 +43,7 @@ Body
 [ ] Export to Postman format
 [x] (MVP) Add Project
 [x] (MVP) Add Endpoint
-[ ] (MVP) Rename Project dialogue
+[x] (MVP) Rename Project dialogue
 
 ### Requests
 * [ ] (MVP) Request dependencies/piping results from dependency

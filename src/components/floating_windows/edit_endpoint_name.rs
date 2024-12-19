@@ -9,7 +9,10 @@ use anathema::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::components::{dashboard::DashboardMessageHandler, send_message};
+use crate::{
+    components::{dashboard::DashboardMessageHandler, send_message},
+    theme::{get_app_theme, AppTheme},
+};
 
 const TEMPLATE: &str = "./src/components/floating_windows/templates/edit_endpoint_name.aml";
 
@@ -158,6 +161,7 @@ impl EditEndpointName {
         ids: &Rc<RefCell<HashMap<String, ComponentId<String>>>>,
         builder: &mut RuntimeBuilder<TuiBackend, ()>,
     ) -> anyhow::Result<()> {
+        let app_theme = get_app_theme();
         let id = builder.register_component(
             "edit_endpoint_name",
             TEMPLATE,
@@ -166,6 +170,7 @@ impl EditEndpointName {
             },
             EditEndpointNameState {
                 name: String::from("").into(),
+                app_theme: app_theme.into(),
             },
         )?;
 
@@ -184,4 +189,5 @@ impl EditEndpointName {
 #[derive(State)]
 pub struct EditEndpointNameState {
     name: Value<String>,
+    app_theme: Value<AppTheme>,
 }
