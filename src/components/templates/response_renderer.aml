@@ -1,10 +1,10 @@
 zstack
   @app_section [
-    border_color: "#ffffff",
+    border_color: app_theme.border_unfocused,
     top_label: response_body_window_label,
     bottom_label: ["(B)ack to Request", "Show Response (H)eaders", "Cop(y) Response", "Sa(v)e Response"],
     show_top_label: true,
-    show_bottom_label: true,
+    show_bottom_label: false,
     section_id: "response_border"
   ]
     $children
@@ -13,9 +13,27 @@ zstack
           text [background: response_background]
             for span in line.spans
               span [foreground: span.foreground, background: span.background, bold: span.bold] span.text
+
   vstack
     spacer
     hstack
+      text [min_height: 1] "╰"
+        span [foreground: border_color, background: app_theme.background] "─"
+        span [bold: true, background: app_theme.background, foreground: app_theme.menu_opt_background] "█"
+        span [foreground: app_theme.background, background: app_theme.menu_opt_background] "(B)ack to Request"
+        span [background: app_theme.background, foreground: app_theme.menu_opt_background] "█"
+        span [foreground: border_color, background: app_theme.background] "─"
+        span [bold: true, background: app_theme.background, foreground: app_theme.menu_opt_background] "█"
+        span [foreground: app_theme.background, background: app_theme.menu_opt_background] "Show Response (H)eaders"
+        span [background: app_theme.background, foreground: app_theme.menu_opt_background] "█"
+        span [foreground: border_color, background: app_theme.background] "─"
+        span [bold: true, background: app_theme.background, foreground: app_theme.menu_opt_background] "█"
+        span [foreground: app_theme.background, background: app_theme.menu_opt_background] "Cop(y) Response"
+        span [background: app_theme.background, foreground: app_theme.menu_opt_background] "█"
+        span [foreground: border_color, background: app_theme.background] "─"
+        span [bold: true, background: app_theme.background, foreground: app_theme.menu_opt_background] "█"
+        span [foreground: app_theme.background, background: app_theme.menu_opt_background] "Sa(v)e Response"
+        span [background: app_theme.background, foreground: app_theme.menu_opt_background] "█"
       spacer
       hstack
         text "["

@@ -1,11 +1,24 @@
-@app_section [
-  border_color: border_color,
-  top_label: "Request (B)ody",
-  show_top_label: true,
-  show_bottom_label: true,
-  bottom_label: ["Send (R)equest", "Show Request Hea(d)ers"],
-  section_id: "request_body_border",
-  section_text_id: "textarea"
-]
-  $children
-    @request_body_input (textarea_focus -> input_focus) [id: "textarea"]
+zstack
+  @app_section [
+    border_color: border_color,
+    top_label: "Request (B)ody",
+    show_top_label: true,
+    show_bottom_label: false,
+    bottom_label: ["Send (R)equest", "Show Request Hea(d)ers"],
+    section_id: "request_body_border",
+    section_text_id: "textarea"
+  ]
+    $children
+      @request_body_input (textarea_focus -> input_focus) [id: "textarea"]
+
+  vstack
+    spacer
+    text [min_height: 1] "╰"
+      span [foreground: border_color, background: app_theme.background] "─"
+      span [bold: true, background: app_theme.background, foreground: app_theme.menu_opt_background] "█"
+      span [foreground: app_theme.background, background: app_theme.menu_opt_background] "Send (R)equest"
+      span [background: app_theme.background, foreground: app_theme.menu_opt_background] "█"
+      span [foreground: border_color, background: app_theme.background] "─"
+      span [bold: true, background: app_theme.background, foreground: app_theme.menu_opt_background] "█"
+      span [foreground: app_theme.background, background: app_theme.menu_opt_background] "Show Request Hea(d)ers"
+      span [background: app_theme.background, foreground: app_theme.menu_opt_background] "█"

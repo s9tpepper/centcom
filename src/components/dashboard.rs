@@ -16,7 +16,6 @@ use std::{fs, ops::Deref};
 use arboard::Clipboard;
 use serde::{Deserialize, Serialize};
 
-use crate::requests::do_request;
 use crate::{fs::get_documents_dir, theme::get_app_theme};
 use crate::{
     projects::{
@@ -25,6 +24,7 @@ use crate::{
     },
     theme::AppTheme,
 };
+use crate::{requests::do_request, theme::get_app_theme_persisted};
 
 use super::{
     add_header_window::AddHeaderWindow,
@@ -248,24 +248,10 @@ impl DashboardComponent {
             state,
         )?;
 
-        let ids_ref = ids.clone();
-        ids_ref.replace_with(|old| {
-            let mut new_map = old.clone();
-            new_map.insert(String::from("dashboard"), id);
-
-            new_map
-        });
+        let mut ids_ref = ids.borrow_mut();
+        ids_ref.insert(String::from("dashboard"), id);
 
         Ok(())
-    }
-
-    fn update_app_theme(&self, _state: &mut DashboardState) {
-        let _app_theme = get_app_theme();
-
-        // TODO: Figure out why this breaks the styling and messaging of the dashboard components
-        // println!("{app_theme:?}");
-        // state.app_theme.set(app_theme);
-        // *state.app_theme.to_mut() = app_theme;
     }
 
     fn show_message(&self, title: &str, message: &str, state: &mut DashboardState) {
@@ -627,6 +613,7 @@ pub trait DashboardMessageHandler {
 pub enum DashboardMessages {
     TextInput(TextInputMessages),
     TextArea(TextAreaMessages),
+    ThemeUpdate,
 }
 
 impl anathema::component::Component for DashboardComponent {
@@ -642,6 +629,15 @@ impl anathema::component::Component for DashboardComponent {
     ) {
         if let Ok(dashboard_message) = serde_json::from_str::<DashboardMessages>(&message) {
             match dashboard_message {
+                DashboardMessages::ThemeUpdate => {
+                    // TODO: Use this message again when the state update bug is fixed in anathema
+                    // println!("Changing dashboard theme");
+                    // self.update_app_theme(state);
+
+                    // let app_theme = get_app_theme_persisted();
+                    // state.app_theme.set(app_theme.into());
+                }
+
                 DashboardMessages::TextInput(text_input_message) => match text_input_message {
                     // TODO: Refactor this message to not be 100% coupled to only editing the
                     // endpoint name
@@ -974,7 +970,7 @@ impl anathema::component::Component for DashboardComponent {
         _: Elements<'_, '_>,
         context: Context<'_, Self::State>,
     ) {
-        self.update_app_theme(state);
+        update_theme(state);
 
         if self.test {
             return;
@@ -996,4 +992,55 @@ impl anathema::component::Component for DashboardComponent {
     fn accept_focus(&self) -> bool {
         true
     }
+}
+
+fn update_theme(state: &mut DashboardState) {
+    let app_theme = get_app_theme_persisted();
+
+    // TODO: Figure out why this breaks the styling and messaging of the dashboard components
+    // println!("{app_theme:?}");
+    // state.app_theme.set(app_theme.into());
+    // state.app_theme.set(app_theme.into());
+
+    let mut at = state.app_theme.to_mut();
+    at.background.set(app_theme.background);
+    at.foreground.set(app_theme.foreground);
+    at.project_name_background
+        .set(app_theme.project_name_background);
+    at.project_name_foreground
+        .set(app_theme.project_name_foreground);
+    at.border_focused.set(app_theme.border_focused);
+    at.border_unfocused.set(app_theme.border_unfocused);
+    at.overlay_heading.set(app_theme.overlay_heading);
+    at.overlay_background.set(app_theme.overlay_background);
+    at.overlay_foreground.set(app_theme.overlay_foreground);
+    at.overlay_submit_background
+        .set(app_theme.overlay_submit_background);
+    at.overlay_submit_foreground
+        .set(app_theme.overlay_submit_foreground);
+
+    at.overlay_cancel_background
+        .set(app_theme.overlay_cancel_background);
+    at.overlay_cancel_foreground
+        .set(app_theme.overlay_cancel_foreground);
+    at.menu_color_1.set(app_theme.menu_color_1);
+    at.menu_color_2.set(app_theme.menu_color_2);
+    at.menu_color_3.set(app_theme.menu_color_3);
+    at.menu_color_4.set(app_theme.menu_color_4);
+    at.menu_color_5.set(app_theme.menu_color_5);
+
+    at.endpoint_name_background
+        .set(app_theme.endpoint_name_background);
+    at.endpoint_name_foreground
+        .set(app_theme.endpoint_name_foreground);
+    at.menu_opt_background.set(app_theme.menu_opt_background);
+    at.menu_opt_foreground.set(app_theme.menu_opt_foreground);
+    at.top_bar_background.set(app_theme.top_bar_background);
+    at.top_bar_foreground.set(app_theme.top_bar_foreground);
+    at.bottom_bar_background
+        .set(app_theme.bottom_bar_background);
+    at.bottom_bar_foreground
+        .set(app_theme.bottom_bar_foreground);
+
+    // *state.app_theme.to_mut() = app_theme.into();
 }

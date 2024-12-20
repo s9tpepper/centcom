@@ -72,8 +72,6 @@ impl ProjectWindow {
         ids: &Rc<RefCell<HashMap<String, ComponentId<String>>>>,
         builder: &mut RuntimeBuilder<TuiBackend, ()>,
     ) -> anyhow::Result<()> {
-        println!("Registering project window component...");
-
         let id = builder.register_component(
             "project_selector",
             PROJECT_WINDOW_TEMPLATE,
@@ -81,17 +79,8 @@ impl ProjectWindow {
             ProjectWindowState::new(),
         )?;
 
-        let ids_ref = ids.clone();
-        ids_ref.replace_with(|old| {
-            let mut new_map = old.clone();
-            new_map.insert(String::from("project_selector"), id);
-            println!("Registered project_window with id project_window {id:?}");
-
-            new_map
-        });
-
-        println!("ids: {ids_ref:?}");
-        println!("project selector registered");
+        let mut ids_ref = ids.borrow_mut();
+        ids_ref.insert(String::from("project_selector"), id);
 
         Ok(())
     }

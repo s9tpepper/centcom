@@ -74,8 +74,6 @@ impl EndpointsSelector {
         ids: &Rc<RefCell<HashMap<String, ComponentId<String>>>>,
         builder: &mut RuntimeBuilder<TuiBackend, ()>,
     ) -> anyhow::Result<()> {
-        println!("Registering endpoints selector with id endpoints_selector_window");
-
         let id = builder.register_component(
             "endpoints_selector_window",
             ENDPOINTS_SELECTOR_TEMPLATE,
@@ -83,17 +81,8 @@ impl EndpointsSelector {
             EndpointsSelectorState::new(),
         )?;
 
-        let ids_ref = ids.clone();
-        ids_ref.replace_with(|old| {
-            let mut new_map = old.clone();
-            new_map.insert(String::from("endpoints_selector_window"), id);
-            println!("Registered endpoints selector with id endpoints_selector_window {id:?}");
-
-            new_map
-        });
-
-        println!("ids: {ids_ref:?}");
-        println!("endpoints selector registered");
+        let mut ids_ref = ids.borrow_mut();
+        ids_ref.insert(String::from("endpoints_selector_window"), id);
 
         Ok(())
     }

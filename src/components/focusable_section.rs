@@ -33,18 +33,12 @@ impl FocusableSection {
             FocusableSectionState::new(),
         )?;
 
-        let ids_ref = ids.clone();
-        ids_ref.replace_with(|old| {
-            let mut new_map = old.clone();
-            new_map.insert(name, app_id);
-
-            new_map
-        });
+        let mut ids_ref = ids.borrow_mut();
+        ids_ref.insert(name, app_id);
 
         Ok(())
     }
 
-    // TODO: Get a message like the MenuItem so it updates the theme changes
     #[allow(unused)]
     fn update_app_theme(&self, state: &mut FocusableSectionState) {
         let app_theme = get_app_theme();
@@ -106,7 +100,6 @@ impl Component for FocusableSection {
         _: anathema::widgets::Elements<'_, '_>,
         _: anathema::prelude::Context<'_, Self::State>,
     ) {
-        #[allow(clippy::single_match)]
         match message.as_str() {
             "unfocus" => {
                 state.active_border_color.set(
@@ -117,6 +110,10 @@ impl Component for FocusableSection {
                         .to_ref()
                         .to_string(),
                 );
+            }
+
+            "theme_update" => {
+                self.update_app_theme(state);
             }
 
             _ => {}

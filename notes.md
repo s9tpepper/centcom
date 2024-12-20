@@ -11,7 +11,7 @@
 ### Options
 [ ] (MVP?) Set up GitHub integration in the options?
 [N] Allow keybinding customizations?? (not really sure about this one)
-[ ] Themes for UI colors
+[x] Themes for UI colors
 
 ### UI
 [x] Pass on cleaning up keybindings
@@ -20,7 +20,7 @@
 [x] (MVP) Fix bindings so they are contextual to the screen that you are on
 [x] Clear project/endpoint name dialog inputs if the name is still default
 [x] (MVP) Options screen to choose themes, background for responses/request bodies, etc
-[ ] (MVP) Flesh out the options for the app
+[x] (MVP) Flesh out the options for the app
 [ ] Open In for URL/response
 [x] (MVP) Fix Ctrl C in request body
 

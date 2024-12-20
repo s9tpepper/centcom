@@ -29,13 +29,8 @@ impl EditValueTextInput {
             InputState::new(),
         )?;
 
-        let ids_ref = ids.clone();
-        ids_ref.replace_with(|old| {
-            let mut new_map = old.clone();
-            new_map.insert(String::from("edit_header_value_input"), id);
-
-            new_map
-        });
+        let mut ids_ref = ids.borrow_mut();
+        ids_ref.insert(String::from("edit_header_value_input"), id);
 
         Ok(())
     }

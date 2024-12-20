@@ -52,6 +52,8 @@ pub struct AppTheme {
     pub overlay_submit_foreground: Value<String>,
     pub overlay_cancel_background: Value<String>,
     pub overlay_cancel_foreground: Value<String>,
+
+    pub row_color: Value<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -141,7 +143,7 @@ impl From<AppThemePersisted> for AppTheme {
             name: theme_persisted.name.into(),
             background: theme_persisted.background.into(),
             foreground: theme_persisted.foreground.into(),
-            border_unfocused: theme_persisted.border_unfocused.into(),
+            border_unfocused: theme_persisted.border_unfocused.clone().into(),
             border_focused: theme_persisted.border_focused.into(),
             top_bar_background: theme_persisted.top_bar_background.into(),
             top_bar_foreground: theme_persisted.top_bar_foreground.into(),
@@ -165,14 +167,32 @@ impl From<AppThemePersisted> for AppTheme {
             overlay_submit_foreground: theme_persisted.overlay_submit_foreground.into(),
             overlay_cancel_background: theme_persisted.overlay_cancel_background.into(),
             overlay_cancel_foreground: theme_persisted.overlay_cancel_foreground.into(),
+            row_color: theme_persisted.border_unfocused.into(),
         }
     }
+}
+
+pub fn get_app_themes_list() -> Vec<AppThemePersisted> {
+    APP_THEME_MAP
+        .values()
+        .flat_map(|app_theme_bytes| {
+            let app_theme_contents = String::from_utf8_lossy(app_theme_bytes);
+
+            serde_json::from_str::<AppThemePersisted>(&app_theme_contents)
+        })
+        .collect()
 }
 
 pub fn get_app_theme() -> AppTheme {
     let app_theme_name = get_app_theme_name();
 
     get_app_theme_by_name(&app_theme_name)
+}
+
+pub fn get_app_theme_persisted() -> AppThemePersisted {
+    let app_theme_name = get_app_theme_name();
+
+    get_app_theme_persisted_by_name(&app_theme_name)
 }
 
 pub fn get_app_theme_by_name(app_theme_name: &str) -> AppTheme {
@@ -191,6 +211,29 @@ pub fn get_app_theme_by_name(app_theme_name: &str) -> AppTheme {
 
         None => get_default_app_theme(),
     }
+}
+
+pub fn get_app_theme_persisted_by_name(app_theme_name: &str) -> AppThemePersisted {
+    let app_theme_opt = APP_THEME_MAP.get_key_value(app_theme_name);
+
+    match app_theme_opt {
+        Some((_, app_theme_bytes)) => {
+            let app_theme_contents = String::from_utf8_lossy(app_theme_bytes);
+
+            let app_theme = serde_json::from_str::<AppThemePersisted>(&app_theme_contents);
+            match app_theme {
+                Ok(theme) => theme,
+                Err(_) => get_default_app_theme_persisted(),
+            }
+        }
+
+        None => get_default_app_theme_persisted(),
+    }
+}
+
+fn get_default_app_theme_persisted() -> AppThemePersisted {
+    let default_app_theme_contents = String::from_utf8_lossy(CATPPUCCIN_THEME);
+    serde_json::from_str::<AppThemePersisted>(&default_app_theme_contents).unwrap()
 }
 
 fn get_default_app_theme() -> AppTheme {

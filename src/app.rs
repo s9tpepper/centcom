@@ -20,8 +20,9 @@ use crate::components::{
     edit_name_textinput::EditNameTextInput,
     edit_value_textinput::EditValueTextInput,
     floating_windows::{
-        edit_endpoint_name::EditEndpointName, edit_project_name::EditProjectName,
-        endpoints_selector::EndpointsSelector, syntax_theme_selector::SyntaxThemeSelector,
+        app_theme_selector::AppThemeSelector, edit_endpoint_name::EditEndpointName,
+        edit_project_name::EditProjectName, endpoints_selector::EndpointsSelector,
+        syntax_theme_selector::SyntaxThemeSelector,
     },
     focusable_section::{FocusableSection, FocusableSectionState},
     header_name_textinput::HeaderNameTextInput,
@@ -129,16 +130,6 @@ impl App {
                 input_for: None,
             },
             TextAreaInputState::new,
-        )?;
-
-        component_ids = self.component_ids.clone();
-        builder.register_prototype(
-            "request_body_section",
-            REQUEST_BODY_SECTION_TEMPLATE,
-            move || FocusableSection {
-                component_ids: component_ids.clone(),
-            },
-            FocusableSectionState::new,
         )?;
 
         builder.register_prototype(
@@ -271,6 +262,7 @@ impl App {
         EditProjectName::register(&self.component_ids, builder)?;
         OptionsView::register(&self.component_ids, builder)?;
         SyntaxThemeSelector::register(&self.component_ids, builder)?;
+        AppThemeSelector::register(&self.component_ids, builder)?;
         TextArea::register(
             &self.component_ids,
             builder,
@@ -279,6 +271,15 @@ impl App {
             None,
             vec![],
         )?;
+
+        FocusableSection::register(
+            &self.component_ids,
+            builder,
+            "request_body_section",
+            REQUEST_BODY_SECTION_TEMPLATE,
+        )?;
+
+        // dbg!(&self.component_ids);
 
         Ok(())
     }

@@ -19,7 +19,11 @@ use anathema::{
 use serde::{Deserialize, Serialize};
 use syntect::highlighting::Theme;
 
-use crate::options::get_syntax_theme;
+use crate::{
+    app_themes,
+    options::get_syntax_theme,
+    theme::{get_app_theme, get_app_theme_persisted, AppTheme},
+};
 
 use super::syntax_highlighter::{highlight, Instruction, Parser};
 
@@ -64,13 +68,8 @@ impl ResponseRenderer {
             ResponseRendererState::new(),
         )?;
 
-        let ids_ref = ids.clone();
-        ids_ref.replace_with(|old| {
-            let mut new_map = old.clone();
-            new_map.insert(ident, id);
-
-            new_map
-        });
+        let mut ids_ref = ids.borrow_mut();
+        ids_ref.insert(ident, id);
 
         Ok(())
     }
@@ -93,6 +92,52 @@ impl ResponseRenderer {
             extension: "".to_string(),
             response_lines: vec![],
         }
+    }
+
+    fn update_app_theme(&self, state: &mut ResponseRendererState) {
+        let app_theme = get_app_theme_persisted();
+
+        // state.app_theme.set(app_theme);
+        // TODO: Temp fix for weirdness around state updates to the app_theme
+        let mut at = state.app_theme.to_mut();
+        at.background.set(app_theme.background);
+        at.foreground.set(app_theme.foreground);
+        at.project_name_background
+            .set(app_theme.project_name_background);
+        at.project_name_foreground
+            .set(app_theme.project_name_foreground);
+        at.border_focused.set(app_theme.border_focused);
+        at.border_unfocused.set(app_theme.border_unfocused);
+        at.overlay_heading.set(app_theme.overlay_heading);
+        at.overlay_background.set(app_theme.overlay_background);
+        at.overlay_foreground.set(app_theme.overlay_foreground);
+        at.overlay_submit_background
+            .set(app_theme.overlay_submit_background);
+        at.overlay_submit_foreground
+            .set(app_theme.overlay_submit_foreground);
+
+        at.overlay_cancel_background
+            .set(app_theme.overlay_cancel_background);
+        at.overlay_cancel_foreground
+            .set(app_theme.overlay_cancel_foreground);
+        at.menu_color_1.set(app_theme.menu_color_1);
+        at.menu_color_2.set(app_theme.menu_color_2);
+        at.menu_color_3.set(app_theme.menu_color_3);
+        at.menu_color_4.set(app_theme.menu_color_4);
+        at.menu_color_5.set(app_theme.menu_color_5);
+
+        at.endpoint_name_background
+            .set(app_theme.endpoint_name_background);
+        at.endpoint_name_foreground
+            .set(app_theme.endpoint_name_foreground);
+        at.menu_opt_background.set(app_theme.menu_opt_background);
+        at.menu_opt_foreground.set(app_theme.menu_opt_foreground);
+        at.top_bar_background.set(app_theme.top_bar_background);
+        at.top_bar_foreground.set(app_theme.top_bar_foreground);
+        at.bottom_bar_background
+            .set(app_theme.bottom_bar_background);
+        at.bottom_bar_foreground
+            .set(app_theme.bottom_bar_foreground);
     }
 
     // TODO: Fix update_cursor/update_cursor2 so I only need 2
@@ -508,10 +553,13 @@ pub struct ResponseRendererState {
     pub response: Value<String>,
     pub response_background: Value<String>,
     pub percent_scrolled: Value<String>,
+    pub app_theme: Value<AppTheme>,
 }
 
 impl ResponseRendererState {
     pub fn new() -> Self {
+        let app_theme = get_app_theme();
+
         ResponseRendererState {
             response: "".to_string().into(),
             scroll_position: 0.into(),
@@ -527,6 +575,7 @@ impl ResponseRendererState {
             show_cursor: true.into(),
             response_background: "#000000".to_string().into(),
             percent_scrolled: "0".to_string().into(),
+            app_theme: app_theme.into(),
         }
     }
 }
@@ -634,6 +683,10 @@ impl Component for ResponseRenderer {
         #[allow(clippy::single_match)]
         match response_renderer_message {
             Ok(message) => match message {
+                ResponseRendererMessages::ThemeUpdate => {
+                    self.update_app_theme(state);
+                }
+
                 ResponseRendererMessages::ResponseUpdate(extension) => {
                     // TODO: Try to delete this file if the program closes/quits/crashes
                     let reader_result = get_file_reader("/tmp/centcom_response.txt");
@@ -779,6 +832,7 @@ pub enum ResponseRendererMessages {
     ResponseUpdate(String),
     SyntaxPreview((String, String, Option<String>)),
     FilterUpdate(TextFilter),
+    ThemeUpdate,
 }
 
 #[derive(Default, Debug, Serialize, Deserialize)]
