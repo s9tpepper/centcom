@@ -1,17 +1,20 @@
-zstack
-  border [id: "options", foreground: #ffffff, border_style: "╭─╮│╯─╰│"]
+zstack [background: app_theme.background]
+  border [id: "options", foreground: app_theme.border_focused, border_style: "╭─╮│╯─╰│"]
     expand
       padding [padding: 1]
         vstack
           hstack
-            text [foreground: "blue"] "(A)pp Theme: "
-            text options.app_theme
+            text [foreground: app_theme.border_unfocused] "(A)pp Theme: "
+            text [bold: true] options.app_theme_name
           hstack
-            text [foreground: "blue"] "Synta(x) Highlight Theme: "
-            text options.syntax_theme
+            text [foreground: app_theme.border_unfocused] "Synta(x) Highlight Theme: "
+            text [bold: true] options.syntax_theme
 
   vstack
-    text "╭─Options:"
+    text "╭─"
+      span [bold: true, background: app_theme.background, foreground: app_theme.overlay_heading] "█"
+      span [background: app_theme.overlay_heading, foreground: app_theme.overlay_submit_foreground] "Options"
+      span [bold: true, background: app_theme.background, foreground: app_theme.overlay_heading] "█"
 
     if show_bottom_label
       //spacer
@@ -19,10 +22,10 @@ zstack
         spacer
         text [min_height: 1] "╰"
           for val in bottom_label
-            span [foreground: border_color, background: "reset"] "─"
-            span [foreground: border_color, background: "reset"] "["
-            span [foreground: border_color, background: "black"] val
-            span [foreground: border_color, background: "reset"] "]"
+            span [foreground: app_theme.border_focused, background: "reset"] "─"
+            span [foreground: app_theme.border_focused, background: "reset"] "["
+            span [foreground: app_theme.border_focused, background: "black"] val
+            span [foreground: app_theme.border_focused, background: "reset"] "]"
 
 if options_window == "SyntaxThemeSelector"
   @syntax_theme_selector (

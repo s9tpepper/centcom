@@ -14,7 +14,7 @@ const SYNTAX_THEMES_LIST: &str = include_str!("../themes/themes.txt");
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Options {
     pub syntax_theme: String,
-    pub app_theme: String,
+    pub app_theme_name: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -34,13 +34,13 @@ pub fn get_syntax_theme() -> String {
 }
 
 pub fn get_app_theme_name() -> String {
-    get_options().app_theme
+    get_options().app_theme_name
 }
 
 pub fn get_default_options() -> Options {
     Options {
         syntax_theme: String::from(DEFAULT_SYNTAX_THEME),
-        app_theme: String::from(DEFAULT_APP_THEME),
+        app_theme_name: String::from(DEFAULT_APP_THEME),
     }
 }
 

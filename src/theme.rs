@@ -171,7 +171,12 @@ impl From<AppThemePersisted> for AppTheme {
 
 pub fn get_app_theme() -> AppTheme {
     let app_theme_name = get_app_theme_name();
-    let app_theme_opt = APP_THEME_MAP.get_key_value(&app_theme_name.as_str());
+
+    get_app_theme_by_name(&app_theme_name)
+}
+
+pub fn get_app_theme_by_name(app_theme_name: &str) -> AppTheme {
+    let app_theme_opt = APP_THEME_MAP.get_key_value(app_theme_name);
 
     match app_theme_opt {
         Some((_, app_theme_bytes)) => {

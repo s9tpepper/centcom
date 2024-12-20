@@ -1,4 +1,7 @@
-use crate::options::{save_options, Options};
+use crate::{
+    options::{save_options, Options},
+    theme::{get_app_theme_by_name, AppTheme},
+};
 
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
@@ -23,20 +26,23 @@ pub struct OptionsView {
 
 #[derive(Default, State)]
 pub struct OptionsViewState {
+    app_theme: Value<AppTheme>,
     options: Value<OptionsState>,
     options_window: Value<OptionsWindows>,
 }
 
 #[derive(Default, State)]
 struct OptionsState {
-    app_theme: Value<String>,
+    app_theme_name: Value<String>,
     syntax_theme: Value<String>,
 }
 
 impl From<Options> for OptionsState {
     fn from(val: Options) -> Self {
+        let app_theme = get_app_theme_by_name(&val.app_theme_name);
+
         OptionsState {
-            app_theme: val.app_theme.into(),
+            app_theme_name: val.app_theme_name.into(),
             syntax_theme: val.syntax_theme.into(),
         }
     }
@@ -44,8 +50,11 @@ impl From<Options> for OptionsState {
 
 impl OptionsViewState {
     pub fn new(options: Options) -> Self {
+        let app_theme = get_app_theme_by_name(&options.app_theme_name);
         let options_state: OptionsState = options.into();
+
         OptionsViewState {
+            app_theme: app_theme.into(),
             options: options_state.into(),
             options_window: OptionsWindows::None.into(),
         }
