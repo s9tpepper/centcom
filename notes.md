@@ -14,6 +14,12 @@
 - Larry
 - Curly
 - Nyuk Nyuk
+- Omen
+- Prophet
+- Seer
+- Oracle
+- Druid
+
 
 
 
