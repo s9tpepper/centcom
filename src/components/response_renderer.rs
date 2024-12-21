@@ -20,7 +20,6 @@ use serde::{Deserialize, Serialize};
 use syntect::highlighting::Theme;
 
 use crate::{
-    app_themes,
     options::get_syntax_theme,
     theme::{get_app_theme, get_app_theme_persisted, AppTheme},
 };
@@ -28,6 +27,7 @@ use crate::{
 use super::syntax_highlighter::{highlight, Instruction, Parser};
 
 const TEMPLATE: &str = "./src/components/templates/response_renderer.aml";
+pub const CODE_SAMPLE: &str = include_str!("../../themes/code_sample.rs");
 
 enum ScrollDirection {
     Up,
@@ -47,12 +47,14 @@ pub struct ResponseRenderer {
     size: Option<Size>,
     response_reader: Option<BufReader<File>>,
     response_offset: usize,
-    total_lines: usize,
     viewport_height: usize,
     extension: String,
 
     // All lines from the response
     response_lines: Vec<String>,
+
+    code_sample: Option<String>,
+    code_ext: Option<String>,
 }
 
 impl ResponseRenderer {
@@ -86,11 +88,12 @@ impl ResponseRenderer {
             theme: None,
             response_reader: None,
             response_offset: 0,
-            total_lines: 0,
             viewport_height: 0,
             size: None,
             extension: "".to_string(),
             response_lines: vec![],
+            code_ext: None,
+            code_sample: None,
         }
     }
 
@@ -251,6 +254,8 @@ impl ResponseRenderer {
 
         match inst {
             Instruction::Type(c, bold) => {
+                let mut added_char = false;
+
                 {
                     let mut lines = state.lines.to_mut();
                     let line = lines.get_mut(self.syntax_highlighter_cursor.y as usize);
@@ -260,16 +265,46 @@ impl ResponseRenderer {
                     }
 
                     let line = line.unwrap();
-                    let mut line = line.to_mut();
-                    // let spans = line.spans.len();
-                    line.spans.insert(
-                        self.syntax_highlighter_cursor.x as usize,
-                        Span::new(*c, self.foreground, self.background, *bold),
-                    );
-                    self.syntax_highlighter_cursor.x += 1;
+                    let mut_line = RefCell::new(line.to_mut());
+
+                    {
+                        let mut mutable_line = mut_line.try_borrow_mut().unwrap();
+                        let spans_len = mutable_line.spans.len();
+
+                        let mut spans = mutable_line.spans.to_mut();
+                        let mut previous_span = spans.get_mut(spans_len);
+
+                        if let Some(ref mut prev_span) = previous_span {
+                            let mut previous = prev_span.to_mut();
+                            if *previous.bold.to_ref() == *bold
+                                && *previous.background.to_ref() == self.background
+                                && *previous.foreground.to_ref() == self.foreground
+                            {
+                                let char_index = previous.text.to_ref().len();
+                                previous.text.to_mut().insert(char_index, *c);
+
+                                added_char = true;
+                            }
+                        }
+                    }
+
+                    {
+                        if !added_char {
+                            let mut mutable_line = mut_line.try_borrow_mut().unwrap();
+                            mutable_line.spans.insert(
+                                self.syntax_highlighter_cursor.x as usize,
+                                Span::new(c.to_string(), self.foreground, self.background, *bold),
+                            );
+
+                            added_char = true;
+                        }
+                    }
                 }
 
-                self.update_cursor2(state, elements);
+                if added_char {
+                    self.syntax_highlighter_cursor.x += 1;
+                    self.update_cursor2(state, elements);
+                }
             }
             Instruction::SetForeground(hex) => self.foreground = *hex,
             Instruction::SetBackground(hex) => self.background = *hex,
@@ -282,7 +317,6 @@ impl ResponseRenderer {
                 self.syntax_highlighter_cursor.x = *x;
                 self.update_cursor2(state, elements);
             }
-            _ => {}
         }
     }
 
@@ -310,9 +344,10 @@ impl ResponseRenderer {
                         let line = line.unwrap();
                         let mut line = line.to_mut();
                         // let spans = line.spans.len();
+
                         line.spans.insert(
                             self.syntax_highlighter_cursor.x as usize,
-                            Span::new(*c, self.foreground, self.background, *bold),
+                            Span::new(c.to_string(), self.foreground, self.background, *bold),
                         );
                         self.syntax_highlighter_cursor.x += 1;
                     }
@@ -330,8 +365,6 @@ impl ResponseRenderer {
                     self.syntax_highlighter_cursor.x = *x;
                     self.update_cursor(state, vp, size);
                 }
-
-                _ => {}
             }
         });
     }
@@ -445,11 +478,12 @@ impl ResponseRenderer {
 
         let (highlighted_lines, parsed_theme) = highlight(&response, &self.extension, theme);
 
+        let bg = parsed_theme.settings.background;
         if self.theme.is_none() {
-            self.theme = Some(parsed_theme.clone());
+            self.theme = Some(parsed_theme);
         }
 
-        if let Some(color) = parsed_theme.settings.background {
+        if let Some(color) = bg {
             let hex_color = format!("#{:02X}{:02X}{:02X}", color.r, color.g, color.b);
             state.response_background.set(hex_color);
         }
@@ -507,7 +541,7 @@ impl Line {
 
 #[derive(State)]
 struct Span {
-    text: Value<char>,
+    text: Value<String>,
     bold: Value<bool>,
     foreground: Value<Hex>,
     background: Value<Hex>,
@@ -515,7 +549,7 @@ struct Span {
 }
 
 impl Span {
-    pub fn new(c: char, foreground: Hex, background: Hex, bold: bool) -> Self {
+    pub fn new(c: String, foreground: Hex, background: Hex, bold: bool) -> Self {
         Self {
             text: c.into(),
             foreground: foreground.into(),
@@ -527,7 +561,7 @@ impl Span {
 
     pub fn empty() -> Self {
         Self {
-            text: ' '.into(),
+            text: " ".to_string().into(),
             foreground: Hex::from((255, 255, 255)).into(),
             background: Hex::from((0, 0, 0)).into(),
             original_background: None.into(),
@@ -700,7 +734,7 @@ impl Component for ResponseRenderer {
                     self.render_response(extension, &mut elements, state, 0);
                 }
 
-                ResponseRendererMessages::SyntaxPreview((response, extension, theme)) => {
+                ResponseRendererMessages::SyntaxPreview(theme) => {
                     loop {
                         if state.lines.len() == 0 {
                             break;
@@ -709,7 +743,14 @@ impl Component for ResponseRenderer {
                         state.lines.remove(0);
                     }
 
-                    let (highlighted_lines, parsed_theme) = highlight(&response, &extension, theme);
+                    if self.code_sample.is_none() {
+                        self.code_sample = Some(String::from(CODE_SAMPLE));
+                        self.code_ext = Some(String::from("rs"));
+                    }
+
+                    let code = self.code_sample.clone().unwrap();
+                    let ext = self.code_ext.as_ref().unwrap();
+                    let (highlighted_lines, parsed_theme) = highlight(&code, ext, theme);
 
                     // NOTE: Maybe remove this if its not useful
                     if self.theme.is_none() {
@@ -726,7 +767,7 @@ impl Component for ResponseRenderer {
                         self.apply_inst(&instruction, state, &mut elements);
                     }
 
-                    state.response.set(response);
+                    state.response.set(code.to_string());
                 }
 
                 ResponseRendererMessages::FilterUpdate(filter) => {
@@ -830,7 +871,7 @@ fn get_file_reader(file_path: &str) -> anyhow::Result<BufReader<File>> {
 #[derive(Debug, Serialize, Deserialize)]
 pub enum ResponseRendererMessages {
     ResponseUpdate(String),
-    SyntaxPreview((String, String, Option<String>)),
+    SyntaxPreview(Option<String>),
     FilterUpdate(TextFilter),
     ThemeUpdate,
 }

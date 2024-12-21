@@ -53,7 +53,7 @@ impl DashboardMessageHandler for EditEndpointName {
                         "edit_endpoint_name",
                         message,
                         &component_ids,
-                        &context.emitter,
+                        context.emitter,
                     );
                 };
             }
@@ -104,7 +104,7 @@ impl Component for EditEndpointName {
                             "edit_endpoint_name_input",
                             "".to_string(),
                             &ids,
-                            &context.emitter,
+                            context.emitter,
                         );
                     }
                 }
@@ -117,7 +117,7 @@ impl Component for EditEndpointName {
                             "edit_endpoint_name_input",
                             input_value,
                             &ids,
-                            &context.emitter,
+                            context.emitter,
                         );
                     }
                 }

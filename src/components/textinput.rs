@@ -51,9 +51,9 @@ pub struct TextUpdate {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum TextInputMessages {
-    InputChange(String), // This needs to go away in favor of the InputUpdate variant
-    InputUpdate(TextUpdate),
-    InputEscape(TextUpdate),
+    Change(String), // This needs to go away in favor of the InputUpdate variant
+    Update(TextUpdate),
+    Escape(TextUpdate),
 }
 
 impl Component for TextInput {
@@ -93,7 +93,7 @@ impl Component for TextInput {
             if let Ok(ids) = self.component_ids.try_borrow() {
                 let input_value = state.input.to_ref().to_string();
                 let input_change_message =
-                    DashboardMessages::TextInput(TextInputMessages::InputChange(input_value));
+                    DashboardMessages::TextInput(TextInputMessages::Change(input_value));
 
                 if let Ok(serialized_message) = serde_json::to_string(&input_change_message) {
                     for listener in &self.listeners {

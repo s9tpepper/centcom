@@ -11,6 +11,7 @@ use crate::theme::{get_app_theme, AppTheme};
 
 #[derive(Default)]
 pub struct FocusableSection {
+    #[allow(unused)]
     pub component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>,
 }
 

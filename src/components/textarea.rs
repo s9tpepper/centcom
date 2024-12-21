@@ -26,6 +26,7 @@ pub const TEXTAREA_TEMPLATE: &str = "./src/components/templates/textarea.aml";
 
 #[derive(Default)]
 pub struct TextArea {
+    #[allow(unused)]
     pub input_for: Option<String>,
     pub listeners: Vec<String>,
     pub component_ids: Rc<RefCell<HashMap<String, ComponentId<String>>>>,
@@ -88,27 +89,28 @@ enum ScrollDirection {
     Down,
 }
 
-fn scroll_to_line(
-    state: &mut TextAreaInputState,
-    mut elements: Elements<'_, '_>,
-    _: Context<'_, TextAreaInputState>,
-    line: usize,
-) {
-    elements
-        .by_attribute("id", "container")
-        .each(|el, _attributes| {
-            let overflow = el.to::<Overflow>();
-
-            state.scroll_position.set(line);
-
-            let pos = Pos {
-                x: 0,
-                y: line as i32,
-            };
-
-            overflow.scroll_to(pos);
-        });
-}
+// NOTE: keep around for future, maybe
+// fn scroll_to_line(
+//     state: &mut TextAreaInputState,
+//     mut elements: Elements<'_, '_>,
+//     _: Context<'_, TextAreaInputState>,
+//     line: usize,
+// ) {
+//     elements
+//         .by_attribute("id", "container")
+//         .each(|el, _attributes| {
+//             let overflow = el.to::<Overflow>();
+//
+//             state.scroll_position.set(line);
+//
+//             let pos = Pos {
+//                 x: 0,
+//                 y: line as i32,
+//             };
+//
+//             overflow.scroll_to(pos);
+//         });
+// }
 
 fn scroll(
     state: &mut TextAreaInputState,

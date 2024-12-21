@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::HashMap, rc::Rc, thread::sleep, time::Duration};
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use anathema::{
     component::ComponentId,
@@ -24,7 +24,7 @@ use crate::components::{
         edit_project_name::EditProjectName, endpoints_selector::EndpointsSelector,
         syntax_theme_selector::SyntaxThemeSelector,
     },
-    focusable_section::{FocusableSection, FocusableSectionState},
+    focusable_section::FocusableSection,
     header_name_textinput::HeaderNameTextInput,
     header_value_textinput::HeaderValueTextInput,
     menu_item::{MenuItem, MenuItemState, MENU_ITEM_TEMPLATE},
@@ -65,6 +65,7 @@ impl App {
         let doc = Document::new("@app");
 
         let tui = TuiBackend::builder()
+            // TODO: Enable this line for releases
             // .enable_alt_screen()
             .enable_raw_mode()
             .hide_cursor()

@@ -60,7 +60,7 @@ impl EditInput {
             let id = self.input_for.clone().unwrap_or("".to_string());
 
             let input_change_message = DashboardMessages::TextInput(
-                super::textinput::TextInputMessages::InputUpdate(TextUpdate {
+                super::textinput::TextInputMessages::Update(TextUpdate {
                     id,
                     value: input_value,
                 }),
@@ -84,7 +84,7 @@ impl EditInput {
             let id = self.input_for.clone().unwrap_or("".to_string());
 
             let input_change_message = DashboardMessages::TextInput(
-                super::textinput::TextInputMessages::InputEscape(TextUpdate {
+                super::textinput::TextInputMessages::Escape(TextUpdate {
                     id,
                     value: "".to_string(),
                 }),

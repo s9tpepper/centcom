@@ -1,7 +1,6 @@
 use std::{cell::Ref, collections::HashMap};
 
 use anathema::component::{ComponentId, Emitter};
-use dashboard::DashboardMessages;
 
 pub mod add_header_window;
 pub mod app_layout;

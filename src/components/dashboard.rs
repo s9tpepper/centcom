@@ -641,7 +641,7 @@ impl anathema::component::Component for DashboardComponent {
                 DashboardMessages::TextInput(text_input_message) => match text_input_message {
                     // TODO: Refactor this message to not be 100% coupled to only editing the
                     // endpoint name
-                    TextInputMessages::InputChange(value) => {
+                    TextInputMessages::Change(value) => {
                         let mut endpoint = state.endpoint.to_mut();
                         let name_still_default = *endpoint.url.to_ref() == *endpoint.name.to_ref();
 
@@ -653,7 +653,7 @@ impl anathema::component::Component for DashboardComponent {
                     }
 
                     #[allow(clippy::single_match)]
-                    TextInputMessages::InputUpdate(text_update) => match text_update.id.as_str() {
+                    TextInputMessages::Update(text_update) => match text_update.id.as_str() {
                         "endpoint_url_input" => {
                             state.endpoint.to_mut().url.set(text_update.value);
                         }
@@ -662,7 +662,7 @@ impl anathema::component::Component for DashboardComponent {
                     },
 
                     #[allow(clippy::single_match)]
-                    TextInputMessages::InputEscape(text_update) => match text_update.id.as_str() {
+                    TextInputMessages::Escape(text_update) => match text_update.id.as_str() {
                         "endpoint_url_input" => {
                             context.set_focus("id", "app");
 

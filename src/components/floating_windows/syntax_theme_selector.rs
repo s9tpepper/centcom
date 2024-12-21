@@ -7,7 +7,7 @@ use std::{
 };
 
 use crate::{
-    components::response_renderer::ResponseRendererMessages,
+    components::response_renderer::{ResponseRendererMessages, CODE_SAMPLE},
     options::{get_syntax_theme, get_syntax_themes},
 };
 
@@ -22,7 +22,6 @@ use anathema::{
 // project window
 
 pub const TEMPLATE: &str = "./src/components/floating_windows/templates/syntax_theme_selector.aml";
-const CODE_SAMPLE: &str = include_str!("../../../themes/code_sample.rs");
 
 // TODO: Fix the default project row color to the correct gray
 const DEFAULT_ROW_COLOR: &str = "#333333";
@@ -225,12 +224,8 @@ impl SyntaxThemeSelector {
 
         let code_sample_id = code_sample_id.unwrap();
 
-        let code = String::from(CODE_SAMPLE);
-        let ext = String::from("rs");
-        if let Ok(msg) = serde_json::to_string(&ResponseRendererMessages::SyntaxPreview((
-            code,
-            ext,
-            Some(theme_name.to_string()),
+        if let Ok(msg) = serde_json::to_string(&ResponseRendererMessages::SyntaxPreview(Some(
+            theme_name.to_string(),
         ))) {
             context.emit(*code_sample_id, msg);
         }

@@ -1,8 +1,4 @@
-use std::{
-    fs::{File, OpenOptions},
-    io::{BufRead, BufReader, Lines, Write},
-    path::PathBuf,
-};
+use std::{fs::OpenOptions, io::Write, path::PathBuf};
 
 use crate::{
     components::{
@@ -152,11 +148,7 @@ pub fn do_request(
 
                 // TODO: Once the response headers are being extracted, figure out the correct
                 // extension type to use to syntax highlight the response
-                let response_msg = ResponseRendererMessages::SyntaxPreview((
-                    body.to_string(),
-                    "txt".to_string(),
-                    None,
-                ));
+                let response_msg = ResponseRendererMessages::SyntaxPreview(None);
                 if let Ok(msg) = serde_json::to_string(&response_msg) {
                     if let Ok(component_ids) = dashboard.component_ids.try_borrow() {
                         let _ =
