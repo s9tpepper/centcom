@@ -3,7 +3,18 @@
 ## Name Ideas
 - Protocall
 - Protocol
-- Stood
+- Mercury
+- Herald
+- A P.I.
+- IPA
+- Hazy
+- Triple Hazy
+- Probe
+- Mo
+- Larry
+- Curly
+- Nyuk Nyuk
+
 
 
 ## TODO
@@ -20,7 +31,7 @@
 [x] (MVP) Fix bindings so they are contextual to the screen that you are on
 [x] Clear project/endpoint name dialog inputs if the name is still default
 [x] (MVP) Options screen to choose themes, background for responses/request bodies, etc
-[x] (MVP) Flesh out the options for the app
+[ ] (MVP) Flesh out the options for the app
 [ ] Open In for URL/response
 [x] (MVP) Fix Ctrl C in request body
 
@@ -46,8 +57,8 @@ Body
 [x] (MVP) Rename Project dialogue
 
 ### Requests
-* [ ] (MVP) Request dependencies/piping results from dependency
-* [ ] (MVP) Project/Request variables, like for tokens so you don't have to copy/paste tokens for every request
+* [ ] (MVP?) Request dependencies/piping results from dependency
+* [ ] (MVP?) Project/Request variables, like for tokens so you don't have to copy/paste tokens for every request
 * [ ] (MVP) Code generation (curl, TypeScript/JavaScript, Rust, PHP?, Go?, Python?) [ ] Code generation plugin framework, based on OpenAPI code generation plugins/tools, maybe?
 [ ] Import/Export OpenAPI?
 
