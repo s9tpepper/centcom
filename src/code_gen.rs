@@ -48,7 +48,7 @@ pub fn generate_typescript(project: PersistedProject) -> anyhow::Result<()> {
         let mut body_var = "";
         let mut body = "";
 
-        if endpoint.body.is_empty() {
+        if !endpoint.body.is_empty() {
             body_var = "body: BodyInit";
             body = "\n    body,";
         }
