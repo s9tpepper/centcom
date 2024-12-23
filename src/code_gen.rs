@@ -5,6 +5,17 @@ use crate::{
     projects::{Header, PersistedProject},
 };
 
+const JS_METHOD_TEMPLATE: &str = "
+export async function [NAME]([BODY_VAR]) {
+  const response = await fetch(\"[URL]\", {
+    headers: { [HEADERS] },[BODY]
+    method: \"[METHOD]\",
+  })
+
+  return await response.[RESPONSE_FUNC]()
+}
+";
+
 const TS_METHOD_TEMPLATE: &str = "
 export async function [NAME][RETURN_GENERIC]([BODY_VAR]): Promise<[RETURN_TYPE]> {
   const response = await fetch(\"[URL]\", {
@@ -16,9 +27,14 @@ export async function [NAME][RETURN_GENERIC]([BODY_VAR]): Promise<[RETURN_TYPE]>
 }
 ";
 
-pub fn generate_typescript(project: PersistedProject) -> anyhow::Result<()> {
-    let mut ts_module = String::new();
-    let method_template = get_method_template()?;
+pub enum WebType {
+    JavaScript,
+    TypeScript,
+}
+
+pub fn generate_web(project: PersistedProject, web_type: WebType) -> anyhow::Result<()> {
+    let mut module = String::new();
+    let method_template = get_method_template(&web_type)?;
 
     project.endpoints.iter().for_each(|endpoint| {
         let content_type = endpoint
@@ -49,7 +65,11 @@ pub fn generate_typescript(project: PersistedProject) -> anyhow::Result<()> {
         let mut body = "";
 
         if !endpoint.body.is_empty() {
-            body_var = "body: BodyInit";
+            body_var = match web_type {
+                WebType::JavaScript => "body",
+                WebType::TypeScript => "body: BodyInit",
+            };
+
             body = "\n    body,";
         }
 
@@ -72,32 +92,48 @@ pub fn generate_typescript(project: PersistedProject) -> anyhow::Result<()> {
             .replace("[RESPONSE_FUNC]", response_func)
             .replace("[RETURN_GENERIC_CAST]", return_generic_cast);
 
-        ts_module.push_str(&method_code);
+        module.push_str(&method_code);
     });
 
-    write_ts_code(&project.name, &ts_module)
+    let extension = match web_type {
+        WebType::JavaScript => "js",
+        WebType::TypeScript => "ts",
+    };
+
+    write_code(&project.name, &module, extension)
 }
 
-fn get_method_template() -> anyhow::Result<String> {
+fn get_method_template(web_type: &WebType) -> anyhow::Result<String> {
     let mut app_dir = get_app_dir("code_templates")?;
-    app_dir.push("typescript_method_template.txt");
+
+    let template = match web_type {
+        WebType::JavaScript => JS_METHOD_TEMPLATE,
+        WebType::TypeScript => TS_METHOD_TEMPLATE,
+    };
+
+    let template_file_name = match web_type {
+        WebType::JavaScript => "javascript_method_template.txt",
+        WebType::TypeScript => "typescript_method_template.txt",
+    };
+
+    app_dir.push(template_file_name);
 
     match fs::read_to_string(app_dir.clone()) {
         Ok(template) => Ok(template),
         Err(_) => {
-            fs::write(app_dir, TS_METHOD_TEMPLATE)?;
+            fs::write(app_dir, template)?;
 
-            Ok(TS_METHOD_TEMPLATE.to_string())
+            Ok(template.to_string())
         }
     }
 }
 
-fn write_ts_code(name: &str, ts_module: &str) -> anyhow::Result<()> {
+fn write_code(name: &str, module: &str, extension: &str) -> anyhow::Result<()> {
     let mut docs_dir = get_documents_dir()?;
     let module_name = name.replace(" ", "_");
-    docs_dir.push(format!("{module_name}.ts"));
+    docs_dir.push(format!("{module_name}.{extension}"));
 
-    fs::write(docs_dir, ts_module)?;
+    fs::write(docs_dir, module)?;
 
     Ok(())
 }

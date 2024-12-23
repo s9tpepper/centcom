@@ -13,7 +13,7 @@ use anathema::{
 };
 
 use crate::{
-    code_gen::generate_typescript,
+    code_gen::{generate_web, WebType},
     components::{
         dashboard::{DashboardMessageHandler, DashboardMessages, DashboardState, FloatingWindow},
         send_message,
@@ -141,15 +141,27 @@ impl DashboardMessageHandler for CodeGen {
                     context.set_focus("id", "app");
                 }
 
-                "typescript" => {
+                code_type @ ("typescript" | "javascript") => {
+                    let web_type = match code_type {
+                        "typescript" => WebType::TypeScript,
+                        "javascript" => WebType::JavaScript,
+                        _ => WebType::TypeScript,
+                    };
+
+                    let language_name = match code_type {
+                        "typescript" => "TypeScript",
+                        "javascript" => "JavaScript",
+                        _ => "",
+                    };
+
                     state.floating_window.set(FloatingWindow::None);
                     context.set_focus("id", "app");
 
                     let project = state.project.to_ref();
 
-                    match generate_typescript((&*project).into()) {
+                    match generate_web((&*project).into(), web_type) {
                         Ok(_) => {
-                            let title = String::from("TypeScript Code Gen");
+                            let title = format!("{language_name} Code Gen");
                             let msg = String::from("Code generated successfully");
                             let message = DashboardMessages::ShowSucces((title, msg));
 
@@ -164,7 +176,7 @@ impl DashboardMessageHandler for CodeGen {
                         }
 
                         Err(_) => {
-                            let msg = String::from("Error generating TypeScript code");
+                            let msg = format!("Error generating {language_name} code");
                             let message = DashboardMessages::ShowError(msg);
 
                             let _ = serde_json::to_string(&message).map(|message| {
@@ -177,15 +189,6 @@ impl DashboardMessageHandler for CodeGen {
                             });
                         }
                     }
-                }
-
-                "javascript" => {
-                    state.floating_window.set(FloatingWindow::None);
-
-                    println!("Generate javascript code here");
-
-                    // TODO: Set this to the code generation dialog instead of app
-                    context.set_focus("id", "app");
                 }
 
                 _ => {}

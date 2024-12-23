@@ -1,0 +1,11 @@
+export async function [NAME]([BODY_VAR]) {
+  const response = await fetch([URL], {
+    headers: {
+      [HEADERS]
+    },
+    [BODY],
+    method: [METHOD],
+  }text)
+
+  return await response.[RESPONSE_FUNC]()
+}
