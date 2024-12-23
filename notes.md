@@ -37,7 +37,7 @@
 [x] (MVP) Fix bindings so they are contextual to the screen that you are on
 [x] Clear project/endpoint name dialog inputs if the name is still default
 [x] (MVP) Options screen to choose themes, background for responses/request bodies, etc
-[ ] (MVP) Flesh out the options for the app
+[x] (MVP) Flesh out the options for the app
 [ ] Open In for URL/response
 [x] (MVP) Fix Ctrl C in request body
 
