@@ -20,9 +20,9 @@ use crate::components::{
     edit_name_textinput::EditNameTextInput,
     edit_value_textinput::EditValueTextInput,
     floating_windows::{
-        app_theme_selector::AppThemeSelector, edit_endpoint_name::EditEndpointName,
-        edit_project_name::EditProjectName, endpoints_selector::EndpointsSelector,
-        syntax_theme_selector::SyntaxThemeSelector,
+        app_theme_selector::AppThemeSelector, code_gen::CodeGen, commands::Commands,
+        edit_endpoint_name::EditEndpointName, edit_project_name::EditProjectName,
+        endpoints_selector::EndpointsSelector, syntax_theme_selector::SyntaxThemeSelector,
     },
     focusable_section::FocusableSection,
     header_name_textinput::HeaderNameTextInput,
@@ -264,6 +264,9 @@ impl App {
         OptionsView::register(&self.component_ids, builder)?;
         SyntaxThemeSelector::register(&self.component_ids, builder)?;
         AppThemeSelector::register(&self.component_ids, builder)?;
+        Commands::register(&self.component_ids, builder)?;
+        CodeGen::register(&self.component_ids, builder)?;
+
         TextArea::register(
             &self.component_ids,
             builder,

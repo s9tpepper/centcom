@@ -22,6 +22,10 @@ zstack [background: app_theme.background]
           text [bold: true, background: app_theme.top_bar_background, foreground: app_theme.menu_opt_background] "█"
           text [bold: false, foreground: app_theme.top_bar_background, background: app_theme.menu_opt_background] "New Endpoin(t)"
           text [bold: true, background: app_theme.top_bar_background, foreground: app_theme.menu_opt_background] "█"
+
+          text [bold: true, background: app_theme.top_bar_background, foreground: app_theme.menu_opt_background] "█"
+          text [bold: false, foreground: app_theme.top_bar_background, background: app_theme.menu_opt_background] "(C)ommands"
+          text [bold: true, background: app_theme.top_bar_background, foreground: app_theme.menu_opt_background] "█"
     hstack
       @row [border_color: app_theme.border_unfocused, top_label: "(M)ethod", expanding: false, minwidth: 13]
         $children
@@ -213,3 +217,15 @@ zstack [background: app_theme.background]
       endpoints_selector__selection -> endpoints_selector__selection,
       endpoints_selector__delete -> endpoints_selector__delete
     ) [id: "endpoints_selector_window"]
+
+  if floating_window == "Commands"
+    @commands_window (
+      commands__selection -> commands__selection,
+      commands__cancel -> commands__cancel
+    ) [id: "commands_window"]
+
+  if floating_window == "CodeGen"
+    @codegen_window (
+      codegen__selection -> codegen__selection,
+      codegen__cancel -> codegen__cancel
+    ) [id: "codegen_window"]

@@ -21,6 +21,10 @@ pub fn do_request(
     let headers = endpoint.headers.to_ref();
 
     let mut content_type = String::new();
+
+    // TODO: Update this mess where we are mixing http crate and ureq crate
+    // for no apparent reason than to make this a huge mess. Use the
+    // ureq::request method to build up the request, and ditch the http crate
     let mut request_builder = http::Request::builder();
     for header_value in headers.iter() {
         let header = header_value.to_ref();

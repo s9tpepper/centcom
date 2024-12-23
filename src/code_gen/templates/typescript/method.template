@@ -1,0 +1,11 @@
+export async function [NAME][RETURN_GENERIC]([BODY_VAR]): Promise<[RETURN_TYPE]> {
+  const response = await fetch([URL], {
+    headers: {
+      [HEADERS]
+    },
+    [BODY],
+    method: [METHOD],
+  }text)
+
+  return await response.[RESPONSE_FUNC]() [RETURN_GENERIC_CAST]
+}

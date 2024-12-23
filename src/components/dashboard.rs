@@ -32,6 +32,8 @@ use super::{
     edit_header_selector::EditHeaderSelector,
     edit_header_window::EditHeaderWindow,
     floating_windows::{
+        code_gen::CodeGen,
+        commands::Commands,
         edit_endpoint_name::{EditEndpointName, EditEndpointNameMessages},
         edit_project_name::{EditProjectName, EditProjectNameMessages},
     },
@@ -91,6 +93,8 @@ pub enum FloatingWindow {
     ChangeEndpointName,
     ChangeProjectName,
     EndpointsSelector,
+    Commands,
+    CodeGen,
 }
 
 impl State for FloatingWindow {
@@ -108,6 +112,8 @@ impl State for FloatingWindow {
             FloatingWindow::ChangeEndpointName => Some(CommonVal::Str("ChangeEndpointName")),
             FloatingWindow::ChangeProjectName => Some(CommonVal::Str("ChangeProjectName")),
             FloatingWindow::EndpointsSelector => Some(CommonVal::Str("EndpointsSelector")),
+            FloatingWindow::Commands => Some(CommonVal::Str("Commands")),
+            FloatingWindow::CodeGen => Some(CommonVal::Str("CodeGen")),
         }
     }
 }
@@ -596,6 +602,16 @@ impl DashboardComponent {
             self.sync_text_filter(state, context, &filter);
         }
     }
+
+    fn open_commands_window(
+        &self,
+        state: &mut DashboardState,
+        mut context: Context<'_, DashboardState>,
+    ) {
+        println!("Opening commands");
+        state.floating_window.set(FloatingWindow::Commands);
+        context.set_focus("id", "commands_window");
+    }
 }
 
 pub trait DashboardMessageHandler {
@@ -614,6 +630,8 @@ pub enum DashboardMessages {
     TextInput(TextInputMessages),
     TextArea(TextAreaMessages),
     ThemeUpdate,
+    ShowSucces((String, String)),
+    ShowError(String),
 }
 
 impl anathema::component::Component for DashboardComponent {
@@ -629,6 +647,14 @@ impl anathema::component::Component for DashboardComponent {
     ) {
         if let Ok(dashboard_message) = serde_json::from_str::<DashboardMessages>(&message) {
             match dashboard_message {
+                DashboardMessages::ShowSucces((title, message)) => {
+                    self.show_message(&title, &message, state);
+                }
+
+                DashboardMessages::ShowError(message) => {
+                    self.show_error(&message, state);
+                }
+
                 DashboardMessages::ThemeUpdate => {
                     // TODO: Use this message again when the state update bug is fixed in anathema
                     // println!("Changing dashboard theme");
@@ -721,6 +747,14 @@ impl anathema::component::Component for DashboardComponent {
 
                     _ => {}
                 },
+
+                "commands" => {
+                    Commands::handle_message(value, ident, state, context, elements, component_ids);
+                }
+
+                "codegen" => {
+                    CodeGen::handle_message(value, ident, state, context, elements, component_ids);
+                }
 
                 "add_header" => {
                     AddHeaderWindow::handle_message(
@@ -829,6 +863,7 @@ impl anathema::component::Component for DashboardComponent {
                 let main_display = *state.main_display.to_ref();
 
                 match char {
+                    'c' => self.open_commands_window(state, context),
                     's' => self.save_project(state, true),
                     'n' => self.open_edit_endpoint_name_window(state, context),
                     'j' => self.open_edit_project_name_window(state, context),
