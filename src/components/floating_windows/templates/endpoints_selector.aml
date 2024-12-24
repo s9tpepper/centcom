@@ -10,7 +10,7 @@ align [alignment: "center"]
           vstack [min_height: 3]
 
             container [min_height: 5]
-              vstack
+              vstack [width: 80]
                 for endpoint in window_list
                   container [fill: ".", width: 80, foreground: endpoint.row_color]
                     text endpoint.name

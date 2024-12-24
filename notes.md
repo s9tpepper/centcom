@@ -1,14 +1,19 @@
 # Features
 
 ## Name Ideas
-- Protocall
-- Protocol
+
+- tome
+- epitome
+
 - Mercury
 - Herald
-- Probe
-- Omen
 - Seer
 - Druid
+- Paradigm
+- sleuth
+- opus
+- ApiTome
+
 
 ## TODO
 
@@ -52,7 +57,8 @@ Body
 ### Requests
 * [ ] (MVP?) Request dependencies/piping results from dependency
 * [ ] (MVP?) Project/Request variables, like for tokens so you don't have to copy/paste tokens for every request
-* [x] (MVP) Code generation (curl, TypeScript/JavaScript, Rust, PHP?, Go?, Python?) [ ] Code generation plugin framework, based on OpenAPI code generation plugins/tools, maybe?
+* [x] (MVP) Code generation (curl, TypeScript/JavaScript, Rust, PHP?, Go?, Python?)
+[ ] Code generation plugin framework, based on OpenAPI code generation plugins/tools, maybe?
 [ ] ***CODE GEN: Header Variables should become function arguments once variables are a thing in requests
 [ ] Import/Export OpenAPI
 
@@ -64,4 +70,7 @@ Body
     Note: This didn't turn out so well, too complicated, kept duo structs
 
 ### Bugs
-[ ] Endpoints Selector window is broken when the project doesn't have any endpoints
+[x] Endpoints Selector window is broken when the project doesn't have any endpoints
+[ ] top right menu goes offscreen when the project/endpoint names change
+[ ] URL input border is sometimes incorrect
+[ ] sort the app themes so they're always in the same order
