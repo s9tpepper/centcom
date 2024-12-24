@@ -169,6 +169,16 @@ impl OptionsView {
             );
         });
 
+        // Update URL Input
+        let _ = self.component_ids.try_borrow().map(|ids| {
+            let _ = send_message(
+                "url_input",
+                "theme_update".to_string(),
+                &ids,
+                context.emitter,
+            );
+        });
+
         let _ = self.component_ids.try_borrow().map(|ids| {
             if let Ok(msg) = serde_json::to_string(&ResponseRendererMessages::ThemeUpdate) {
                 let _ = send_message("response_renderer", msg, &ids, context.emitter);
@@ -252,7 +262,6 @@ impl Component for OptionsView {
                     Ok(_) => {
                         state.options.to_mut().app_theme_name.set(value.to_string());
                         self.update_app_theme(state, context);
-                        // self.update_app_theme(state);
                     }
                     Err(_) => {}
                 }

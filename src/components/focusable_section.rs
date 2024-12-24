@@ -44,6 +44,18 @@ impl FocusableSection {
     fn update_app_theme(&self, state: &mut FocusableSectionState) {
         let app_theme = get_app_theme();
         state.app_theme.set(app_theme);
+
+        state
+            .active_border_color
+            .set(state.app_theme.to_ref().border_focused.to_ref().to_string());
+        state.active_border_color.set(
+            state
+                .app_theme
+                .to_ref()
+                .border_unfocused
+                .to_ref()
+                .to_string(),
+        );
     }
 }
 
