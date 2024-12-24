@@ -56,7 +56,7 @@ pub struct AppTheme {
     pub row_color: Value<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Ord, PartialOrd, Eq, PartialEq)]
 pub struct AppThemePersisted {
     /// Theme name
     pub name: String,
@@ -173,14 +173,18 @@ impl From<AppThemePersisted> for AppTheme {
 }
 
 pub fn get_app_themes_list() -> Vec<AppThemePersisted> {
-    APP_THEME_MAP
+    let mut list: Vec<AppThemePersisted> = APP_THEME_MAP
         .values()
         .flat_map(|app_theme_bytes| {
             let app_theme_contents = String::from_utf8_lossy(app_theme_bytes);
 
             serde_json::from_str::<AppThemePersisted>(&app_theme_contents)
         })
-        .collect()
+        .collect();
+
+    list.sort();
+
+    list
 }
 
 pub fn get_app_theme() -> AppTheme {
