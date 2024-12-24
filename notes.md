@@ -75,3 +75,4 @@ Body
 [x] URL input border is sometimes incorrect
 [x] sort the app themes so they're always in the same order
 [x] code gen window needs Esc to close the window
+[ ] fix the response filtering
