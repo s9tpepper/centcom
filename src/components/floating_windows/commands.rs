@@ -95,7 +95,7 @@ impl Component for Commands {
             }
 
             anathema::component::KeyCode::Esc => {
-                context.publish("commands__cancel", |state| &state.app_theme);
+                context.publish("commands__cancel", |state| &state.command);
             }
 
             _ => {}
@@ -113,6 +113,7 @@ impl DashboardMessageHandler for Commands {
         _component_ids: Ref<'_, HashMap<String, ComponentId<String>>>,
     ) {
         let event: String = ident.into();
+
         match event.as_str() {
             #[allow(clippy::single_match)]
             "commands__selection" => match value.to_string().as_str() {

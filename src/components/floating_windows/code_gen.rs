@@ -136,7 +136,7 @@ impl Component for CodeGen {
             }
 
             anathema::component::KeyCode::Esc => {
-                context.publish("codegen__cancel", |state| &state.app_theme);
+                context.publish("codegen__cancel", |state| &state.language);
             }
 
             _ => {}
