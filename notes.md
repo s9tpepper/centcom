@@ -73,5 +73,5 @@ Body
 [x] Endpoints Selector window is broken when the project doesn't have any endpoints
 [x] top right menu goes offscreen when the project/endpoint names change
 [ ] URL input border is sometimes incorrect
-[ ] sort the app themes so they're always in the same order
+[x] sort the app themes so they're always in the same order
 [ ] code gen window needs Esc to close the window
