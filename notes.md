@@ -74,4 +74,4 @@ Body
 [x] top right menu goes offscreen when the project/endpoint names change
 [ ] URL input border is sometimes incorrect
 [x] sort the app themes so they're always in the same order
-[ ] code gen window needs Esc to close the window
+[x] code gen window needs Esc to close the window
