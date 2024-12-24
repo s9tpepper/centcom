@@ -101,7 +101,7 @@ pub struct PersistedEndpoint {
     pub body: String,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Default, Clone, Debug, Serialize, Deserialize)]
 pub struct Header {
     pub name: String,
     pub value: String,

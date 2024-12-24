@@ -5,7 +5,7 @@ use std::{
 };
 
 use anathema::{
-    component::{self, Component, ComponentId},
+    component::{self, Component, ComponentId, Emitter},
     prelude::TuiBackend,
     runtime::RuntimeBuilder,
     state::{State, Value},
@@ -13,7 +13,7 @@ use anathema::{
 };
 
 use crate::{
-    code_gen::{generate_web, WebType},
+    code_gen::{generate_rust, generate_web, WebType},
     components::{
         dashboard::{DashboardMessageHandler, DashboardMessages, DashboardState, FloatingWindow},
         send_message,
@@ -56,6 +56,33 @@ impl CodeGen {
         let app_theme = get_app_theme();
         state.app_theme.set(app_theme);
     }
+}
+
+fn show_successful_code_gen_msg(
+    language_name: &str,
+    component_ids: Ref<'_, HashMap<String, ComponentId<String>>>,
+    emitter: Emitter,
+) {
+    let title = format!("{language_name} Code Gen");
+    let msg = String::from("Code generated successfully");
+    let message = DashboardMessages::ShowSucces((title, msg));
+
+    let _ = serde_json::to_string(&message).map(|message| {
+        let _ = send_message("dashboard", message, &component_ids, &emitter);
+    });
+}
+
+fn show_error_code_gen_msg(
+    language_name: &str,
+    component_ids: Ref<'_, HashMap<String, ComponentId<String>>>,
+    emitter: Emitter,
+) {
+    let msg = format!("Error generating {language_name} code");
+    let message = DashboardMessages::ShowError(msg);
+
+    let _ = serde_json::to_string(&message).map(|message| {
+        let _ = send_message("dashboard", message, &component_ids, &emitter);
+    });
 }
 
 #[derive(Default, State)]
@@ -132,13 +159,22 @@ impl DashboardMessageHandler for CodeGen {
             "codegen__selection" => match value.to_string().as_str() {
                 "rust" => {
                     state.floating_window.set(FloatingWindow::None);
-
-                    // state.project
-
-                    println!("Generate rust code here");
-
-                    // TODO: Set this to the code generation dialog instead of app
                     context.set_focus("id", "app");
+
+                    let project = state.project.to_ref();
+                    match generate_rust((&*project).into()) {
+                        Ok(_) => {
+                            show_successful_code_gen_msg(
+                                "Rust",
+                                component_ids,
+                                context.emitter.clone(),
+                            );
+                        }
+
+                        Err(_) => {
+                            show_error_code_gen_msg("Rust", component_ids, context.emitter.clone());
+                        }
+                    }
                 }
 
                 code_type @ ("typescript" | "javascript") => {
@@ -161,32 +197,19 @@ impl DashboardMessageHandler for CodeGen {
 
                     match generate_web((&*project).into(), web_type) {
                         Ok(_) => {
-                            let title = format!("{language_name} Code Gen");
-                            let msg = String::from("Code generated successfully");
-                            let message = DashboardMessages::ShowSucces((title, msg));
-
-                            let _ = serde_json::to_string(&message).map(|message| {
-                                let _ = send_message(
-                                    "dashboard",
-                                    message,
-                                    &component_ids,
-                                    context.emitter,
-                                );
-                            });
+                            show_successful_code_gen_msg(
+                                language_name,
+                                component_ids,
+                                context.emitter.clone(),
+                            );
                         }
 
                         Err(_) => {
-                            let msg = format!("Error generating {language_name} code");
-                            let message = DashboardMessages::ShowError(msg);
-
-                            let _ = serde_json::to_string(&message).map(|message| {
-                                let _ = send_message(
-                                    "dashboard",
-                                    message,
-                                    &component_ids,
-                                    context.emitter,
-                                );
-                            });
+                            show_error_code_gen_msg(
+                                language_name,
+                                component_ids,
+                                context.emitter.clone(),
+                            );
                         }
                     }
                 }
