@@ -52,7 +52,7 @@ Body
 ### Requests
 * [ ] (MVP?) Request dependencies/piping results from dependency
 * [ ] (MVP?) Project/Request variables, like for tokens so you don't have to copy/paste tokens for every request
-* [ ] (MVP) Code generation (curl, TypeScript/JavaScript, Rust, PHP?, Go?, Python?) [ ] Code generation plugin framework, based on OpenAPI code generation plugins/tools, maybe?
+* [x] (MVP) Code generation (curl, TypeScript/JavaScript, Rust, PHP?, Go?, Python?) [ ] Code generation plugin framework, based on OpenAPI code generation plugins/tools, maybe?
 [ ] ***CODE GEN: Header Variables should become function arguments once variables are a thing in requests
 [ ] Import/Export OpenAPI
 
