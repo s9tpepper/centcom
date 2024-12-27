@@ -2,6 +2,28 @@
 
 ## TODO
 
+### Release Checklist
+[ ] Squash bugs for MVP
+[ ] Test on other terminals? (Ghostty, Kitty, Alacritty, gtk terminal, konsole, xterm)
+[ ] Flesh out the README.md
+[ ] Add GitHub Action(s) for producing binaries and release
+[ ] Screenshots for the README
+
+### Post-Release
+[ ] Need a cool logo
+[ ] github pages website/page?
+[ ] Neovim wrapper plugin
+
+### Bugs
+[x] Endpoints Selector window is broken when the project doesn't have any endpoints
+[x] top right menu goes offscreen when the project/endpoint names change
+[x] URL input border is sometimes incorrect
+[x] sort the app themes so they're always in the same order
+[x] code gen window needs Esc to close the window
+[x] fix the response filtering
+[ ] (MVP) reduce number of syntax highlighting themes, too many
+
+
 ### Options
 [ ] (MVP?) Set up GitHub integration in the options?
 [N] Allow keybinding customizations?? (not really sure about this one)
@@ -53,12 +75,3 @@ Body
 ### Optimizations
 [x] Update AppTheme/AppThemePersisted to use serde w/out derive to try to get rid of the need for two structs to save JSON
     Note: This didn't turn out so well, too complicated, kept duo structs
-
-### Bugs
-[x] Endpoints Selector window is broken when the project doesn't have any endpoints
-[x] top right menu goes offscreen when the project/endpoint names change
-[x] URL input border is sometimes incorrect
-[x] sort the app themes so they're always in the same order
-[x] code gen window needs Esc to close the window
-[x] fix the response filtering
-[ ] reduce number of syntax highlighting themes, too many
