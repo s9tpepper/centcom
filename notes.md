@@ -1,20 +1,5 @@
 # Features
 
-## Name Ideas
-
-- tome
-- epitome
-
-- Mercury
-- Herald
-- Seer
-- Druid
-- Paradigm
-- sleuth
-- opus
-- ApiTome
-
-
 ## TODO
 
 ### Options
@@ -75,4 +60,5 @@ Body
 [x] URL input border is sometimes incorrect
 [x] sort the app themes so they're always in the same order
 [x] code gen window needs Esc to close the window
-[ ] fix the response filtering
+[x] fix the response filtering
+[ ] reduce number of syntax highlighting themes, too many

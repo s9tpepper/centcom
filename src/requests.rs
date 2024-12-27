@@ -1,4 +1,8 @@
-use std::{fs::OpenOptions, io::Write, path::PathBuf};
+use std::{
+    fs::{self, OpenOptions},
+    io::Write,
+    path::PathBuf,
+};
 
 use anathema::prelude::Context;
 use ureq::Response;
@@ -108,7 +112,7 @@ fn handle_successful_response(
         .create(true)
         .truncate(true)
         .write(true)
-        .open(file_path)?;
+        .open(file_path.clone())?;
 
     let write_result = file.write_all(buf.as_slice());
     // TODO: Fix the error handling to message the user
@@ -117,6 +121,11 @@ fn handle_successful_response(
     }
 
     let window_label = format!("Response Body (Status Code: {status})");
+
+    // TODO: Fix the response handling so it doesnt have to be read from file since
+    // response renderer is reading it all into lines anyway
+    let full_response = fs::read_to_string(file_path)?;
+    state.response.set(full_response);
 
     state.response_body_window_label.set(window_label);
     state.main_display.set(DashboardDisplay::ResponseBody);

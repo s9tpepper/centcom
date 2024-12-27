@@ -1,10 +1,12 @@
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, fs::File, rc::Rc};
 
 use anathema::{
     component::ComponentId,
     prelude::{Document, TuiBackend},
     runtime::{Runtime, RuntimeBuilder},
 };
+use log::LevelFilter;
+use simplelog::{Config, WriteLogger};
 
 use crate::components::{
     add_header_window::{AddHeaderWindow, AddHeaderWindowState, ADD_HEADER_WINDOW_TEMPLATE},
@@ -55,6 +57,16 @@ struct App {
 }
 
 impl App {
+    fn logger(&self) {
+        // TODO: Move this log file into the application directory
+        // TODO: Enable this block with an env var
+        // let _ = WriteLogger::init(
+        //     LevelFilter::Info,
+        //     Config::default(),
+        //     File::create("my_rust_binary.log").unwrap(),
+        // );
+    }
+
     pub fn new() -> Self {
         App {
             component_ids: Rc::new(RefCell::new(HashMap::new())),
@@ -62,6 +74,8 @@ impl App {
     }
 
     pub fn run(&mut self) -> anyhow::Result<()> {
+        self.logger();
+
         let doc = Document::new("@app");
 
         let tui = TuiBackend::builder()

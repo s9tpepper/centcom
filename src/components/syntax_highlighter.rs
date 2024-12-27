@@ -4,6 +4,7 @@ use std::io::Cursor;
 use std::sync::LazyLock;
 
 use anathema::state::Hex;
+use log::info;
 use syntect::easy::HighlightLines;
 use syntect::highlighting::{FontStyle, Style, Theme, ThemeSet};
 use syntect::parsing::SyntaxSet;
@@ -132,6 +133,8 @@ pub fn highlight<'a>(src: &'a str, ext: &str, name: Option<String>) -> (Box<[Lin
     let mut output = vec![];
 
     for line in LinesWithEndings::from(src) {
+        info!("Highlinting this slice: {line}");
+
         let mut head = h
             .highlight_line(line, &ps)
             .unwrap()
@@ -148,6 +151,7 @@ pub fn highlight<'a>(src: &'a str, ext: &str, name: Option<String>) -> (Box<[Lin
         });
     }
 
+    info!("output length: {}", output.len());
     (output.into_boxed_slice(), theme)
 }
 

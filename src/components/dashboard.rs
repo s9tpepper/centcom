@@ -26,6 +26,7 @@ use crate::{
 };
 use crate::{requests::do_request, theme::get_app_theme_persisted};
 
+use super::floating_windows::endpoints_selector::{EndpointsSelector, EndpointsSelectorMessages};
 use super::{
     add_header_window::AddHeaderWindow,
     app_layout::AppLayoutMessages,
@@ -39,20 +40,15 @@ use super::{
     },
     method_selector::MethodSelector,
     project_window::ProjectWindow,
-    response_renderer::TextFilter,
     send_message,
     syntax_highlighter::get_highlight_theme,
     textarea::TextAreaMessages,
     textinput::TextInputMessages,
 };
-use super::{
-    floating_windows::endpoints_selector::{EndpointsSelector, EndpointsSelectorMessages},
-    response_renderer::ResponseRendererMessages,
-};
 
 pub const DASHBOARD_TEMPLATE: &str = "./src/components/templates/dashboard.aml";
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum DashboardDisplay {
     RequestBody,
     RequestHeadersEditor,
@@ -528,81 +524,6 @@ impl DashboardComponent {
         }
     }
 
-    fn get_text_filter(&self, state: &mut DashboardState, filter: &str) -> TextFilter {
-        let mut indexes: Vec<usize> = vec![];
-
-        let i = state.filter_indexes.to_ref();
-        i.iter().for_each(|e| {
-            let val = *e.to_ref();
-            indexes.push(val);
-        });
-
-        TextFilter {
-            indexes,
-            total: *state.filter_total.to_ref(),
-            nav_index: *state.filter_nav_index.to_ref(),
-            filter: String::from(filter),
-        }
-    }
-
-    fn sync_text_filter(
-        &self,
-        state: &mut DashboardState,
-        context: Context<'_, DashboardState>,
-        filter: &str,
-    ) {
-        let text_filter = self.get_text_filter(state, filter);
-
-        if let Ok(message) =
-            serde_json::to_string(&ResponseRendererMessages::FilterUpdate(text_filter))
-        {
-            if let Ok(component_ids) = self.component_ids.try_borrow() {
-                let _ = send_message(
-                    "response_renderer",
-                    message,
-                    &component_ids,
-                    context.emitter,
-                );
-            }
-        };
-    }
-
-    fn apply_response_filter(
-        &self,
-        value: CommonVal<'_>,
-        state: &mut DashboardState,
-        context: Context<'_, DashboardState>,
-    ) {
-        loop {
-            if state.filter_indexes.len() == 0 {
-                break;
-            }
-
-            state.filter_indexes.remove(0);
-        }
-        state.filter_total.set(0);
-        state.filter_nav_index.set(0);
-
-        let filter = value.to_string();
-        if filter.is_empty() {
-            self.sync_text_filter(state, context, &filter);
-
-            return;
-        }
-
-        let response = state.response.to_ref().to_string();
-        response.lines().enumerate().for_each(|(idx, line)| {
-            if line.contains(&filter) {
-                state.filter_indexes.push(idx);
-            }
-        });
-        state.filter_total.set(state.filter_indexes.len());
-
-        if state.filter_indexes.len() > 0 {
-            self.sync_text_filter(state, context, &filter);
-        }
-    }
-
     fn open_commands_window(
         &self,
         state: &mut DashboardState,
@@ -736,17 +657,10 @@ impl anathema::component::Component for DashboardComponent {
             _ => {}
         }
 
-        let (component, event) = ident.split_once("__").unwrap_or(("", ""));
+        let (component, _event) = ident.split_once("__").unwrap_or(("", ""));
+
         if let Ok(component_ids) = self.component_ids.try_borrow() {
             match component {
-                "response_filter" => match event {
-                    "input_update" => self.apply_response_filter(value, state, context),
-
-                    "input_escape" => context.set_focus("id", "response_renderer"),
-
-                    _ => {}
-                },
-
                 "commands" => {
                     Commands::handle_message(value, ident, state, context, elements, component_ids);
                 }
@@ -867,7 +781,7 @@ impl anathema::component::Component for DashboardComponent {
                     'n' => self.open_edit_endpoint_name_window(state, context),
                     'j' => self.open_edit_project_name_window(state, context),
                     'i' => self.save_endpoint(state, &context, true),
-                    'f' => context.set_focus("id", "response_body_input"),
+                    // 'f' => context.set_focus("id", "response_body_input"),
                     'o' => self.send_options_open(state, context),
                     't' => self.new_endpoint(state, context),
                     'w' => self.new_project(state, context, elements),
@@ -903,7 +817,9 @@ impl anathema::component::Component for DashboardComponent {
                             state.main_display.set(DashboardDisplay::RequestBody);
                         }
                         DashboardDisplay::ResponseBody => {
-                            state.main_display.set(DashboardDisplay::RequestBody);
+                            // NOTE: Maybe revert this, needs testing to check focus UX
+                            // state.main_display.set(DashboardDisplay::RequestBody);
+                            context.set_focus("id", "response_renderer");
                         }
                         DashboardDisplay::ResponseHeaders => {
                             state.main_display.set(DashboardDisplay::ResponseBody)
@@ -987,6 +903,9 @@ impl anathema::component::Component for DashboardComponent {
 
                 if *state.floating_window.to_ref() != FloatingWindow::None {
                     state.floating_window.set(FloatingWindow::None);
+                // NOTE: Test the UX of the focus movement with this Esc binding
+                } else if *state.main_display.to_ref() != DashboardDisplay::RequestBody {
+                    state.main_display.set(DashboardDisplay::RequestBody);
                 }
             }
 

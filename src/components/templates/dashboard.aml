@@ -49,17 +49,6 @@ zstack [background: app_theme.background]
             zstack
               @response_renderer [id: "response_renderer"]
 
-              hstack
-                spacer
-                text "(F)ilter:["
-                @response_filter_input (
-                  text_change -> response_filter__input_update,
-                  escape -> response_filter__input_escape
-                ) [id: "response_body_input"]
-                text "]:"
-                text filter_total
-                container [width: 2]
-
         if main_display == "request_headers_editor"
           expand
             zstack
