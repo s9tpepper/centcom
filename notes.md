@@ -9,6 +9,7 @@
 [ ] Add GitHub Action(s) for producing binaries and release
 [ ] Screenshots for the README
 [x] Update the application name
+[ ] Do a pass through the keybindings, make sure they make sense
 
 ### Post-Release
 [ ] Need a cool logo
