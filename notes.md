@@ -4,7 +4,7 @@
 
 ### Release Checklist
 [ ] Squash bugs for MVP
-[ ] Test on other terminals? (Ghostty, Kitty, Alacritty, gtk terminal, konsole, xterm)
+[x] Test on other terminals? (Ghostty, Kitty, Alacritty, iTerm, gnome terminal, konsole, terminator, xterm, gtk terminal)
 [ ] Flesh out the README.md
 [ ] Add GitHub Action(s) for producing binaries and release
 [ ] Screenshots for the README
