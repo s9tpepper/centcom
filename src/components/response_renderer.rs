@@ -387,6 +387,7 @@ impl ResponseRenderer {
                     foreground: hl.head.fg.into(),
                     background: hl.head.bg.into(),
                     original_background: None.into(),
+                    original_foreground: None.into(),
                 };
                 line.spans.push(span);
             });
@@ -400,6 +401,7 @@ impl ResponseRenderer {
                         foreground: span.fg.into(),
                         background: span.bg.into(),
                         original_background: None.into(),
+                        original_foreground: None.into(),
                     };
                     line.spans.push(span);
                 });
@@ -483,6 +485,7 @@ impl ResponseRenderer {
 
         if filter.is_empty() {
             self.text_filter = self.get_text_filter(state);
+            clear_highlights(state);
 
             return;
         }
@@ -502,6 +505,8 @@ impl ResponseRenderer {
             self.text_filter = self.get_text_filter(state);
 
             self.do_filter(state, elements, context);
+        } else {
+            clear_highlights(state);
         }
     }
 
@@ -593,6 +598,7 @@ struct Span {
     foreground: Value<Hex>,
     background: Value<Hex>,
     original_background: Value<Option<Hex>>,
+    original_foreground: Value<Option<Hex>>,
 }
 
 impl Span {
@@ -602,6 +608,7 @@ impl Span {
             foreground: foreground.into(),
             background: background.into(),
             original_background: None.into(),
+            original_foreground: None.into(),
             bold: bold.into(),
         }
     }
@@ -612,6 +619,7 @@ impl Span {
             foreground: Hex::from((255, 255, 255)).into(),
             background: Hex::from((0, 0, 0)).into(),
             original_background: None.into(),
+            original_foreground: None.into(),
             bold: false.into(),
         }
     }
@@ -886,6 +894,12 @@ fn clear_highlights(state: &mut ResponseRendererState) {
                 s.background.set(og_bg);
                 s.original_background.set(None);
             };
+
+            let og_opt = *s.original_foreground.to_ref();
+            if let Some(og_fg) = og_opt {
+                s.foreground.set(og_fg);
+                s.original_foreground.set(None);
+            }
         });
     });
 }
@@ -947,6 +961,10 @@ fn highlight_matches(
                             let og_bg = Some(*s.background.to_ref());
                             s.original_background.set(og_bg);
                             s.background.set(Hex::from((255, 255, 0)));
+
+                            let og_fg = Some(*s.foreground.to_ref());
+                            s.original_foreground.set(og_fg);
+                            s.foreground.set(Hex::from((0, 0, 0)));
                         }
                     }
                 })
