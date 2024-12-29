@@ -58,7 +58,7 @@ Body
 ### Projects
 [x] (MVP) Switch projects
 [x] (MVP) Switch endpoints
-[ ] Import/Export to Postman format
+[ ] (MVP) Import/Export to Postman format
 [x] (MVP) Add Project
 [x] (MVP) Add Endpoint
 [x] (MVP) Rename Project dialogue
