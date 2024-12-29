@@ -821,7 +821,7 @@ impl Component for ResponseRenderer {
 
                 ResponseRendererMessages::ResponseUpdate(extension) => {
                     // TODO: Try to delete this file if the program closes/quits/crashes
-                    let reader_result = get_file_reader("/tmp/centcom_response.txt");
+                    let reader_result = get_file_reader("/tmp/tome_response.txt");
                     if reader_result.is_err() {
                         println!("Error getting reader for response...");
                         return;

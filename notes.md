@@ -8,6 +8,7 @@
 [ ] Flesh out the README.md
 [ ] Add GitHub Action(s) for producing binaries and release
 [ ] Screenshots for the README
+[x] Update the application name
 
 ### Post-Release
 [ ] Need a cool logo
@@ -89,5 +90,3 @@ Body
 - Midnight
 - Monokai Dark
 - Spectacular
-
-

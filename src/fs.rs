@@ -16,7 +16,7 @@ pub fn get_project_directory<'a>(app: &'a str, path: &'a str) -> anyhow::Result<
 
 pub fn get_app_dir(path: &str) -> anyhow::Result<PathBuf> {
     // FIXME: Update application name here
-    get_project_directory("Centcom", path)
+    get_project_directory("Tome", path)
 }
 
 pub fn get_documents_dir() -> anyhow::Result<PathBuf> {

@@ -99,14 +99,14 @@ fn handle_successful_response(
     }
 
     let mut response_path = PathBuf::from("/tmp");
-    response_path.push("centcom_response.txt");
+    response_path.push("tome_response.txt");
 
     let mut response_reader = response.into_reader();
     let mut buf: Vec<u8> = vec![];
     response_reader.read_to_end(&mut buf)?;
 
     let mut file_path = PathBuf::from("/tmp");
-    file_path.push("centcom_response.txt");
+    file_path.push("tome_response.txt");
 
     let mut file = OpenOptions::new()
         .create(true)

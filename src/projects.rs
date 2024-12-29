@@ -111,7 +111,7 @@ fn get_default_headers() -> Vec<HeaderState> {
     vec![
         HeaderState {
             name: "user-agent".to_string().into(),
-            value: "centcom-tui".to_string().into(),
+            value: "tome-tui".to_string().into(),
         },
         HeaderState {
             name: "content-type".to_string().into(),
