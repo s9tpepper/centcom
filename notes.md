@@ -21,7 +21,7 @@
 [x] sort the app themes so they're always in the same order
 [x] code gen window needs Esc to close the window
 [x] fix the response filtering
-[ ] (MVP) reduce number of syntax highlighting themes, too many
+[x] (MVP) reduce number of syntax highlighting themes, too many
 
 
 ### Options
@@ -75,3 +75,19 @@ Body
 ### Optimizations
 [x] Update AppTheme/AppThemePersisted to use serde w/out derive to try to get rid of the need for two structs to save JSON
     Note: This didn't turn out so well, too complicated, kept duo structs
+
+
+### Themes to Keep
+- Bespin
+- Blackboard Mod
+- BlackLight
+- Cobalt
+- fake
+- GlitterBomb
+
+- Juicy (Light Theme)
+- Midnight
+- Monokai Dark
+- Spectacular
+
+

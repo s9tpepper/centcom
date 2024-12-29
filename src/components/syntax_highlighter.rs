@@ -11,7 +11,7 @@ use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
 
 use crate::options::get_syntax_theme;
-use crate::themes::{PLUM_DUMB, THEME_MAP};
+use crate::themes::{MONOKAI_DARK, THEME_MAP};
 
 #[derive(Debug)]
 pub struct Span<'a> {
@@ -87,7 +87,7 @@ pub fn get_highlight_theme(name: Option<String>) -> Theme {
                     let const_name = get_constant_from_name(&theme_name);
 
                     let theme_arr = THEME_MAP.get_key_value(&const_name.as_ref());
-                    let default_theme = &PLUM_DUMB.as_ref();
+                    let default_theme = &MONOKAI_DARK.as_ref();
                     let (_, theme_bytes) = theme_arr.unwrap_or((&"PLUM_DUMB", default_theme));
 
                     let mut cursor = Cursor::new(*theme_bytes);
@@ -106,7 +106,7 @@ pub fn get_highlight_theme(name: Option<String>) -> Theme {
             let const_name = get_constant_from_name(&theme_name);
 
             let theme_arr = THEME_MAP.get_key_value(&const_name.as_ref());
-            let default_theme = &PLUM_DUMB.as_ref();
+            let default_theme = &MONOKAI_DARK.as_ref();
             let (_, theme_bytes) = theme_arr.unwrap_or((&"PLUM_DUMB", default_theme));
 
             let mut cursor = Cursor::new(*theme_bytes);
