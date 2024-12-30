@@ -5,6 +5,7 @@ use clap::{Parser, Subcommand};
 mod app;
 mod app_themes;
 mod code_gen;
+mod compatibility;
 mod components;
 mod fs;
 mod messages;

@@ -13,7 +13,12 @@ use anathema::{
 };
 
 use crate::{
-    components::dashboard::{DashboardMessageHandler, DashboardState, FloatingWindow},
+    compatibility::postman::export_postman,
+    components::{
+        dashboard::{DashboardMessageHandler, DashboardMessages, DashboardState, FloatingWindow},
+        send_message,
+    },
+    projects::PersistedProject,
     theme::{get_app_theme, AppTheme},
 };
 
@@ -110,7 +115,7 @@ impl DashboardMessageHandler for Commands {
         state: &mut DashboardState,
         mut context: anathema::prelude::Context<'_, DashboardState>,
         _: Elements<'_, '_>,
-        _component_ids: Ref<'_, HashMap<String, ComponentId<String>>>,
+        component_ids: Ref<'_, HashMap<String, ComponentId<String>>>,
     ) {
         let event: String = ident.into();
 
@@ -120,6 +125,35 @@ impl DashboardMessageHandler for Commands {
                 "g" => {
                     state.floating_window.set(FloatingWindow::CodeGen);
                     context.set_focus("id", "codegen_window");
+                }
+
+                "e" => {
+                    state.floating_window.set(FloatingWindow::CodeGen);
+                    context.set_focus("id", "codegen_window");
+
+                    let project: PersistedProject = (&*state.project.to_ref()).into();
+
+                    match export_postman(project) {
+                        Ok(_) => {
+                            let title = "Postman Export".to_string();
+                            let message = "Postman exported successfully".to_string();
+                            let dashboard_message = DashboardMessages::ShowSucces((title, message));
+                            let msg = serde_json::to_string(&dashboard_message);
+                            if let Ok(msg) = msg {
+                                let _ =
+                                    send_message("dashboard", msg, &component_ids, context.emitter);
+                            }
+                        }
+                        Err(_) => {
+                            let message = "Postman export failed".to_string();
+                            let dashboard_message = DashboardMessages::ShowError(message);
+                            let msg = serde_json::to_string(&dashboard_message);
+                            if let Ok(msg) = msg {
+                                let _ =
+                                    send_message("dashboard", msg, &component_ids, context.emitter);
+                            }
+                        }
+                    }
                 }
 
                 _ => {}

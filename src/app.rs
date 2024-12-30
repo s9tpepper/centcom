@@ -5,7 +5,7 @@ use anathema::{
     prelude::{Document, TuiBackend},
     runtime::{Runtime, RuntimeBuilder},
 };
-use log::LevelFilter;
+use log::{info, LevelFilter};
 use simplelog::{Config, WriteLogger};
 
 use crate::components::{
@@ -65,6 +65,8 @@ impl App {
         //     Config::default(),
         //     File::create("my_rust_binary.log").unwrap(),
         // );
+
+        info!("Logging has been enabled");
     }
 
     pub fn new() -> Self {
@@ -99,7 +101,6 @@ impl App {
             let _emitter = runtime.emitter();
 
             runtime.run();
-            // sleep(Duration::from_secs(60));
         } else if let Err(error) = runtime {
             println!("{:?}", error);
         }

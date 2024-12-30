@@ -10,6 +10,10 @@
 [ ] Screenshots for the README
 [x] Update the application name
 [ ] Do a pass through the keybindings, make sure they make sense
+[ ] (MVP) Import to Postman format
+[x] (MVP) Export to Postman format
+[ ] (MVP) saving endpoint/project is not updating the project/endpoint name display
+[ ] (MVP) Add form-data handling
 
 ### Post-Release
 [ ] Need a cool logo
@@ -58,7 +62,6 @@ Body
 ### Projects
 [x] (MVP) Switch projects
 [x] (MVP) Switch endpoints
-[ ] (MVP) Import/Export to Postman format
 [x] (MVP) Add Project
 [x] (MVP) Add Endpoint
 [x] (MVP) Rename Project dialogue

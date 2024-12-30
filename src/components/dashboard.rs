@@ -650,6 +650,7 @@ impl anathema::component::Component for DashboardComponent {
     ) {
         #[allow(clippy::single_match)]
         match ident {
+            // Unfocus the url input and set back to dashboard
             "url_input_focus" => {
                 context.set_focus("id", "app");
             }

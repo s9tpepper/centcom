@@ -133,7 +133,9 @@ pub trait InputReceiver {
         state.focused.set(false);
 
         context.publish("textarea_focus", |state| &state.focused);
-        context.set_focus("id", "app");
+
+        // NOTE: This is causing lots of windows to lose focus for some reason
+        // context.set_focus("id", "app");
     }
 
     #[allow(dead_code)]

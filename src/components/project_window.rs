@@ -158,6 +158,10 @@ impl ProjectWindow {
         selected_index: usize,
         state: &mut ProjectWindowState,
     ) {
+        if self.project_list.is_empty() {
+            return;
+        }
+
         let display_projects = &self.project_list[first_index..=last_index];
         let mut new_project_list: Vec<Project> = vec![];
         display_projects.iter().for_each(|display_project| {
